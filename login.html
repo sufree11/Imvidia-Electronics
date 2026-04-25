@@ -1,0 +1,175 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log In</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        imvidia: {
+                            light: '#8DFFFF',
+                            DEFAULT: '#49C2FA',
+                            dark: '#1F2468',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-6">
+            <div class="flex justify-center md:justify-start h-16 items-center">
+                <a href="Index.html" class="flex-shrink-0 flex items-center cursor-pointer">
+                    <img src="assets/logo.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
+                    <span class="font-bold text-2xl tracking-tight text-gray-900">ImVidia<span class="text-imvidia">.</span></span>
+                </a>
+            </div>
+        </div>
+    </nav> 
+
+    <main class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+
+        <div class="max-w-md w-full bg-white px-8 pb-8 pt-14 rounded-2xl shadow-xl border border-gray-100 relative mt-8">
+            
+            <div class="absolute -top-12 left-1/2 transform -translate-x-1/2 w-24 h-24 bg-white rounded-full shadow-lg overflow-hidden flex items-center justify-center">
+                
+                <img src="assets/logo.svg" alt="Logo" class="w-full h-full object-cover">
+            </div>
+
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-extrabold text-gray-900 mb-2">Welcome Back</h2>
+                <p class="text-gray-500 text-sm">Please sign in to your account.</p>
+            </div>
+
+            <div class="flex bg-gray-100 p-1 rounded-lg mb-8 relative">
+                <button id="tab-customer" onclick="switchTab('customer')" class="flex-1 py-2 text-sm font-semibold rounded-md transition-all duration-300 bg-white text-gray-900 shadow-sm">
+                    Customer
+                </button>
+                <button id="tab-admin" onclick="switchTab('admin')" class="flex-1 py-2 text-sm font-semibold rounded-md transition-all duration-300 text-gray-500 hover:text-gray-700">
+                    Administrator
+                </button>
+            </div>
+
+            <form action="#" method="POST" class="space-y-6">
+                
+                <div>
+                    <label id="identity-label" for="identity" class="block text-sm font-medium text-gray-700 mb-1">
+                        Email Address
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i id="identity-icon" class="fa-solid fa-envelope text-gray-400"></i>
+                        </div>
+                        <input id="identity-input" name="identity" type="email" required 
+                            class="appearance-none block w-full pl-10 px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-imvidia focus:border-imvidia sm:text-sm transition duration-200" 
+                            placeholder="you@example.com">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
+                        Password
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-lock text-gray-400"></i>
+                        </div>
+                        <input id="password" name="password" type="password" required 
+                            class="appearance-none block w-full pl-10 px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-imvidia focus:border-imvidia sm:text-sm transition duration-200" 
+                            placeholder="••••••••">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 text-imvidia focus:ring-imvidia border-gray-300 rounded cursor-pointer">
+                        <label for="remember-me" class="ml-2 block text-sm text-gray-700 cursor-pointer">
+                            Remember me
+                        </label>
+                    </div>
+
+                    <div class="text-sm">
+                        <a href="#" class="font-medium text-imvidia hover:text-imvidia-dark transition">
+                            Forgot your password?
+                        </a>
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit" id="submit-btn" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-bold text-white bg-imvidia hover:bg-imvidia-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-imvidia transition transform hover:-translate-y-0.5">
+                        Sign In as Customer
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-8 text-center text-sm text-gray-600 border-t border-gray-100 pt-6">
+                Don't have an account? 
+                <a href="register.html" class="font-bold text-imvidia hover:text-imvidia-dark transition">
+                    Register here
+                </a>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        function switchTab(role) {
+            const tabCustomer = document.getElementById('tab-customer');
+            const tabAdmin = document.getElementById('tab-admin');
+            
+            const identityLabel = document.getElementById('identity-label');
+            const identityInput = document.getElementById('identity-input');
+            const identityIcon = document.getElementById('identity-icon');
+            const submitBtn = document.getElementById('submit-btn');
+            const passwordInput = document.getElementById('password');
+
+            if (role === 'admin') {
+                tabAdmin.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
+                tabAdmin.classList.remove('text-gray-500', 'hover:text-gray-700');
+                
+                tabCustomer.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
+                tabCustomer.classList.add('text-gray-500', 'hover:text-gray-700');
+
+                passwordInput.type = "password";
+                passwordInput.value = "";
+                identityLabel.innerText = "Admin ID";
+                identityInput.type = "text";
+                identityInput.value = "";
+                identityInput.placeholder = "Enter your Admin ID";
+                identityIcon.className = "fa-solid fa-id-badge text-gray-400";
+                submitBtn.innerText = "Sign In as Admin";
+                submitBtn.classList.replace('bg-imvidia', 'bg-gray-900');
+                submitBtn.classList.replace('hover:bg-imvidia-dark', 'hover:bg-gray-800');
+
+            } else {
+                tabCustomer.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
+                tabCustomer.classList.remove('text-gray-500', 'hover:text-gray-700');
+
+                tabAdmin.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
+                tabAdmin.classList.add('text-gray-500', 'hover:text-gray-700');
+
+                passwordInput.type = "password";
+                passwordInput.value = ""; 
+                identityLabel.innerText = "Email Address";
+                identityInput.type = "email";
+                identityInput.value = "";
+                identityInput.placeholder = "you@example.com";
+                identityIcon.className = "fa-solid fa-envelope text-gray-400";
+                submitBtn.innerText = "Sign In as Customer";
+                submitBtn.classList.replace('bg-gray-900', 'bg-imvidia');
+                submitBtn.classList.replace('hover:bg-gray-800', 'hover:bg-imvidia-dark');
+            }
+        }
+    </script>
+</body>
+</html>

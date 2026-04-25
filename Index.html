@@ -42,14 +42,21 @@
                     </div>
 
                     <div class="flex items-center space-x-4">
-                    <button class="hidden md:block text-black-600 hover:text-imvidia font-medium transition"> Log In </button>
-                    <button class="relative p-2 text-gray-600 hover:text-imvidia transition">
+                    <a href="login.html" class="hidden md:block text-gray-600 hover:text-imvidia font-medium transition">
+                        Log In
+                    </a>
+
+                    <a href="register.html" class="hidden md:block bg-imvidia hover:bg-imvidia-dark text-white font-medium py-2 px-4 rounded-lg shadow-sm transition">
+                        Register
+                    </a>
+
+                    <button class="relative p-2 text-gray-600 hover:text-imvidia transition" onclick="viewCart()">
                         <i class="fa-solid fa-cart-shopping text-xl"></i>
-                        <span class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-imvidia rounded-full">
+                        <span id="cart-badge" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-imvidia rounded-full transition-transform duration-200">
                             0
                         </span>
                     </button>
-                    </div>
+                </div>
              </div>
         </div>
     </nav>
@@ -99,7 +106,7 @@
             
             <div class="col-span-1 sm:col-span-2 lg:col-span-4 flex flex-col items-center justify-center py-16 bg-white rounded-xl shadow-sm border border-dashed border-gray-300">
                 <a href="https://www.google.com/logos/2010/pacman10-i.html" target="_blank" rel="noopener noreferrer" title="A blue ghost...">
-                <i class="fa-solid fa-ghost text-6xl text-gray-300 mb-4 hover:text-imvidia duration-300 hover:scale-110 transition-transform duration-300"></i>
+                <i class="fa-solid fa-ghost text-6xl text-gray-300 mb-4 hover:text-imvidia duration-300 hover:scale-110 transition transform duration-300"></i>
                 </a>
                 
                 <h3 class="text-2xl font-bold text-gray-500">Nothing here just yet...</h3>
@@ -227,7 +234,7 @@
             setTimeout(() => {
                 isInitialized = true;
                 startCarousel();
-            }, 50);
+            }, 15);
 
             document.addEventListener("visibilitychange", () => {
                 if (document.hidden) {
