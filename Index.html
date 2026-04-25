@@ -86,44 +86,78 @@
         </div>
     </header>
 
-    <script>
+        <script>
         document.addEventListener('DOMContentLoaded', () => {
             const images = document.querySelectorAll('.carousel-image');
             let currentIndex = 0;
             let pullingIndex = -1;
+            let isInitialized = false; // Prevents animation on initial load
+            let intervalId;
+            let timeoutId;
 
-            function imageCarousel() {
+            function updateCarousel() {
                 images.forEach((img, index) => {
-                    img.className = 'carousel-image absolute top-1/2 rounded-xl shadow-2xl transition-all duration-700 ease-in-out object-cover aspect-video';
+                    // Base classes. Only add transitions AFTER the initial load to prevent flying glitches
+                    let baseClasses = 'carousel-image absolute top-1/2 rounded-xl shadow-2xl border-4 border-gray-800 object-cover aspect-video';
+                    if (isInitialized) {
+                        baseClasses += ' transition-all duration-700 ease-in-out';
+                    }
+                    img.className = baseClasses;
                     
                     if (index === pullingIndex) {
-                        img.classList.add('z-50', 'w-[70%]', 'left-[90%]', '-translate-x-1/2', '-translate-y-[55%]', 'scale-100', 'brightness-100', 'opacity-100', 'rotate-12');
+                        // THE PULL
+                        img.classList.add('z-50', 'w-[70%]', 'left-[95%]', '-translate-x-1/2', '-translate-y-[55%]', 'scale-100', 'brightness-100', 'opacity-100', 'rotate-12');
                     } else if (index === currentIndex) {
+                        // THE CENTER
                         img.classList.add('z-40', 'w-[75%]', 'left-1/2', '-translate-x-1/2', '-translate-y-[60%]', 'scale-100', 'brightness-100', 'opacity-100', 'rotate-0');
                     } else if (index === (currentIndex + 1) % 3) {
+                        // THE RIGHT
                         img.classList.add('z-10', 'w-[60%]', 'left-[80%]', '-translate-x-1/2', '-translate-y-[40%]', 'scale-90', 'brightness-50', 'opacity-70', 'rotate-3');
                     } else {
+                        // THE LEFT
                         img.classList.add('z-20', 'w-[60%]', 'left-[20%]', '-translate-x-1/2', '-translate-y-[40%]', 'scale-90', 'brightness-50', 'opacity-70', '-rotate-3');
                     }
                 });
             }
 
-            setInterval(() => {
-                const nextIndex = (currentIndex + 1) % images.length;
+            function startCarousel() {
+                if (intervalId) clearInterval(intervalId);
                 
-                pullingIndex = nextIndex;
-                currentIndex = nextIndex;
-                imageCarousel();
-                
-        
-                setTimeout(() => {
-                    pullingIndex = -1;
-                    imageCarousel();
-                }, 350);
+                intervalId = setInterval(() => {
+                    const nextIndex = (currentIndex + 1) % images.length;
+                    
+                    pullingIndex = nextIndex;
+                    currentIndex = nextIndex;
+                    updateCarousel();
+                    
+                    timeoutId = setTimeout(() => {
+                        pullingIndex = -1; 
+                        updateCarousel();
+                    }, 350); 
+                }, 3500);
+            }
 
-            }, 2500); 
+            function stopCarousel() {
+                clearInterval(intervalId);
+                clearTimeout(timeoutId);
+                pullingIndex = -1;
+                updateCarousel(); 
+            }
 
-            imageCarousel();
+            updateCarousel();
+
+            setTimeout(() => {
+                isInitialized = true;
+                startCarousel();
+            }, 50);
+
+            document.addEventListener("visibilitychange", () => {
+                if (document.hidden) {
+                    stopCarousel();
+                } else {
+                    startCarousel();
+                }
+            });
         });
     </script>
         </div>
