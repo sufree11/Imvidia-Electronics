@@ -15,9 +15,9 @@
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
                         imvidia: {
-                            light: '#00D2FF',
-                            DEFAULT: '#007AFF',
-                            dark: '#131D5A',
+                            light: '#8DFFFF',
+                            DEFAULT: '#49C2FA',
+                            dark: '#1F2468',
                         }
                     }
                 }
@@ -31,7 +31,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
              <div class="flex justify-between h-16 items-center">
                 <div class="flex-shrink-0 flex items-center cursor-pointer">
-                    <i class="fa-solid fa-eye text-imvidia text-2xl mr-2"></i>
+                    <img src="assets/logo.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
                     <span class="font-bold text-2xl tracking-tight text-gray-900">ImVidia<span class="text-imvidia">.</span></span>
                     </div>
 
@@ -58,11 +58,11 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28 flex flex-col md:flex-row items-center">
             <div class="md:w-1/2 mb-10 md:mb-0">
                 <h1 class="text-4xl md:text-5xl font-extrabold leading-tight mb-4">
-                    Powering <span class="text-imvidia">Lives</span>, <br> for a better <span class="text-imvidia">Price</span>.
+                    Powering <span class="text-imvidia-light">Lives</span>, <br> for a Better <span class="text-imvidia">Price</span>.
                 </h1>
 
                 <p class="text-lg text-gray-300 mb-8">
-                    Delivering innovative, affordable, and user-friendly solutions that improve your home comfort. Power your life with Imvidia today.
+                    Delivering innovative, affordable, and user-friendly solutions that improve your home comfort. Power your life with ImVidia today.
                 </p>
 
                 <div class="flex space-x-4">
@@ -86,6 +86,34 @@
         </div>
     </header>
 
+    <main id="catalog" class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
+        
+
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-gray-900">Featured Products</h2>
+            <div class="w-24 h-1 bg-imvidia mx-auto mt-4 rounded"></div>
+            <p class="mt-4 text-gray-600">Browse our selection of top-tier household electronics.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            
+            <div class="col-span-1 sm:col-span-2 lg:col-span-4 flex flex-col items-center justify-center py-16 bg-white rounded-xl shadow-sm border border-dashed border-gray-300">
+                <a href="https://www.google.com/logos/2010/pacman10-i.html" target="_blank" rel="noopener noreferrer" title="A blue ghost...">
+                <i class="fa-solid fa-ghost text-6xl text-gray-300 mb-4 hover:text-imvidia duration-300 hover:scale-110 transition-transform duration-300"></i>
+                </a>
+                
+                <h3 class="text-2xl font-bold text-gray-500">Nothing here just yet...</h3>
+                <p class="text-gray-400 mt-2">Products will appear here once added to the database.</p>
+
+                
+            </div>
+            
+            <!--php goes here when sets up database.-->
+
+        </div>
+    </main>
+
+
         <script>
         document.addEventListener('DOMContentLoaded', () => {
             const images = document.querySelectorAll('.carousel-image');
@@ -104,7 +132,7 @@
                     img.className = baseClasses;
                     
                     if (index === pullingIndex) {
-                        img.classList.add('z-50', 'w-[70%]', 'left-[90%]', '-translate-x-1/2', '-translate-y-[55%]', 'scale-100', 'brightness-100', 'opacity-100', 'rotate-12');
+                        img.classList.add('z-50', 'w-[70%]', 'left-[85%]', '-translate-x-1/2', '-translate-y-[55%]', 'scale-100', 'brightness-100', 'opacity-100', 'rotate-12');
                     } else if (index === currentIndex) {
                         img.classList.add('z-40', 'w-[75%]', 'left-1/2', '-translate-x-1/2', '-translate-y-[60%]', 'scale-100', 'brightness-100', 'opacity-100', 'rotate-0');
                     } else if (index === (currentIndex + 1) % 3) {
@@ -129,7 +157,7 @@
                         pullingIndex = -1; 
                         updateCarousel();
                     }, 350); 
-                }, 3500);
+                }, 3000);
             }
 
             function stopCarousel() {
@@ -154,6 +182,39 @@
                 }
             });
         });
+    </script>
+
+    <script>
+        let cart = [];
+        const cartNum = document.getElementById('cart-badge');
+
+        function addToCart(productName, price) {
+            cart.push({ name: productName, price: price });
+            cartNum.innerText = cart.length;
+            
+            cartNum.classList.add('scale-150');
+            setTimeout(() => {
+                cartNum.classList.remove('scale-150');
+            }, 200);
+        }
+
+        function viewCart() {
+            if (cart.length === 0) {
+                alert("Your ImVidia cart is empty!");
+                return;
+            }
+            
+            let message = "🛒 YOUR CART:\n\n";
+            let total = 0;
+            
+            cart.forEach((item, index) => {
+                message += `${index + 1}. ${item.name} - RM ${item.price.toFixed(2)}\n`;
+                total += item.price;
+            });
+            
+            message += `\nTotal: RM ${total.toFixed(2)}\n\n(This will go to the checkout page later!)`;
+            alert(message);
+        }
     </script>
         </div>
     </header>
