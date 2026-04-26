@@ -1,0 +1,38 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        imvidia: {
+                            light: '#8DFFFF',
+                            DEFAULT: '#49C2FA',
+                            dark: '#1F2468',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-6">
+            <div class="flex justify-center md:justify-start h-16 items-center">
+                <a href="Index.html" class="flex-shrink-0 flex items-center cursor-pointer hover:scale-105 transition transform duration-300">
+                    <img src="assets/logo.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
+                    <span class="font-bold text-2xl tracking-tight text-gray-900" >ImVidia<span class="text-imvidia">.</span></span>
+                </a>
+            </div>
+        </div>
+    </nav> 
