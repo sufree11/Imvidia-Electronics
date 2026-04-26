@@ -30,17 +30,45 @@
     <nav class="bg-white shadow-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
              <div class="flex justify-between h-16 items-center">
-                <div class="flex-shrink-0 flex items-center cursor-pointer">
+                <a href="#" id="homeLink1" class="flex-shrink-0 flex items-center cursor-pointer">
                     <img src="assets/logo.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
                     <span class="font-bold text-2xl tracking-tight text-gray-900">ImVidia<span class="text-imvidia">.</span></span>
-                    </div>
+                </a>
+
+                <script>
+                    document.getElementById('homeLink1').addEventListener('click', function(e) {
+                    e.preventDefault();
+                        window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                        });
+                    });
+                </script>
 
                     <div class="hidden md:flex space-x-8 items-center">
-                    <a href="#" class="text-gray-600 hover:text-imvidia font-medium transition">Home</a>
-                    <a href="#catalog" class="text-gray-600 hover:text-imvidia font-medium transition">Catalog</a>
+                    <a href="#" id="homeLink2" class="text-gray-600 hover:text-imvidia font-medium transition">Home</a>
+                    <a href="#catalog" id="catalogLink1" class="text-gray-600 hover:text-imvidia font-medium transition">Catalog</a>
                     <a href="#" class="text-gray-600 hover:text-imvidia font-medium transition">Support</a>
+                    <script>
+                    document.getElementById('homeLink2').addEventListener('click', function(e) {
+                    e.preventDefault();
+                        window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                        });
+                    });
+                </script>
+                    <script>
+                    document.getElementById('catalogLink1').addEventListener('click', function(e) {
+                    e.preventDefault();
+                        window.scrollTo({
+                        top: document.getElementById('catalog').offsetTop - 80,
+                        behavior: 'smooth'
+                        });
+                    });
+                </script>
                     </div>
-
+                    
                     <div class="flex items-center space-x-4">
                     <a href="login.html" class="hidden md:block text-gray-600 hover:text-imvidia font-medium transition">
                         Log In
@@ -65,7 +93,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28 flex flex-col md:flex-row items-center">
             <div class="md:w-1/2 mb-10 md:mb-0">
                 <h1 class="text-4xl md:text-5xl font-extrabold leading-tight mb-4">
-                    Powering <span class="text-imvidia-light">Lives</span>, <br> for a Better <span class="text-imvidia">Price</span>.
+                    Powering <span class="text-imvidia-light">Lives</span>, <br> at a better <span class="text-imvidia">Price</span>.
                 </h1>
 
                 <p class="text-lg text-gray-300 mb-8">
@@ -73,9 +101,19 @@
                 </p>
 
                 <div class="flex space-x-4">
-                    <a href="#catalog" class="bg-imvidia hover:bg-imvidia-dark text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:-translate-y-1">
+                    <a href="#catalog" id="catalogLink2" class="bg-imvidia hover:bg-imvidia-dark text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:-translate-y-1">
                         Shop Now
                     </a>
+
+                    <script>
+                    document.getElementById('catalogLink2').addEventListener('click', function(e) {
+                    e.preventDefault();
+                        window.scrollTo({
+                        top: document.getElementById('catalog').offsetTop - 80,
+                        behavior: 'smooth'
+                        });
+                    });
+                </script>
                     <button class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:-translate-y-1">
                         Learn More
                     </button>
@@ -96,6 +134,7 @@
     <main id="catalog" class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
         
 
+                
         <div class="text-center mb-12">
             <h2 class="text-3xl font-bold text-gray-900">Featured Products</h2>
             <div class="w-24 h-1 bg-imvidia mx-auto mt-4 rounded"></div>
@@ -110,7 +149,7 @@
                 </a>
                 
                 <h3 class="text-2xl font-bold text-gray-500">Nothing here just yet...</h3>
-                <p class="text-gray-400 mt-2">Products will appear here once added to the database.</p>
+                <p class="text-gray-400 mt-2">Products will appear here.</p>
 
                 
             </div>
@@ -139,8 +178,27 @@
                 <div>
                     <h4 class="text-white font-bold mb-4 uppercase tracking-wider text-sm">Quick Links</h4>
                     <ul class="space-y-2 text-sm">
-                        <li><a href="#" class="hover:text-imvidia transition">Home</a></li>
-                        <li><a href="#catalog" class="hover:text-imvidia transition">Product Catalog</a></li>
+                        <li><a href="#" id="homeLink3" class="hover:text-imvidia transition">Home</a>
+                        <script>
+                            document.getElementById('homeLink3').addEventListener('click', function(e) {
+                    e.preventDefault();
+                        window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                        });
+                    });
+                        </script></li>
+                        
+                        <li><a href="#catalog" id="catalogLink3" class="hover:text-imvidia transition">Product Catalog</a>
+                        <script>
+                            document.getElementById('catalogLink3').addEventListener('click', function(e) {
+                    e.preventDefault();
+                        window.scrollTo({
+                        top: document.getElementById('catalog').offsetTop - 80,
+                        behavior: 'smooth'
+                        });
+                    });
+                        </script></li>
                         <li><a href="#" class="hover:text-imvidia transition">About the Company</a></li>
                         <li><a href="#" class="hover:text-imvidia transition">Contact Support</a></li>
                     </ul>
@@ -149,8 +207,8 @@
                 <div>
                     <h4 class="text-white font-bold mb-4 uppercase tracking-wider text-sm">Connect With Us</h4>
                     <ul class="space-y-2 text-sm mb-6">
-                        <li><i class="fa-solid fa-envelope mr-2 text-imvidia"></i> support@imvidia.tech</li>
-                        <li><i class="fa-solid fa-phone mr-2 text-imvidia"></i> +60 12-345 6789</li>
+                        <li><i class="fa-solid fa-envelope mr-2 text-imvidia"></i> imvidia67@gmail.com</li>
+                        <li><i class="fa-solid fa-phone mr-2 text-imvidia"></i> +6017 676 7676</li>
                     </ul>
                     <div class="flex space-x-4">
                         <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center">
@@ -171,7 +229,7 @@
             </div>
 
             <div class="mt-12 pt-8 border-t border-gray-800 text-sm text-center">
-                <p>&copy; 2026 ImVidia Electronics. Developed by Mohd Imran Shakir, Mohammad Sufree, Putera Mikhail Fallon, and Muhammad Firas Faiq.</p>
+                <p>&copy; 2015 ImVidia Electronics. Developed by Mohd Imran Shakir, Mohammad Sufree, Putera Mikhail Fallon, and Muhammad Firas Faiq.</p>
             </div>
         </div>
     </footer>
