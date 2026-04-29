@@ -10,6 +10,7 @@
 
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
@@ -24,24 +25,102 @@
             }
         }
     </script>
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+        .dark {
+            --bg: #020617;
+            --surface: #111827;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
+        body {
+            background-color: var(--bg) !important;
+            color: var(--text-primary) !important;
+        }
+        .dark .bg-white { background-color: var(--surface) !important; }
+        .dark .bg-gray-50 { background-color: #020617 !important; }
+        .dark .bg-gray-100 { background-color: #17203a !important; }
+        .dark .bg-gray-900 { background-color: #020617 !important; }
+        .dark .bg-gray-700 { background-color: #1f2937 !important; }
+        .dark .text-gray-900,
+        .dark .text-gray-800,
+        .dark .text-gray-700 {
+            color: var(--text-primary) !important;
+        }
+        .dark .text-gray-600,
+        .dark .text-gray-500,
+        .dark .text-gray-400 {
+            color: var(--text-secondary) !important;
+        }
+        .dark .border-gray-100,
+        .dark .border-gray-200 {
+            border-color: var(--border-color) !important;
+        }
+        .dark .shadow-sm,
+        .dark .shadow-xl {
+            box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.4), 0 4px 6px -4px rgba(15, 23, 42, 0.1) !important;
+        }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 1.5px, transparent 1.5px); background-size: 40px 40px;">
-    <nav class="bg-white shadow-sm sticky top-0 z-50">
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 1.5px, transparent 1.5px); background-size: 40px 40px;">
+    <nav class="bg-white shadow-sm sticky top-0 z-50 dark:bg-slate-950">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-6">
-            <div class="flex justify-center md:justify-start h-16 items-center">
+            <div class="flex justify-between md:justify-start h-16 items-center w-full">
                 <a href="Index.html" class="flex-shrink-0 flex items-center cursor-pointer hover:scale-105 transition transform duration-300">
-                    <img src="assets/logo.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
-                    <span class="font-bold text-2xl tracking-tight text-gray-900" >ImVidia<span class="text-imvidia">.</span></span>
+                    <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
+                    <span class="font-bold text-2xl tracking-tight text-gray-900 dark:text-white" >ImVidia<span class="text-imvidia">.</span></span>
                 </a>
+                <button id="dark-mode-toggle" type="button" class="p-2 rounded-full text-gray-600 hover:text-imvidia transition dark:text-gray-300" aria-label="Toggle dark mode" onclick="toggleDarkMode()">
+                    <i id="dark-mode-icon" class="fa-solid fa-moon"></i>
+                </button>
             </div>
         </div>
     </nav> 
 
+    <script>
+        function updateLogoForMode() {
+            const logo = document.getElementById('navbarLogo');
+            if (!logo) return;
+            logo.src = document.documentElement.classList.contains('dark') ? 'assets/logo-light.svg' : 'assets/logo.svg';
+        }
+
+        function updateDarkToggleIcon() {
+            const icon = document.getElementById('dark-mode-icon');
+            if (!icon) return;
+            icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('imvidiaDarkMode', document.documentElement.classList.contains('dark') ? 'true' : 'false');
+            updateLogoForMode();
+            updateDarkToggleIcon();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const stored = localStorage.getItem('imvidiaDarkMode');
+            if (stored === 'true') {
+                document.documentElement.classList.add('dark');
+            }
+            updateLogoForMode();
+            updateDarkToggleIcon();
+        });
+    </script>
+
     <main class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
 
-        <div class="max-w-md w-full bg-white px-8 pb-8 pt-14 rounded-2xl shadow-xl border border-gray-100 relative mt-8 z-10">
+        <div class="max-w-md w-full bg-white dark:bg-slate-900 px-8 pb-8 pt-14 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 relative mt-8 z-10">
             
-            <div class="absolute -top-12 left-1/2 transform -translate-x-1/2 w-24 h-24 bg-white rounded-full shadow-lg overflow-hidden flex items-center justify-center">
+            <div class="absolute -top-12 left-1/2 transform -translate-x-1/2 w-24 h-24 bg-white dark:bg-slate-800 rounded-full shadow-lg overflow-hidden flex items-center justify-center">
                 
                 <img src="assets/logo.svg" alt="Logo" class="w-full h-full object-cover">
             </div>
