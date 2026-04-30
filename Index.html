@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js"></script>
 
+    <!-- custom colour and theme configuration -->
+
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -26,6 +28,8 @@
             }
         }
     </script>
+
+    <!-- darkmode theme config -->
     <style>
         :root {
             --bg: #f8fafc;
@@ -70,11 +74,15 @@
         .dark .shadow-xl {
             box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.4), 0 4px 6px -4px rgba(15, 23, 42, 0.1) !important;
         }
+        .dark body {
+            background-image: repeating-linear-gradient(22.5deg, transparent, transparent 2px, rgba(148, 163, 184, 0.08) 2px, rgba(148, 163, 184, 0.08) 3px, transparent 3px, transparent 8px), repeating-linear-gradient(67.5deg, transparent, transparent 2px, rgba(203, 213, 225, 0.07) 2px, rgba(203, 213, 225, 0.07) 3px, transparent 3px, transparent 8px), repeating-linear-gradient(112.5deg, transparent, transparent 2px, rgba(100, 116, 139, 0.06) 2px, rgba(100, 116, 139, 0.06) 3px, transparent 3px, transparent 8px), repeating-linear-gradient(157.5deg, transparent, transparent 2px, rgba(51, 65, 85, 0.05) 2px, rgba(51, 65, 85, 0.05) 3px, transparent 3px, transparent 8px) !important;
+        }
     </style>
 </head>
 
-<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100">
-    <nav class="bg-white shadow-md sticky top-0 z-50 dark:bg-slate-950">
+<!--Nav bar-->
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: repeating-linear-gradient(22.5deg, transparent, transparent 2px, rgba(75, 85, 99, 0.06) 2px, rgba(75, 85, 99, 0.06) 3px, transparent 3px, transparent 8px), repeating-linear-gradient(67.5deg, transparent, transparent 2px, rgba(107, 114, 128, 0.05) 2px, rgba(107, 114, 128, 0.05) 3px, transparent 3px, transparent 8px), repeating-linear-gradient(112.5deg, transparent, transparent 2px, rgba(55, 65, 81, 0.04) 2px, rgba(55, 65, 81, 0.04) 3px, transparent 3px, transparent 8px), repeating-linear-gradient(157.5deg, transparent, transparent 2px, rgba(31, 41, 55, 0.03) 2px, rgba(31, 41, 55, 0.03) 3px, transparent 3px, transparent 8px);">
+    <nav class="bg-white/95 shadow-md sticky top-0 z-50 dark:bg-slate-950/95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
              <div class="flex justify-between h-16 items-center">
                 <a href="#" id="homeLink1" class="flex-shrink-0 flex items-center cursor-pointer">
@@ -139,8 +147,6 @@
              </div>
         </div>
     </nav>
-
-    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 1.5px, transparent 1.5px); background-size: 40px 40px; z-index: -1;"></div>
 
     <script>
         function updateLogoForMode() {
