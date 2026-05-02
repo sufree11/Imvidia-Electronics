@@ -121,47 +121,7 @@
         <div class="max-w-2xl w-full bg-white dark:bg-slate-900 p-8 sm:p-10 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 relative z-10 transition-all duration-500" id="main-card">
             
             
-            <div id="role-selection" class="block animate-fade-in-up">
-                <div class="text-center mb-10">
-                    <h2 class="text-3xl font-extrabold text-gray-900 mb-2">Create an Account</h2>
-                    <p class="text-gray-500 text-sm">How would you like to register today?</p>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Customer Option -->
-                    <button onclick="showForm('customer')" class="flex flex-col items-center justify-center p-8 border-2 border-gray-200 rounded-xl hover:border-imvidia hover:bg-green-50 hover:shadow-md transition duration-300 group">
-                        <div class="w-16 h-16 rounded-full bg-gray-100 group-hover:bg-imvidia-light flex items-center justify-center mb-4 transition duration-300">
-                            <i class="fa-solid fa-user text-2xl text-gray-500 group-hover:text-white transition duration-300"></i>
-                        </div>
-                        <span class="font-bold text-lg text-gray-900 mb-2">Customer</span>
-                        <span class="text-sm text-gray-500 text-center">Shop for appliances and track your orders easily.</span>
-                    </button>
-                    
-                    <!-- Admin Option -->
-                    <button onclick="showForm('admin')" class="flex flex-col items-center justify-center p-8 border-2 border-gray-200 rounded-xl hover:border-gray-900 hover:bg-gray-50 hover:shadow-md transition duration-300 group">
-                        <div class="w-16 h-16 rounded-full bg-gray-100 group-hover:bg-gray-800 flex items-center justify-center mb-4 transition duration-300">
-                            <i class="fa-solid fa-shield-halved text-2xl text-gray-500 group-hover:text-white transition duration-300"></i>
-                        </div>
-                        <span class="font-bold text-lg text-gray-900 mb-2">Administrator</span>
-                        <span class="text-sm text-gray-500 text-center">Manage inventory, process orders, and staff tools.</span>
-                    </button>
-                </div>
-
-                <div class="mt-8 text-center text-sm text-gray-600 border-t border-gray-100 pt-6">
-                    Already have an account? 
-                    <a href="login.html" class="font-bold text-imvidia hover:text-imvidia-dark transition">
-                        Log in here
-                    </a>
-                </div>
-            </div>
-
-            <!-- ========================================== -->
-            <!-- VIEW 2: CUSTOMER FORM -->
-            <!-- ========================================== -->
-            <div id="customer-form-container" class="hidden animate-fade-in-up">
-                <button onclick="showRoleSelection()" class="text-sm text-gray-500 hover:text-imvidia mb-6 flex items-center transition">
-                    <i class="fa-solid fa-arrow-left mr-2"></i> Back to selection
-                </button>
+            <div id="customer-form-container" class="animate-fade-in-up">
                 
                 <div class="text-center mb-8">
                     <h2 class="text-2xl font-bold text-gray-900">Customer Registration</h2>
@@ -172,7 +132,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                            <input type="text" required class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm" placeholder="John">
+                            <input type="text" required class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm" placeholder="Jane">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
@@ -182,79 +142,35 @@
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                        <input type="email" required class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm" placeholder="john@example.com">
+                        <input type="email" required class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm" placeholder="thiccthighs@example.com">
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Shipping Address</label>
-                        <textarea required rows="2" class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm" placeholder="123 Jalan Ampang..."></textarea>
+                        <textarea required rows="2" class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm" placeholder="123 New Eridu..."></textarea>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                            <input type="password" required class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm" placeholder="••••••••">
+                            <input type="password" required class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-                            <input type="password" required class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm" placeholder="••••••••">
+                            <input type="password" required class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm">
                         </div>
                     </div>
 
                     <button type="submit" class="w-full py-3 px-4 rounded-lg shadow-md text-sm font-bold text-white bg-imvidia hover:bg-imvidia-dark transition mt-4">
                         Create Customer Account
                     </button>
-                </form>
-            </div>
-
-            <!-- ========================================== -->
-            <!-- VIEW 3: ADMIN FORM -->
-            <!-- ========================================== -->
-            <div id="admin-form-container" class="hidden animate-fade-in-up">
-                <button onclick="showRoleSelection()" class="text-sm text-gray-500 hover:text-gray-900 mb-6 flex items-center transition">
-                    <i class="fa-solid fa-arrow-left mr-2"></i> Back to selection
-                </button>
-                
-                <div class="text-center mb-8">
-                    <h2 class="text-2xl font-bold text-gray-900">Administrator Setup</h2>
-                    <p class="text-gray-500 text-sm mt-1">Authorized personnel only.</p>
+                      <div class="mt-8 text-center text-sm text-gray-600 border-t border-gray-100 pt-6">
+                    Already have an account? 
+                    <a href="login.html" class="font-bold text-imvidia hover:text-imvidia-dark transition">
+                        Log in here
+                    </a>
                 </div>
-
-                <form action="#" method="POST" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                        <input type="text" required class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-gray-900 focus:border-gray-900 sm:text-sm" placeholder="Imran Shakir">
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Admin ID</label>
-                            <input type="text" required class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-gray-900 focus:border-gray-900 sm:text-sm" placeholder="ADM-001">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                            <select class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-gray-900 focus:border-gray-900 sm:text-sm">
-                                <option>Inventory</option>
-                                <option>Sales</option>
-                                <option>IT Support</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                            <input type="password" required class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-gray-900 focus:border-gray-900 sm:text-sm" placeholder="••••••••">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Admin Secret Key</label>
-                            <input type="password" required class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-red-300 rounded-lg focus:ring-red-500 focus:border-red-500 sm:text-sm bg-red-50" placeholder="Required for access">
-                        </div>
-                    </div>
-
-                    <button type="submit" class="w-full py-3 px-4 rounded-lg shadow-md text-sm font-bold text-white bg-gray-900 hover:bg-gray-800 transition mt-4">
-                        Register Admin
-                    </button>
+            </div>
                 </form>
             </div>
 
@@ -273,37 +189,5 @@
         }
     </style>
 
-    <script>
-        const roleSelection = document.getElementById('role-selection');
-        const customerForm = document.getElementById('customer-form-container');
-        const adminForm = document.getElementById('admin-form-container');
-
-        function showForm(role) {
-            // Hide selection
-            roleSelection.classList.add('hidden');
-            roleSelection.classList.remove('block');
-
-            // Show appropriate form
-            if (role === 'customer') {
-                customerForm.classList.remove('hidden');
-                customerForm.classList.add('block');
-            } else if (role === 'admin') {
-                adminForm.classList.remove('hidden');
-                adminForm.classList.add('block');
-            }
-        }
-
-        function showRoleSelection() {
-            // Hide all forms
-            customerForm.classList.add('hidden');
-            customerForm.classList.remove('block');
-            adminForm.classList.add('hidden');
-            adminForm.classList.remove('block');
-
-            // Show selection
-            roleSelection.classList.remove('hidden');
-            roleSelection.classList.add('block');
-        }
-    </script>
 </body>
 </html>
