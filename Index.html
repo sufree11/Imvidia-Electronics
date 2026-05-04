@@ -9,8 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js"></script>
 
-    <!-- custom colour and theme configuration -->
-
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -29,7 +27,6 @@
         }
     </script>
 
-    <!-- darkmode theme config -->
     <style>
         :root {
             --bg: #f8fafc;
@@ -74,14 +71,30 @@
         .dark .shadow-xl {
             box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.4), 0 4px 6px -4px rgba(15, 23, 42, 0.1) !important;
         }
-        .dark body {
-            background-image: repeating-linear-gradient(22.5deg, transparent, transparent 2px, rgba(148, 163, 184, 0.08) 2px, rgba(148, 163, 184, 0.08) 3px, transparent 3px, transparent 8px), repeating-linear-gradient(67.5deg, transparent, transparent 2px, rgba(203, 213, 225, 0.07) 2px, rgba(203, 213, 225, 0.07) 3px, transparent 3px, transparent 8px), repeating-linear-gradient(112.5deg, transparent, transparent 2px, rgba(100, 116, 139, 0.06) 2px, rgba(100, 116, 139, 0.06) 3px, transparent 3px, transparent 8px), repeating-linear-gradient(157.5deg, transparent, transparent 2px, rgba(51, 65, 85, 0.05) 2px, rgba(51, 65, 85, 0.05) 3px, transparent 3px, transparent 8px) !important;
+
+        
+        .dropdown-wrapper {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dropdown-wrapper.open {
+            grid-template-rows: 1fr;
+        }
+        .dropdown-inner {
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-10px); 
+            transition: opacity 0.4s ease-out, transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dropdown-wrapper.open .dropdown-inner {
+            opacity: 1;
+            transform: translateY(0); 
         }
     </style>
 </head>
 
-<!--Nav bar-->
-<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: repeating-linear-gradient(22.5deg, transparent, transparent 2px, rgba(75, 85, 99, 0.06) 2px, rgba(75, 85, 99, 0.06) 3px, transparent 3px, transparent 8px), repeating-linear-gradient(67.5deg, transparent, transparent 2px, rgba(107, 114, 128, 0.05) 2px, rgba(107, 114, 128, 0.05) 3px, transparent 3px, transparent 8px), repeating-linear-gradient(112.5deg, transparent, transparent 2px, rgba(55, 65, 81, 0.04) 2px, rgba(55, 65, 81, 0.04) 3px, transparent 3px, transparent 8px), repeating-linear-gradient(157.5deg, transparent, transparent 2px, rgba(31, 41, 55, 0.03) 2px, rgba(31, 41, 55, 0.03) 3px, transparent 3px, transparent 8px);">
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
     <nav class="bg-white/95 shadow-md sticky top-0 z-50 dark:bg-slate-950/95">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
              <div class="flex justify-between h-16 items-center">
@@ -203,9 +216,10 @@
                         });
                     });
                 </script>
-                    <button class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:-translate-y-1">
+                <a href="product.html"><button  class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:-translate-y-1">
                         Learn More
-                    </button>
+                    </button></a>
+                    
                 </div>
             </div>
             <div class="md:w-1/2 w-full flex justify-center relative h-64 md:h-80 mt-10 md:mt-0">
@@ -222,55 +236,65 @@
 
     <main id="catalog" class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
         
-
-                
         <div class="text-center mb-12">
-            <h2 class="text-3xl font-bold text-gray-900">Products</h2>
+            <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Products</h2>
             <div class="w-24 h-1 bg-imvidia mx-auto mt-4 rounded"></div>
-                <div class=" grid grid-cols-1 md:grid-cols-5 lg:grid-cols-5 gap-8 mt-12">
-                    <button onclick="showForm('kitchenAppliances')" class=" backdrop-blur-lg flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl hover:border-imvidia hover:bg-imvidia hover:shadow-md transition duration-300 group">
-                            <iconify-icon icon="material-symbols-light:kitchen-outline" class="z-10 text-5xl text-gray-500 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
-                            <br>
-                        <span class="font-medium text-lg text-gray-500 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Kitchen<br>Appliances</span>
+            
+                <div class="grid grid-cols-1 md:grid-cols-5 lg:grid-cols-5 gap-8 mt-12 relative z-10">
+                    <button id="cat-kitchen" onclick="toggleCategory('Kitchen Appliances', 'cat-kitchen')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group">
+                        <iconify-icon icon="material-symbols-light:kitchen-outline" class="z-10 text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
+                        <br>
+                        <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Kitchen<br>Appliances</span>
+                        <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
                     </button>
-                    <button onclick="showForm('audioVisual')" class=" backdrop-blur-lg flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl hover:border-imvidia hover:bg-imvidia hover:shadow-md transition duration-300 group">
-                            <iconify-icon icon="fluent:tv-48-regular" class="text-5xl text-gray-500 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
-                            <br>
-                        <span class="font-medium text-lg text-gray-500 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Audio<br>Visual</span>
+                    
+                    <button id="cat-audio" onclick="toggleCategory('Audio Visual', 'cat-audio')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group">
+                        <iconify-icon icon="fluent:tv-48-regular" class="text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
+                        <br>
+                        <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Audio<br>Visual</span>
+                        <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
                     </button>
-                    <button onclick="showForm('portableDevices')" class=" backdrop-blur-lg flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl hover:border-imvidia hover:bg-imvidia hover:shadow-md transition duration-300 group">
-                            <iconify-icon icon="fluent:phone-laptop-20-regular" class="text-5xl text-gray-500 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
-                            <br>
-                        <span class="font-medium text-lg text-gray-500 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Portable<br>Devices</span>
+                    
+                    <button id="cat-portable" onclick="toggleCategory('Portable Devices', 'cat-portable')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group">
+                        <iconify-icon icon="fluent:phone-laptop-20-regular" class="text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
+                        <br>
+                        <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Portable<br>Devices</span>
+                        <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
                     </button>
-                    <button onclick="showForm('personalCare')" class=" backdrop-blur-lg flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl hover:border-imvidia hover:bg-imvidia hover:shadow-md transition duration-300 group">
-                            <iconify-icon icon="ph:hair-dryer-light" class="text-5xl text-gray-500 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
-                            <br>
-                        <span class="font-medium text-lg text-gray-500 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Personal<br>Care</span>
+                    
+                    <button id="cat-personal" onclick="toggleCategory('Personal Care', 'cat-personal')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group">
+                        <iconify-icon icon="ph:hair-dryer-light" class="text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
+                        <br>
+                        <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Personal<br>Care</span>
+                        <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
                     </button>
-                    <button onclick="showForm('homeAppliances')" class=" backdrop-blur-lg flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl hover:border-imvidia hover:bg-imvidia hover:shadow-md transition duration-300 group">
-                            <iconify-icon icon="material-symbols-light:dishwasher-gen-outline-rounded" class="text-5xl text-gray-500 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
-                            <br>
-                        <span class="font-medium text-lg text-gray-500 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Home<br>Appliances</span>
+                    
+                    <button id="cat-home" onclick="toggleCategory('Home Appliances', 'cat-home')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group">
+                        <iconify-icon icon="material-symbols-light:dishwasher-gen-outline-rounded" class="text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
+                        <br>
+                        <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Home<br>Appliances</span>
+                        <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
                     </button>
                 </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            
-            <div id="productPanel" class="col-span-1 sm:col-span-2 lg:col-span-4 flex flex-col items-center justify-center py-16 bg-white rounded-xl shadow-sm border border-dashed border-gray-300">
-                <a href="https://www.google.com/logos/2010/pacman10-i.html" target="_blank" rel="noopener noreferrer" title="A blue ghost...">
-                <i class="fa-solid fa-ghost text-6xl text-gray-300 mb-4 hover:text-imvidia duration-300 hover:scale-110 transition transform duration-300"></i>
-                </a>
-                
-                <h3 class="text-2xl font-bold text-gray-500">Nothing here just yet...</h3>
-                <p class="text-gray-400 mt-2">Products will appear here.</p>
+        
+        <div id="productContainer" class="dropdown-wrapper mt-6 relative z-0">
+            <div class="dropdown-inner">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    
+                    
+                    <div id="productPanel" class="col-span-1 sm:col-span-2 lg:col-span-4 flex flex-col items-center justify-center py-16 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-dashed border-gray-300 dark:border-slate-700">
+                        <a href="https://www.google.com/logos/2010/pacman10-i.html" target="_blank" rel="noopener noreferrer" title="A blue ghost...">
+                            <i class="fa-solid fa-ghost text-6xl text-gray-300 dark:text-slate-600 mb-4 hover:text-imvidia duration-300 hover:scale-110 transition transform"></i>
+                        </a>
+                        
+                        <h3 class="text-2xl font-bold text-gray-500 dark:text-gray-400">Nothing here just yet...</h3>
+                        <p id="category-text" class="text-gray-400 dark:text-gray-500 mt-2">Products will appear here.</p>
+                    </div>
 
-                
+                </div>
             </div>
-            
-            <!--php goes here when sets up database.-->
-
         </div>
     </main>
 
@@ -349,7 +373,8 @@
         </div>
     </footer>
 
-        <script>
+    <!-- Carousel Logic -->
+    <script>
         document.addEventListener('DOMContentLoaded', () => {
             const images = document.querySelectorAll('.carousel-image');
             let currentIndex = 0;
@@ -419,6 +444,7 @@
         });
     </script>
 
+    <!-- Cart Logic -->
     <script>
         let cart = [];
         const cartNum = document.getElementById('cart-badge');
@@ -451,6 +477,63 @@
             alert(message);
         }
     </script>
-        </div>
-    </header>
+
+    <!-- category anim -->
+    <script>
+        let activeCategoryId = null;
+
+        function toggleCategory(categoryName, btnId) {
+            const container = document.getElementById('productContainer');
+            const catText = document.getElementById('category-text');
+            const clickedBtn = document.getElementById(btnId);
+            const clickedArrow = clickedBtn.querySelector('.arrow-icon');
+
+            // Test if open if open then close 
+            if (activeCategoryId === btnId) {
+                container.classList.remove('open');
+                
+                
+                clickedArrow.classList.remove('rotate-180', 'text-imvidia', 'opacity-100');
+                
+                activeCategoryId = null;
+            } 
+            
+            else {
+                
+                if (activeCategoryId) {
+                    const prevBtn = document.getElementById(activeCategoryId);
+                    if (prevBtn) {
+                        const prevArrow = prevBtn.querySelector('.arrow-icon');
+                        if (prevArrow) prevArrow.classList.remove('rotate-180', 'text-imvidia', 'opacity-100');
+                    }
+                }
+
+                
+                if ( categoryName === 'Audio Visual' || categoryName==='Personal Care')
+                {
+                    catText.innerText = categoryName + " products will appear here.";
+                } else {
+                catText.innerText = categoryName + " will appear here.";
+                }
+                
+                container.classList.add('open');
+
+               
+                clickedArrow.classList.add('rotate-180', 'text-imvidia', 'opacity-100');
+
+                activeCategoryId = btnId;
+
+                
+                setTimeout(() => {
+                    const catalogTop = document.getElementById('catalog').offsetTop;
+                    window.scrollTo({
+                        top: catalogTop + 100, 
+                        behavior: 'smooth'
+                    });
+                }, 300); 
+            }
+        }
+    </script>
+
 </body>
+</html>

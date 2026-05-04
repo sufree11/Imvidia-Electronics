@@ -1,0 +1,416 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details - ImVidia</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        imvidia: {
+                            light: '#8DFFFF',
+                            DEFAULT: '#49C2FA',
+                            dark: '#1F2468',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+        .dark {
+            --bg: #020617;
+            --surface: #111827;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
+        body {
+            background-color: var(--bg) !important;
+            color: var(--text-primary) !important;
+            -webkit-font-smoothing: antialiased;
+        }
+        .dark .bg-white { background-color: var(--surface) !important; }
+        .dark .bg-gray-50 { background-color: #020617 !important; }
+        .dark .bg-gray-100 { background-color: #0f172a !important; } /* Deeper slate for image stage */
+        .dark .bg-gray-900 { background-color: #020617 !important; }
+        .dark .bg-gray-700 { background-color: #1f2937 !important; }
+        .dark .text-gray-900,
+        .dark .text-gray-800,
+        .dark .text-gray-700 {
+            color: var(--text-primary) !important;
+        }
+        .dark .text-gray-600,
+        .dark .text-gray-500,
+        .dark .text-gray-400 {
+            color: var(--text-secondary) !important;
+        }
+        .dark .border-gray-100,
+        .dark .border-gray-200 {
+            border-color: var(--border-color) !important;
+        }
+        .dark .shadow-sm,
+        .dark .shadow-xl {
+            box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.4), 0 4px 6px -4px rgba(15, 23, 42, 0.1) !important;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
+    
+    <!-- Navigation -->
+    <nav class="bg-white/95 shadow-sm border-b border-gray-100 dark:border-slate-800 sticky top-0 z-50 dark:bg-slate-950/95 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+             <div class="flex justify-between h-16 items-center">
+                <a href="Index.html" class="flex-shrink-0 flex items-center cursor-pointer">
+                    <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
+                    <span class="font-bold text-2xl tracking-tight text-gray-900 dark:text-white">ImVidia<span class="text-imvidia">.</span></span>
+                </a>
+
+                <div class="hidden md:flex space-x-8 items-center">
+                    <a href="Index.html" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Home</a>
+                    <a href="Index.html#catalog" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Catalog</a>
+                    <a href="#" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Support</a>
+                </div>
+                    
+                <div class="flex items-center space-x-4">
+                    <button id="dark-mode-toggle" type="button" class="p-2 rounded-full text-gray-600 hover:text-imvidia transition dark:text-gray-300" aria-label="Toggle dark mode" onclick="toggleDarkMode()">
+                        <i id="dark-mode-icon" class="fa-solid fa-moon"></i>
+                    </button>
+
+                    <a href="login.html" class="hidden md:block text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">
+                        Log In
+                    </a>
+
+                    <a href="register.html" class="hidden md:block bg-imvidia hover:bg-imvidia-dark text-white font-medium py-2 px-4 rounded-lg shadow-sm transition">
+                        Register
+                    </a>
+
+                    <button class="relative p-2 text-gray-600 hover:text-imvidia transition dark:text-gray-300" onclick="viewCart()">
+                        <i class="fa-solid fa-cart-shopping text-xl"></i>
+                        <span id="cart-badge" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-imvidia rounded-full transition-transform duration-200">
+                            0
+                        </span>
+                    </button>
+                </div>
+             </div>
+        </div>
+    </nav>
+
+    <!-- ========================================== -->
+    <!-- PREMIUM PRODUCT TEMPLATE -->
+    <!-- ========================================== -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-24 w-full relative z-10">
+        
+        <nav class="flex text-xs font-medium text-gray-400 dark:text-slate-500 mb-10 uppercase tracking-widest" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-2">
+                <li><a href="Index.html" class="hover:text-imvidia transition">Home</a></li>
+                <li><span class="mx-1">/</span></li>
+                <li><a href="Index.html#catalog" class="hover:text-imvidia transition">Catalog</a></li>
+                <li><span class="mx-1">/</span></li>
+                <li><span class="hover:text-imvidia cursor-pointer transition">Category Placeholder</span></li>
+            </ol>
+        </nav>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24">
+            
+            <!-- LEFT: Image Gallery with Seamless Fade Functionality -->
+            <div class="lg:col-span-7 flex flex-col space-y-6">
+                <!-- Main Stage -->
+                <div id="mainPic" class="aspect-square bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden flex items-center justify-center relative shadow-sm border border-gray-100/50 dark:border-slate-800/50">
+                    <!-- Notice the w=1200 high-res image here! -->
+                    <!-- Also added transition-opacity duration-200 for the fade effect -->
+                    <img id="main-image" src="assets/crunchyteio.png" alt="Product Image" class="w-full h-full object-cover transition-opacity duration-200" style="opacity: 1;">
+                </div>
+                
+                <!-- Thumbnails -->
+                <div class="flex space-x-4">
+                    <!-- Thumbnail 1 (Active) -->
+                    <!-- data-full-image holds the high-res w=1200 version! -->
+                    <!-- the actual <img> tag holds the low-res w=200 version for faster loading! -->
+                    <button onclick="changeImage(this)" data-full-image="assets/crunchyteio.png" class="thumb-btn w-20 h-20 bg-white dark:bg-slate-900 rounded-2xl border-2 border-gray-900 dark:border-white opacity-100 overflow-hidden cursor-pointer transition-all duration-300">
+                         <img src="assets/crunchyteio.png" alt="Thumb 1" class="w-full h-full object-cover pointer-events-none">
+                    </button>
+                    
+                    <!-- Thumbnail 2 (Inactive) -->
+                    <button onclick="changeImage(this)" data-full-image="assets/TamaplushNo.png" class="thumb-btn w-20 h-20 bg-white dark:bg-slate-900 rounded-2xl border border-transparent opacity-50 hover:opacity-100 overflow-hidden cursor-pointer transition-all duration-300">
+                         <img src="assets/TamaplushNo.png" alt="Thumb 2" class="w-full h-full object-cover pointer-events-none">
+                    </button>
+                </div>
+            </div>
+
+            <!-- RIGHT: Typography-focused Details -->
+            <div class="lg:col-span-5 flex flex-col justify-center">
+                
+                <p class="text-sm text-imvidia font-bold tracking-widest uppercase mb-4">portable devices</p>
+                <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-6 tracking-tight leading-[1.1]">
+                    [Placeholder Product Name]
+                </h1>
+                
+                <p class="text-2xl md:text-3xl font-medium text-gray-900 dark:text-white mb-8">
+                    RM 0.00
+                </p>
+
+                <!-- Refined Description -->
+                <div class="prose prose-lg text-gray-500 dark:text-gray-400 mb-10 leading-relaxed font-light">
+                    <p>
+                        TAMAMOTAMAMOTAMAMOTAMAMO HACHIMIHACHIMIHACHIMIHACHIMI Once connected to the database, this text will automatically update to the actual item.
+                    </p>
+                </div>
+
+                <!-- Clean Specs Divider List -->
+                <div class="border-t border-b border-gray-200 dark:border-slate-800 py-6 mb-10">
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-gray-500 dark:text-gray-400 font-medium">Availability</span>
+                        <span class="text-gray-900 dark:text-white font-semibold">In Stock</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-gray-500 dark:text-gray-400 font-medium">Delivery</span>
+                        <span class="text-gray-900 dark:text-white font-semibold">1-2 Business Days</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-gray-500 dark:text-gray-400 font-medium">Warranty</span>
+                        <span class="text-gray-900 dark:text-white font-semibold">1 Year Included</span>
+                    </div>
+                </div>
+
+                <!-- Add to Cart Mechanism -->
+                <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                    
+                    <!-- High-End Quantity Pill -->
+                    <div class="sm:w-32">
+                        <div class="flex items-center justify-between border border-gray-300 dark:border-slate-700 rounded-full h-14 px-4 bg-white dark:bg-slate-900">
+                            <button type="button" class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition" onclick="document.getElementById('qty').value = Math.max(1, parseInt(document.getElementById('qty').value) - 1)">
+                                <i class="fa-solid fa-minus text-xs"></i>
+                            </button>
+                            <input type="number" id="qty" value="1" min="1" class="w-10 text-center border-none bg-transparent font-semibold focus:ring-0 text-gray-900 dark:text-white p-0">
+                            <button type="button" class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition" onclick="document.getElementById('qty').value = parseInt(document.getElementById('qty').value) + 1">
+                                <i class="fa-solid fa-plus text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Stark Inverted CTA Button (Apple-style) -->
+                    <button onclick="addToCart('[Placeholder Product]', 0.00)" class="flex-1 bg-imvidia dark:bg-imvidia-dark text-white dark:text-white hover:bg-imvidia dark:hover:bg-imvidia dark:hover:text-white h-14 rounded-full font-bold transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-imvidia/25 hover:-translate-y-1">
+                        <span>Add to Cart</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer (Unchanged) -->
+    <footer class="bg-gray-900 text-gray-400 py-12 border-t border-gray-800 relative z-10 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <div class="flex items-center cursor-pointer mb-4">
+                        <img src="assets/logo-light.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
+                        <span class="font-bold text-2xl tracking-tight text-white">ImVidia<span class="text-imvidia">.</span></span>
+                    </div>
+                    <p class="text-sm mb-4">
+                        Innovative & affordable electronics for the modern household. Power your life with ImVidia.
+                    </p>
+                    <p class="text-sm">
+                        Disclaimer: <br> This is not a legitimate company. This is a group project for <span class="text-white font-medium">CSC264</span> & <span class="text-white font-medium">ISP250</span>.
+                    </p>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-4 uppercase tracking-wider text-sm">Directories</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="Index.html" class="hover:text-imvidia transition">Home</a></li>
+                        <li><a href="Index.html#catalog" class="hover:text-imvidia transition">Product Catalog</a></li>
+                        <li><a href="#" class="hover:text-imvidia transition">About the Company</a></li>
+                        <li><a href="#" class="hover:text-imvidia transition">Contact Support</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-4 uppercase tracking-wider text-sm">Connect With Us</h4>
+                    <ul class="space-y-2 text-sm mb-6">
+                        <li><i class="fa-solid fa-envelope mr-2 text-imvidia"></i> imvidia67@gmail.com</li>
+                        <li><i class="fa-solid fa-phone mr-2 text-imvidia"></i> +6017 676 7676</li>
+                    </ul>
+                    <div class="flex space-x-4">
+                        <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center">
+                            <i class="fa-brands fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center">
+                            <i class="fa-brands fa-twitter"></i>
+                        </a>
+                        <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center">
+                            <i class="fa-brands fa-instagram"></i>
+                        </a>
+                        <a href="https://github.com/sufree11/Imvidia-Electronics" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center">
+                            <i class="fa-brands fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-12 pt-8 border-t border-gray-800 text-sm text-center">
+                <p>&copy; 2015 ImVidia Electronics. Developed by Mohd Imran Shakir, Mohammad Sufree, Putera Mikhail Fallon, and Muhammad Firas Faiq.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+     <script>
+        function changeImage(clickedElement) {
+            // Grab the HIGH RES image source from the hidden data attribute
+            const fullImageSrc = clickedElement.getAttribute('data-full-image');
+            const mainImage = document.getElementById('main-image');
+            
+            // 1. Instantly fade out the current image
+            mainImage.style.opacity = '0';
+
+            // 2. Wait exactly 200ms (matching the Tailwind duration-200 class), 
+            //    then swap the image source and fade it back in!
+            setTimeout(() => {
+                mainImage.src = fullImageSrc;
+                mainImage.style.opacity = '1';
+            }, 200);
+
+            // Reset all thumbnail buttons to "inactive" state
+            const allThumbs = document.querySelectorAll('.thumb-btn');
+            allThumbs.forEach(thumb => {
+                thumb.classList.remove('border-2', 'border-gray-900', 'dark:border-white', 'opacity-100');
+                thumb.classList.add('border', 'border-transparent', 'opacity-50', 'hover:opacity-100');
+            });
+
+            // Set the clicked thumbnail to "active" state
+            clickedElement.classList.remove('border', 'border-transparent', 'opacity-50', 'hover:opacity-100');
+            clickedElement.classList.add('border-2', 'border-gray-900', 'dark:border-white', 'opacity-100');
+        }
+    </script>
+    <script>
+        function updateLogoForMode() {
+            const logo = document.getElementById('navbarLogo');
+            if (!logo) return;
+            logo.src = document.documentElement.classList.contains('dark') ? 'assets/logo-light.svg' : 'assets/logo.svg';
+        }
+
+        function updateDarkToggleIcon() {
+            const icon = document.getElementById('dark-mode-icon');
+            if (!icon) return;
+            icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('imvidiaDarkMode', document.documentElement.classList.contains('dark') ? 'true' : 'false');
+            updateLogoForMode();
+            updateDarkToggleIcon();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const stored = localStorage.getItem('imvidiaDarkMode');
+            if (stored === 'true') {
+                document.documentElement.classList.add('dark');
+            }
+            updateLogoForMode();
+            updateDarkToggleIcon();
+        });
+    </script>
+
+        <script>
+        function updateLogoForMode() {
+            const logo = document.getElementById('navbarLogo');
+            if (!logo) return;
+            logo.src = document.documentElement.classList.contains('dark') ? 'assets/logo-light.svg' : 'assets/logo.svg';
+        }
+
+        function updateDarkToggleIcon() {
+            const icon = document.getElementById('dark-mode-icon');
+            if (!icon) return;
+            icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('imvidiaDarkMode', document.documentElement.classList.contains('dark') ? 'true' : 'false');
+            updateLogoForMode();
+            updateDarkToggleIcon();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const stored = localStorage.getItem('imvidiaDarkMode');
+            if (stored === 'true') {
+                document.documentElement.classList.add('dark');
+            }
+            updateLogoForMode();
+            updateDarkToggleIcon();
+        });
+    </script>
+
+    <!-- UPDATED: Fixed Cart Logic -->
+    <script>
+        let cart = [];
+        const cartNum = document.getElementById('cart-badge');
+
+        function addToCart(productName, price) {
+            const qty = parseInt(document.getElementById('qty').value);
+            
+            // Check if item is already in cart to just update quantity
+            let existingItem = cart.find(item => item.name === productName);
+            if (existingItem) {
+                existingItem.quantity += qty;
+            } else {
+                cart.push({ name: productName, price: price, quantity: qty });
+            }
+            
+            // Calculate total number of items by adding up all quantities
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            cartNum.innerText = totalItems; 
+            
+            // Animate badge
+            cartNum.classList.add('scale-150');
+            setTimeout(() => {
+                cartNum.classList.remove('scale-150');
+            }, 200);
+            
+            alert(`Added ${qty}x ${productName} to your cart!`);
+        }
+
+        function viewCart() {
+            if (cart.length === 0) {
+                alert("Your ImVidia cart is empty!");
+                return;
+            }
+            
+            let message = "🛒 YOUR CART:\n\n";
+            let total = 0;
+            
+            cart.forEach((item, index) => {
+                let itemTotal = item.price * item.quantity;
+                message += `${index + 1}. ${item.name} (x${item.quantity}) - RM ${itemTotal.toFixed(2)}\n`;
+                total += itemTotal;
+            });
+            
+            message += `\nTotal: RM ${total.toFixed(2)}\n\n(This will go to the checkout page later!)`;
+            alert(message);
+        }
+    </script>
+</body>
+</html>
