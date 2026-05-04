@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products - Admin Panel</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js"></script>
+
+    <!--tinymce apicode-->
+    <script src="https://cdn.tiny.cloud/1/be8dfp6y9j7hrwecamdcd0qll0us7grftmz5xjf4sb32mcqg/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        imvidia: {
+                            light: '#8DFFFF',
+                            DEFAULT: '#49C2FA',
+                            dark: '#1F2468',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+        .dark {
+            --bg: #020617;
+            --surface: #111827;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
+        body {
+            background-color: var(--bg) !important;
+            color: var(--text-primary) !important;
+        }
+        .dark .bg-white { background-color: var(--surface) !important; }
+        .dark .bg-gray-50 { background-color: #020617 !important; }
+        .dark .bg-gray-100 { background-color: #17203a !important; }
+        .dark .bg-gray-900 { background-color: #020617 !important; }
+        .dark .bg-gray-800 { background-color: #1e293b !important; }
+        .dark .bg-gray-700 { background-color: #1f2937 !important; }
+        .dark .text-gray-900,
+        .dark .text-gray-800,
+        .dark .text-gray-700 { color: var(--text-primary) !important; }
+        .dark .text-gray-600,
+        .dark .text-gray-500,
+        .dark .text-gray-400 { color: var(--text-secondary) !important; }
+        .dark .border-gray-100,
+        .dark .border-gray-200 { border-color: var(--border-color) !important; }
+        .dark .shadow-sm,
+        .dark .shadow-md,
+        .dark .shadow-xl {
+            box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.4), 0 4px 6px -4px rgba(15, 23, 42, 0.1) !important;
+        }
+
+       
+        .tox-tinymce {
+            border: 1px solid var(--border-color) !important;
+            border-radius: 0.5rem !important;
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
+        }
+        .tox:not(.tox-tinymce-inline) .tox-editor-header {
+            border-bottom: 1px solid var(--border-color) !important;
+            box-shadow: none !important;
+            padding: 4px 8px !important;
+        }
+        .tox .tox-toolbar__primary { background: transparent !important; }
+        .tox .tox-toolbar__overflow, .tox-menu, .tox-pop__dialog {
+            background-color: var(--surface) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 0.5rem !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+            padding: 4px !important;
+        }
+        .dark .tox .tox-toolbar-overlord, .dark .tox:not(.tox-tinymce-inline) .tox-editor-header {
+            background-color: #1e293b !important;
+        }
+        .dark .tox .tox-toolbar__overflow, .dark .tox-menu, .dark .tox-pop__dialog {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+        }
+        .dark .tox-menu .tox-collection__item-label { color: #f8fafc !important; }
+        .dark .tox-menu .tox-collection__item-icon svg { fill: #cbd5e1 !important; }
+        .dark .tox-menu .tox-collection__item--active { background-color: #334155 !important; }
+        .dark .tox-tbtn svg { fill: #cbd5e1 !important; }
+        .dark .tox-tbtn:hover { background-color: #334155 !important; }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 flex h-screen overflow-hidden dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
+
+    <!-- sidebar stuff -->
+    <aside class="w-64 bg-white dark:bg-slate-900 shadow-xl border-r border-gray-100 dark:border-slate-800 hidden md:flex flex-col z-20 transition-all duration-300 relative">
+        <div class="h-16 flex items-center px-6 border-b border-gray-100 dark:border-slate-800 w-full">
+            <a href="Index.html" class="flex items-center cursor-pointer hover:scale-105 transition transform duration-300">
+                <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-8 w-auto mr-2">
+                <span class="font-bold text-xl tracking-tight text-gray-900 dark:text-white">Admin<span class="text-imvidia">Panel</span></span>
+            </a>
+        </div>
+
+        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+            <a href="admin.html" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia rounded-lg transition">
+                <i class="fa-solid fa-chart-pie w-6"></i>
+                <span class="font-medium">Overview</span>
+            </a>
+            <button onclick="showProductList()" class="w-full flex items-center px-4 py-3 bg-imvidia text-white rounded-lg shadow-sm transition transform hover:-translate-y-0.5">
+                <i class="fa-solid fa-box-open w-6 text-left"></i>
+                <span class="font-medium">Products</span>
+            </button>
+            <a href="#" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia rounded-lg transition">
+                <i class="fa-solid fa-cart-shopping w-6"></i>
+                <span class="font-medium">Orders</span>
+                <span id="order-count-badge" class="ml-auto bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-gray-400 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+            </a>
+            <a href="#" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia rounded-lg transition">
+                <i class="fa-solid fa-users w-6"></i>
+                <span class="font-medium">Customers</span>
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-gray-100 dark:border-slate-800">
+            <a href="login.html" class="flex items-center px-4 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition group">
+                <i class="fa-solid fa-arrow-right-from-bracket w-6 group-hover:-translate-x-1 transition"></i>
+                <span class="font-medium">Log Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        
+        <!-- header -->
+        <header class="h-16 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-sm border-b border-gray-100 dark:border-slate-800 flex items-center justify-between px-6 z-10">
+            <button class="md:hidden text-gray-600 dark:text-gray-300 hover:text-imvidia transition">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+
+            <div class="hidden sm:flex items-center font-bold text-gray-800 dark:text-gray-200">
+                Product Management
+            </div>
+
+            <div class="flex items-center space-x-4 ml-auto">
+                <button id="dark-mode-toggle" type="button" class="p-2 rounded-full text-gray-600 hover:text-imvidia transition dark:text-gray-300" aria-label="Toggle dark mode" onclick="toggleDarkMode()">
+                    <i id="dark-mode-icon" class="fa-solid fa-moon text-lg"></i>
+                </button>
+                
+                <div class="flex items-center space-x-3 border-l border-gray-200 dark:border-slate-700 pl-4 cursor-pointer hover:opacity-80 transition">
+                    <div class="text-right hidden sm:block">
+                        <p class="text-sm font-bold text-gray-900 dark:text-white leading-tight">JaneThiccAss</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Administrator</p>
+                    </div>
+                    <div class="h-9 w-9 rounded-full bg-gray-200 dark:bg-slate-700 border-2 border-imvidia flex items-center justify-center overflow-hidden">
+                        <i class="fa-solid fa-user text-gray-400 dark:text-gray-500 text-sm"></i>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-6 lg:p-8">
+            <div class="max-w-6xl mx-auto relative">
+                
+               
+                <div id="productListView" class="block animate-fade-in-up">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Products</h1>
+                            <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Manage your catalog and inventory.</p>
+                        </div>
+                        <button onclick="showAddProductForm()" class="px-4 py-2.5 bg-imvidia hover:bg-imvidia-dark text-white rounded-lg shadow-md transition transform hover:-translate-y-0.5 flex items-center text-sm font-bold">
+                            <i class="fa-solid fa-plus mr-2"></i> Add Product
+                        </button>
+                    </div>
+
+                    <div class="flex flex-col items-center justify-center py-24 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-dashed border-gray-300 dark:border-slate-700">
+                        <a href="https://www.google.com/logos/2010/pacman10-i.html" target="_blank" rel="noopener noreferrer" title="A blue ghost...">
+                            <i class="fa-solid fa-ghost text-6xl text-gray-300 dark:text-slate-600 mb-4 hover:text-imvidia duration-300 hover:scale-110 transition transform"></i>
+                        </a>
+                        <h3 class="text-2xl font-bold text-gray-500 dark:text-gray-400">Nothing here just yet...</h3>
+                        <p class="text-gray-400 dark:text-gray-500 mt-2 text-sm">Products will appear here once added to the database.</p>
+                    </div>
+                </div>
+
+               
+                <div id="addProductView" class="hidden animate-fade-in-up">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Add New Product</h1>
+                            <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Create a new product listing for the catalog.</p>
+                        </div>
+                        <button type="button" onclick="showProductList()" class="px-4 py-2 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-slate-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 shadow-sm transition flex items-center text-sm font-medium">
+                            <i class="fa-solid fa-arrow-left mr-2"></i> Cancel
+                        </button>
+                    </div>
+
+                    <form id="addProductForm" onsubmit="handleFormSubmit(event)" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        
+                       
+                        <div class="lg:col-span-2 space-y-6">
+                            
+                            <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800">
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b border-gray-100 dark:border-slate-800 pb-3">Basic Information</h3>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product Name <span class="text-red-500">*</span></label>
+                                        <input type="text" required class="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition" placeholder="e.g. ImVidia Pro Hairdryer">
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category <span class="text-red-500">*</span></label>
+                                            <select required class="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition cursor-pointer">
+                                                <option value="" disabled selected>Select a category...</option>
+                                                <option value="kitchen">Kitchen Appliances</option>
+                                                <option value="audio">Audio Visual</option>
+                                                <option value="portable">Portable Devices</option>
+                                                <option value="personal">Personal Care</option>
+                                                <option value="home">Home Appliances</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Brand</label>
+                                            <input type="text" value="ImVidia Original" class="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-gray-400 transition" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            
+                            <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800">
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b border-gray-100 dark:border-slate-800 pb-3">Product Description</h3>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Add specifications tables, highlight text, and insert inline images here.</p>
+                                
+                                <textarea id="product-editor" name="description_html">
+                                    <p>Enter your detailed product description here...</p>
+                                    <p>&nbsp;</p>
+                                    <h3><strong>Key Specifications:</strong></h3>
+                                    <table style="border-collapse: collapse; width: 100%;" border="1">
+                                        <tbody>
+                                            <tr>
+                                                <td style="width: 50%; padding: 8px;"><strong>Power Output</strong></td>
+                                                <td style="width: 50%; padding: 8px;">1200W</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="width: 50%; padding: 8px;"><strong>Warranty</strong></td>
+                                                <td style="width: 50%; padding: 8px;">1 Year</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </textarea>
+                            </div>
+                        </div>
+
+                        
+                        <div class="space-y-6">
+                            
+                            <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800">
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b border-gray-100 dark:border-slate-800 pb-3">Pricing & Inventory</h3>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Selling Price (RM) <span class="text-red-500">*</span></label>
+                                        <div class="relative">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <span class="text-gray-500 sm:text-sm">RM</span>
+                                            </div>
+                                            <input type="number" step="0.01" required class="w-full pl-10 px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition" placeholder="0.00">
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stock Quantity</label>
+                                        <input type="number" value="10" min="0" class="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800">
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b border-gray-100 dark:border-slate-800 pb-3">Gallery Images</h3>
+                                
+                                <div class="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:border-imvidia dark:hover:border-imvidia bg-gray-50 dark:bg-slate-800/50 transition-colors group">
+                                    <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 dark:text-gray-500 group-hover:text-imvidia mb-3 transition-colors"></i>
+                                    <span class="text-sm font-medium text-gray-900 dark:text-white">Click to upload or drag and drop</span>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">SVG, PNG, JPG or GIF (max. 5MB)</span>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full py-3 px-4 bg-imvidia hover:bg-imvidia-dark text-white rounded-lg shadow-md font-bold text-sm transition transform hover:-translate-y-0.5 flex items-center justify-center">
+                                <i class="fa-solid fa-floppy-disk mr-2"></i> Publish Product
+                            </button>
+                        </div>
+                    </form>
+                </div> 
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const productList = document.getElementById('productListView');
+        const addProductForm = document.getElementById('addProductView');
+        let isTinyMCEInitialized = false;
+
+        function showAddProductForm() {
+            productList.classList.remove('block');
+            productList.classList.add('hidden');
+            
+            addProductForm.classList.remove('hidden');
+            addProductForm.classList.add('block');
+
+            if (!isTinyMCEInitialized) {
+                setTimeout(function() {
+                    initTinyMCE();
+                    isTinyMCEInitialized = true;
+                }, 100);
+            }
+        }
+
+        function showProductList() {
+            addProductForm.classList.remove('block');
+            addProductForm.classList.add('hidden');
+            
+            productList.classList.remove('hidden');
+            productList.classList.add('block');
+        }
+
+        function initTinyMCE() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#cbd5e1' : '#475569';
+            const bgColor = isDark ? '#0f172a' : '#ffffff';
+            const tableBorderColor = isDark ? '#334155' : '#e2e8f0';
+
+            tinymce.init({
+                selector: '#product-editor',
+                height: 400,
+                menubar: false, 
+                statusbar: false, 
+                promotion: false, 
+
+
+                plugins: [
+                    'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 'image', 'link', 'lists', 'media', 'searchreplace', 'table', 'visualblocks', 'wordcount'
+                ],
+                
+  
+                toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+                
+                skin: isDark ? 'oxide-dark' : 'oxide',
+                content_css: isDark ? 'dark' : 'default',
+                
+                content_style: `
+                    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+                    body { 
+                        font-family: 'Inter', sans-serif; 
+                        font-size: 14px; 
+                        color: ${textColor}; 
+                        background-color: ${bgColor};
+                        line-height: 1.6;
+                    }
+                    p { margin-bottom: 1rem; }
+                    table { border-collapse: collapse; width: 100%; border-radius: 8px; overflow: hidden; }
+                    table td, table th { border: 1px solid ${tableBorderColor}; padding: 10px; }
+                `,
+                
+                branding: false,
+                setup: function (editor) {
+                    editor.on('change', function () {
+                        tinymce.triggerSave(); 
+                    });
+                }
+            });
+        }
+
+        function handleFormSubmit(event) {
+            event.preventDefault(); 
+            var htmlContent = document.getElementById('product-editor').value;
+            alert("Success! Table and Text data is ready for the database.\n\nDescription HTML Saved:\n" + htmlContent.substring(0, 150) + "...");
+            showProductList();
+        }
+    </script>
+
+  
+    <script>
+        function updateLogoForMode() {
+            const logo = document.getElementById('navbarLogo');
+            if (!logo) return;
+            logo.src = document.documentElement.classList.contains('dark') ? 'assets/logo-light.svg' : 'assets/logo.svg';
+        }
+
+        function updateDarkToggleIcon() {
+            const icon = document.getElementById('dark-mode-icon');
+            if (!icon) return;
+            icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun text-lg' : 'fa-solid fa-moon text-lg';
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('imvidiaDarkMode', isDark ? 'true' : 'false');
+            
+            updateLogoForMode();
+            updateDarkToggleIcon();
+
+            if (isTinyMCEInitialized && tinymce.get('product-editor')) {
+                tinymce.remove('#product-editor');
+                initTinyMCE();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const stored = localStorage.getItem('imvidiaDarkMode');
+            if (stored === 'true') {
+                document.documentElement.classList.add('dark');
+            }
+            updateLogoForMode();
+            updateDarkToggleIcon();
+        });
+    </script>
+
+</body>
+</html>
