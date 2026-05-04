@@ -3,7 +3,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product Details - ImVidia</title>
-
+    <!-- this should be where the prod name be displayed as the title but thats l8r-->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -51,7 +51,7 @@
         }
         .dark .bg-white { background-color: var(--surface) !important; }
         .dark .bg-gray-50 { background-color: #020617 !important; }
-        .dark .bg-gray-100 { background-color: #0f172a !important; } /* Deeper slate for image stage */
+        .dark .bg-gray-100 { background-color: #0f172a !important; } 
         .dark .bg-gray-900 { background-color: #020617 !important; }
         .dark .bg-gray-700 { background-color: #1f2937 !important; }
         .dark .text-gray-900,
@@ -77,7 +77,7 @@
 
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
     
-    <!-- Navigation -->
+    <!-- Navbar -->
     <nav class="bg-white/95 shadow-sm border-b border-gray-100 dark:border-slate-800 sticky top-0 z-50 dark:bg-slate-950/95 backdrop-blur-md">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
              <div class="flex justify-between h-16 items-center">
@@ -116,9 +116,7 @@
         </div>
     </nav>
 
-    <!-- ========================================== -->
-    <!-- PREMIUM PRODUCT TEMPLATE -->
-    <!-- ========================================== -->
+    <!-- main prod template thing -->
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-24 w-full relative z-10">
         
         <nav class="flex text-xs font-medium text-gray-400 dark:text-slate-500 mb-10 uppercase tracking-widest" aria-label="Breadcrumb">
@@ -133,32 +131,28 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24">
             
-            <!-- LEFT: Image Gallery with Seamless Fade Functionality -->
+            <!-- all the image stuff goes here -->
             <div class="lg:col-span-7 flex flex-col space-y-6">
-                <!-- Main Stage -->
+                <!-- big pic -->
                 <div id="mainPic" class="aspect-square bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden flex items-center justify-center relative shadow-sm border border-gray-100/50 dark:border-slate-800/50">
-                    <!-- Notice the w=1200 high-res image here! -->
-                    <!-- Also added transition-opacity duration-200 for the fade effect -->
-                    <img id="main-image" src="assets/crunchyteio.png" alt="Product Image" class="w-full h-full object-cover transition-opacity duration-200" style="opacity: 1;">
+                    <img id="main-image" src="assets/hero1.jpg" alt="Product Image" class="w-full h-full object-cover transition-opacity duration-200" style="opacity: 1;">
                 </div>
                 
-                <!-- Thumbnails -->
+                <!-- below big pic thumbnails for switching big pic -->
                 <div class="flex space-x-4">
-                    <!-- Thumbnail 1 (Active) -->
-                    <!-- data-full-image holds the high-res w=1200 version! -->
-                    <!-- the actual <img> tag holds the low-res w=200 version for faster loading! -->
-                    <button onclick="changeImage(this)" data-full-image="assets/crunchyteio.png" class="thumb-btn w-20 h-20 bg-white dark:bg-slate-900 rounded-2xl border-2 border-gray-900 dark:border-white opacity-100 overflow-hidden cursor-pointer transition-all duration-300">
-                         <img src="assets/crunchyteio.png" alt="Thumb 1" class="w-full h-full object-cover pointer-events-none">
+                    <!-- thumb1 -->
+                    <button onclick="changeImage(this)" data-full-image="assets/hero1.jpg" class="thumb-btn w-20 h-20 bg-white dark:bg-slate-900 rounded-2xl border-2 border-gray-900 dark:border-white opacity-100 overflow-hidden cursor-pointer transition-all duration-300">
+                         <img src="assets/hero1.jpg" alt="Thumb 1" class="w-full h-full object-cover pointer-events-none">
                     </button>
                     
-                    <!-- Thumbnail 2 (Inactive) -->
+                    <!-- thumb2 -->
                     <button onclick="changeImage(this)" data-full-image="assets/TamaplushNo.png" class="thumb-btn w-20 h-20 bg-white dark:bg-slate-900 rounded-2xl border border-transparent opacity-50 hover:opacity-100 overflow-hidden cursor-pointer transition-all duration-300">
                          <img src="assets/TamaplushNo.png" alt="Thumb 2" class="w-full h-full object-cover pointer-events-none">
                     </button>
                 </div>
             </div>
 
-            <!-- RIGHT: Typography-focused Details -->
+            <!-- prod details -->
             <div class="lg:col-span-5 flex flex-col justify-center">
                 
                 <p class="text-sm text-imvidia font-bold tracking-widest uppercase mb-4">portable devices</p>
@@ -170,14 +164,14 @@
                     RM 0.00
                 </p>
 
-                <!-- Refined Description -->
+                <!-- product desc -->
                 <div class="prose prose-lg text-gray-500 dark:text-gray-400 mb-10 leading-relaxed font-light">
                     <p>
                         TAMAMOTAMAMOTAMAMOTAMAMO HACHIMIHACHIMIHACHIMIHACHIMI Once connected to the database, this text will automatically update to the actual item.
                     </p>
                 </div>
 
-                <!-- Clean Specs Divider List -->
+                <!-- info abt stock and deliver thing -->
                 <div class="border-t border-b border-gray-200 dark:border-slate-800 py-6 mb-10">
                     <div class="flex justify-between items-center py-2">
                         <span class="text-gray-500 dark:text-gray-400 font-medium">Availability</span>
@@ -193,10 +187,10 @@
                     </div>
                 </div>
 
-                <!-- Add to Cart Mechanism -->
+                
                 <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
                     
-                    <!-- High-End Quantity Pill -->
+                    <!-- qty changer -->
                     <div class="sm:w-32">
                         <div class="flex items-center justify-between border border-gray-300 dark:border-slate-700 rounded-full h-14 px-4 bg-white dark:bg-slate-900">
                             <button type="button" class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition" onclick="document.getElementById('qty').value = Math.max(1, parseInt(document.getElementById('qty').value) - 1)">
@@ -209,7 +203,7 @@
                         </div>
                     </div>
 
-                    <!-- Stark Inverted CTA Button (Apple-style) -->
+                    <!-- add to catrt -->
                     <button onclick="addToCart('[Placeholder Product]', 0.00)" class="flex-1 bg-imvidia dark:bg-imvidia-dark text-white dark:text-white hover:bg-imvidia dark:hover:bg-imvidia dark:hover:text-white h-14 rounded-full font-bold transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-imvidia/25 hover:-translate-y-1">
                         <span>Add to Cart</span>
                     </button>
@@ -219,7 +213,7 @@
         </div>
     </main>
 
-    <!-- Footer (Unchanged) -->
+    <!-- footer-->
     <footer class="bg-gray-900 text-gray-400 py-12 border-t border-gray-800 relative z-10 mt-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -278,28 +272,27 @@
     <!-- Scripts -->
      <script>
         function changeImage(clickedElement) {
-            // Grab the HIGH RES image source from the hidden data attribute
+            // check for highres source then grab it by checkign thumbnail
             const fullImageSrc = clickedElement.getAttribute('data-full-image');
             const mainImage = document.getElementById('main-image');
             
-            // 1. Instantly fade out the current image
+            // fadeout first img first
             mainImage.style.opacity = '0';
 
-            // 2. Wait exactly 200ms (matching the Tailwind duration-200 class), 
-            //    then swap the image source and fade it back in!
+            // change image after 200ms delay for fadeout fadein fx
             setTimeout(() => {
                 mainImage.src = fullImageSrc;
                 mainImage.style.opacity = '1';
             }, 200);
 
-            // Reset all thumbnail buttons to "inactive" state
+            // reset all thumbnails to inactive to reset it
             const allThumbs = document.querySelectorAll('.thumb-btn');
             allThumbs.forEach(thumb => {
                 thumb.classList.remove('border-2', 'border-gray-900', 'dark:border-white', 'opacity-100');
                 thumb.classList.add('border', 'border-transparent', 'opacity-50', 'hover:opacity-100');
             });
 
-            // Set the clicked thumbnail to "active" state
+            // set clicked one to active so have border thingy
             clickedElement.classList.remove('border', 'border-transparent', 'opacity-50', 'hover:opacity-100');
             clickedElement.classList.add('border-2', 'border-gray-900', 'dark:border-white', 'opacity-100');
         }
@@ -364,7 +357,7 @@
         });
     </script>
 
-    <!-- UPDATED: Fixed Cart Logic -->
+    <!-- cart-->
     <script>
         let cart = [];
         const cartNum = document.getElementById('cart-badge');
@@ -380,26 +373,21 @@
                 cart.push({ name: productName, price: price, quantity: qty });
             }
             
-            // Calculate total number of items by adding up all quantities
+            // calc total numbers by addding up all
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
             cartNum.innerText = totalItems; 
-            
-            // Animate badge
-            cartNum.classList.add('scale-150');
-            setTimeout(() => {
-                cartNum.classList.remove('scale-150');
-            }, 200);
             
             alert(`Added ${qty}x ${productName} to your cart!`);
         }
 
+        //viewcart thing palceholder
         function viewCart() {
             if (cart.length === 0) {
                 alert("Your ImVidia cart is empty!");
                 return;
             }
             
-            let message = "🛒 YOUR CART:\n\n";
+            let message = "Your cart: \n\n";
             let total = 0;
             
             cart.forEach((item, index) => {
@@ -408,7 +396,7 @@
                 total += itemTotal;
             });
             
-            message += `\nTotal: RM ${total.toFixed(2)}\n\n(fuck you)`;
+            message += `\nTotal: RM ${total.toFixed(2)}\n\nthis js a placeholder for actual cart l8r once db connect`;
             alert(message);
         }
     </script>
