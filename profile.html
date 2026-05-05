@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - ImVidia</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        imvidia: {
+                            light: '#8DFFFF',
+                            DEFAULT: '#49C2FA',
+                            dark: '#1F2468',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #475569;
+            --border-color: #e2e8f0;
+        }
+        .dark {
+            --bg: #020617;
+            --surface: #0f172a;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --border-color: #1e293b;
+        }
+        body {
+            background-color: var(--bg) !important;
+            color: var(--text-primary) !important;
+            -webkit-font-smoothing: antialiased;
+        }
+        .dark .bg-white { background-color: var(--surface) !important; }
+        .dark .bg-gray-50 { background-color: #020617 !important; }
+        .dark .bg-gray-900 { background-color: #020617 !important; }
+        .dark .border-gray-100, .dark .border-gray-200 { border-color: var(--border-color) !important; }
+    </style>
+</head>
+
+<body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
+    
+    <!-- Navbar: Solid background, perfectly centered links -->
+    <nav class="bg-white shadow-md sticky top-0 z-50 dark:bg-slate-950 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+             <div class="flex justify-between h-16 items-center relative">
+                
+                <!-- LEFT SECTION -->
+                <div class="flex items-center space-x-6">
+                    <a href="Index.html" class="flex-shrink-0 flex items-center cursor-pointer">
+                        <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
+                        <span class="font-bold text-2xl tracking-tight text-gray-900 dark:text-white">ImVidia<span class="text-imvidia">.</span></span>
+                    </a>
+                    
+                    <button id="dark-mode-toggle" type="button" class="p-2 rounded-full text-gray-600 hover:text-imvidia transition dark:text-gray-300" aria-label="Toggle dark mode" onclick="toggleDarkMode()">
+                        <i id="dark-mode-icon" class="fa-solid fa-moon"></i>
+                    </button>
+                </div>
+
+                <!-- MIDDLE SECTION -->
+                <div class="hidden md:flex space-x-8 items-center absolute left-1/2 transform -translate-x-1/2">
+                    <a href="Index.html" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Home</a>
+                    <a href="Index.html#catalog" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Catalog</a>
+                    <a href="#" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Support</a>
+                </div>
+                    
+                <!-- RIGHT SECTION -->
+                <div class="flex items-center space-x-4">
+                    <a href="login.html" class="hidden md:block text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">
+                        Log In
+                    </a>
+
+                    <a href="register.html" class="hidden md:block bg-imvidia hover:bg-imvidia-dark text-white font-medium py-2 px-4 rounded-lg shadow-sm transition">
+                        Register
+                    </a>
+
+                    <!-- User Profile Icon -->
+                    <a href="profile.html" class="relative p-2 text-imvidia transition dark:text-imvidia" title="User Profile">
+                        <i class="fa-solid fa-user text-xl"></i>
+                    </a>
+
+                    <!-- Cart Icon -->
+                    <button class="relative p-2 text-gray-600 hover:text-imvidia transition dark:text-gray-300" onclick="viewCart()">
+                        <i class="fa-solid fa-cart-shopping text-xl"></i>
+                        <span id="cart-badge" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-imvidia rounded-full transition-transform duration-200">
+                            0
+                        </span>
+                    </button>
+                </div>
+
+             </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full relative z-10">
+        
+        <nav class="flex text-xs font-medium text-gray-400 dark:text-slate-500 mb-8 uppercase tracking-widest" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-2">
+                <li><a href="Index.html" class="hover:text-imvidia transition">Home</a></li>
+                <li><span class="mx-1">/</span></li>
+                <li><a href="#" class="hover:text-imvidia transition">My Account</a></li>
+                <li><span class="mx-1">/</span></li>
+                <li><span class="text-gray-600 dark:text-gray-300">Profile Settings</span></li>
+            </ol>
+        </nav>
+
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Account Settings</h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">Manage your personal details and security.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            
+            <!-- LEFT COLUMN: Profile Sidebar -->
+            <div class="lg:col-span-4 xl:col-span-3 space-y-6">
+                <!-- Avatar Card -->
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 text-center">
+                    
+                    <!-- Profile Picture Upload Area -->
+                    <div class="relative w-32 h-32 mx-auto mb-4 group cursor-pointer" onclick="document.getElementById('avatar-upload').click()">
+                        <div class="w-full h-full rounded-full overflow-hidden border-4 border-white dark:border-slate-800 shadow-md">
+                            <img id="avatar-preview" src="https://ui-avatars.com/api/?name=Jane+Doe&background=49C2FA&color=fff&size=128" alt="Profile Picture" class="w-full h-full object-cover">
+                        </div>
+                        
+                        <!-- Hover Overlay -->
+                        <div class="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                            <i class="fa-solid fa-camera text-white text-2xl"></i>
+                        </div>
+                        
+                        <!-- Hidden input -->
+                        <input type="file" id="avatar-upload" accept="image/*" class="hidden" onchange="previewAvatar(event)">
+                    </div>
+
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Jane Doe</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">jane.doe@example.com</p>
+                </div>
+
+                <!-- Navigation Links -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden">
+                    <nav class="flex flex-col">
+                        <a href="#" class="px-6 py-4 flex items-center bg-gray-50 dark:bg-slate-800/50 border-l-4 border-imvidia text-imvidia font-semibold transition">
+                            <i class="fa-regular fa-id-badge w-6"></i> Profile Details
+                        </a>
+                        <a href="#" class="px-6 py-4 flex items-center text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800/50 hover:text-imvidia dark:hover:text-imvidia transition border-l-4 border-transparent">
+                            <i class="fa-solid fa-box-open w-6"></i> Order History
+                        </a>
+                        <a href="#" class="px-6 py-4 flex items-center text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800/50 hover:text-imvidia dark:hover:text-imvidia transition border-l-4 border-transparent">
+                            <i class="fa-regular fa-heart w-6"></i> Wishlist
+                        </a>
+                        <div class="border-t border-gray-100 dark:border-slate-800 my-1"></div>
+                        <a href="login.html" class="px-6 py-4 flex items-center text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition border-l-4 border-transparent">
+                            <i class="fa-solid fa-arrow-right-from-bracket w-6"></i> Log Out
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Forms -->
+            <div class="lg:col-span-8 xl:col-span-9 space-y-8">
+                
+                <form id="profile-form" onsubmit="saveProfile(event)" class="space-y-8">
+                    
+                    <!-- Section 1: Personal Info -->
+                    <section class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-5 border-b border-gray-100 dark:border-slate-800 pb-3">Personal Information</h3>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">First Name</label>
+                                <input type="text" value="Jane" required class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Last Name</label>
+                                <input type="text" value="Doe" required class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
+                                <input type="email" value="jane.doe@example.com" required class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
+                                <input type="tel" value="+60 12-345 6789" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Section 2: Default Shipping Address -->
+                    <section class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-5 border-b border-gray-100 dark:border-slate-800 pb-3">Default Shipping Address</h3>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div class="sm:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Street Address</label>
+                                <input type="text" placeholder="123 Example Street, Apt 4B" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">City</label>
+                                <input type="text" placeholder="Kuala Lumpur" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">State / Province</label>
+                                <select class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm appearance-none cursor-pointer">
+                                    <option value="" disabled selected>Select State...</option>
+                                    <option value="SGR">Selangor</option>
+                                    <option value="KUL">Kuala Lumpur</option>
+                                    <option value="JHR">Johor</option>
+                                    <option value="PEN">Penang</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ZIP / Postal Code</label>
+                                <input type="text" placeholder="50000" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Section 3: Change Password -->
+                    <section class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-5 border-b border-gray-100 dark:border-slate-800 pb-3">Security & Password</h3>
+                        
+                        <div class="grid grid-cols-1 gap-6 max-w-md">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Current Password</label>
+                                <input type="password" placeholder="••••••••" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
+                                <input type="password" placeholder="••••••••" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm New Password</label>
+                                <input type="password" placeholder="••••••••" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-4 pt-4">
+                        <button type="button" class="mt-3 sm:mt-0 px-6 py-3 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-slate-600 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition font-medium">
+                            Discard Changes
+                        </button>
+                        <button type="submit" class="px-8 py-3 bg-imvidia hover:bg-imvidia-dark text-white rounded-xl shadow-md font-bold transition transform hover:-translate-y-0.5">
+                            Save Profile
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-400 py-12 border-t border-gray-800 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <div class="flex items-center mb-4">
+                        <img src="assets/logo-light.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
+                        <span class="font-bold text-2xl tracking-tight text-white">ImVidia<span class="text-imvidia">.</span></span>
+                    </div>
+                    <p class="text-sm mb-4">Innovative & affordable electronics for the modern household.</p>
+                </div>
+                <!-- Reduced footer details for brevity, assumes standard footer structure -->
+                <div>
+                    <h4 class="text-white font-bold mb-4 uppercase tracking-wider text-sm">Directories</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="Index.html" class="hover:text-imvidia transition">Home</a></li>
+                        <li><a href="Index.html#catalog" class="hover:text-imvidia transition">Product Catalog</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-4 uppercase tracking-wider text-sm">Connect With Us</h4>
+                    <ul class="space-y-2 text-sm mb-6">
+                        <li><i class="fa-solid fa-envelope mr-2 text-imvidia"></i> support@imvidia.com</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-12 pt-8 border-t border-gray-800 text-sm text-center">
+                <p>&copy; 2015 ImVidia Electronics.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Form & Image Logic -->
+    <script>
+        // Profile Picture Preview Logic
+        function previewAvatar(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Ensure it's an image
+                if (!file.type.startsWith('image/')) {
+                    alert("Please select a valid image file.");
+                    return;
+                }
+                
+                // Max size: 2MB for profile pics
+                if (file.size > 2 * 1024 * 1024) {
+                    alert("Profile picture must be less than 2MB.");
+                    return;
+                }
+
+                // Create a temporary local preview of the image
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatar-preview').src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Save Profile Validation Simulator
+        function saveProfile(event) {
+            event.preventDefault(); // Prevent page reload
+            
+            // In a real app, Putera Mikail would grab the form data and the file input here 
+            // and send it via an AJAX POST request to update the database.
+            
+            alert("Success! Your profile details have been saved.");
+        }
+    </script>
+
+    <!-- Global Layout Logic (Dark mode & Cart) -->
+    <script>
+        // 1. Dark Mode
+        function updateLogoForMode() {
+            const logo = document.getElementById('navbarLogo');
+            if (!logo) return;
+            logo.src = document.documentElement.classList.contains('dark') ? 'assets/logo-light.svg' : 'assets/logo.svg';
+        }
+
+        function updateDarkToggleIcon() {
+            const icon = document.getElementById('dark-mode-icon');
+            if (!icon) return;
+            icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('imvidiaDarkMode', document.documentElement.classList.contains('dark') ? 'true' : 'false');
+            updateLogoForMode();
+            updateDarkToggleIcon();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('imvidiaDarkMode') === 'true') {
+                document.documentElement.classList.add('dark');
+            }
+            updateLogoForMode();
+            updateDarkToggleIcon();
+        });
+
+        // 2. Cart Badge Memory
+        function updateCartBadge() {
+            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            const badge = document.getElementById('cart-badge');
+            if (badge) {
+                badge.innerText = totalItems;
+            }
+        }
+
+        function viewCart() {
+            window.location.href = 'cart.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', updateCartBadge);
+    </script>
+
+</body>
+</html>
