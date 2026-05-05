@@ -72,7 +72,6 @@
             box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.4), 0 4px 6px -4px rgba(15, 23, 42, 0.1) !important;
         }
 
-       
         .tox-tinymce {
             border: 1px solid var(--border-color) !important;
             border-radius: 0.5rem !important;
@@ -111,6 +110,16 @@
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* NEW: Completely hides the ugly default browser up/down arrows */
+        .hide-spinner::-webkit-inner-spin-button, 
+        .hide-spinner::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        .hide-spinner {
+            -moz-appearance: textfield;
         }
     </style>
 </head>
@@ -186,7 +195,6 @@
         <main class="flex-1 overflow-y-auto p-6 lg:p-8">
             <div class="max-w-6xl mx-auto relative">
                 
-               
                 <div id="productListView" class="block animate-fade-in-up">
                     <div class="flex items-center justify-between mb-8">
                         <div>
@@ -207,7 +215,6 @@
                     </div>
                 </div>
 
-               
                 <div id="addProductView" class="hidden animate-fade-in-up">
                     <div class="flex items-center justify-between mb-8">
                         <div>
@@ -221,7 +228,6 @@
 
                     <form id="addProductForm" onsubmit="handleFormSubmit(event)" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         
-                       
                         <div class="lg:col-span-2 space-y-6">
                             
                             <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800">
@@ -253,37 +259,66 @@
                                 </div>
                             </div>
 
-                            
                             <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800">
                                 <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b border-gray-100 dark:border-slate-800 pb-3">Product Description</h3>
                                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Describe the product, add tables, insert inline images, and customise the description fully.</p>
                                 
                                 <textarea id="product-editor" name="description_html" placeholder="Enter product description...">
-                                    </table>
                                 </textarea>
                             </div>
                         </div>
 
-                        
                         <div class="space-y-6">
                             
                             <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800">
-                                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b border-gray-100 dark:border-slate-800 pb-3">Pricing & Inventory</h3>
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b border-gray-100 dark:border-slate-800 pb-3">Pricing, Stock & Policies</h3>
                                 
                                 <div class="space-y-4">
+                                    <!-- UPDATED PRICE FIELD: Hidden native spinners, added custom + / - buttons -->
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Selling Price (RM) <span class="text-red-500">*</span></label>
-                                        <div class="relative">
+                                        <div class="relative flex items-center">
                                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                                 <span class="text-gray-500 sm:text-sm">RM</span>
                                             </div>
-                                            <input type="number" step="0.01" required class="w-full pl-10 px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition" placeholder="0.00">
+                                            <input type="number" id="selling-price" step="any" onblur="if(this.value) this.value = parseFloat(this.value).toFixed(2)" onkeydown="if(event.key==='ArrowUp'){this.value=(parseFloat(this.value||0)+1).toFixed(2);event.preventDefault();} if(event.key==='ArrowDown'){this.value=Math.max(0, parseFloat(this.value||0)-1).toFixed(2);event.preventDefault();}" required class="hide-spinner w-full pl-10 pr-20 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition" placeholder="0.00">
+                                            <div class="absolute inset-y-0 right-1.5 flex items-center space-x-1">
+                                                <button type="button" onclick="let el=document.getElementById('selling-price'); el.value=Math.max(0, parseFloat(el.value || 0) - 1).toFixed(2);" class="w-7 h-7 flex items-center justify-center bg-gray-100 dark:bg-slate-700 rounded hover:text-imvidia transition cursor-pointer text-gray-500 dark:text-gray-400">
+                                                    <i class="fa-solid fa-minus text-xs"></i>
+                                                </button>
+                                                <button type="button" onclick="let el=document.getElementById('selling-price'); el.value=(parseFloat(el.value || 0) + 1).toFixed(2);" class="w-7 h-7 flex items-center justify-center bg-gray-100 dark:bg-slate-700 rounded hover:text-imvidia transition cursor-pointer text-gray-500 dark:text-gray-400">
+                                                    <i class="fa-solid fa-plus text-xs"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
 
+                                    <!-- UPDATED STOCK FIELD: Matching custom + / - buttons -->
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stock Quantity</label>
-                                        <input type="number" value="10" min="0" class="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition">
+                                        <div class="relative flex items-center">
+                                            <input type="number" id="stock-qty" value="10" min="0" onkeydown="if(event.key==='ArrowUp'){this.value=parseInt(this.value||0)+1;event.preventDefault();} if(event.key==='ArrowDown'){this.value=Math.max(0, parseInt(this.value||0)-1);event.preventDefault();}" class="hide-spinner w-full px-4 pr-20 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition">
+                                            <div class="absolute inset-y-0 right-1.5 flex items-center space-x-1">
+                                                <button type="button" onclick="let el=document.getElementById('stock-qty'); el.value=Math.max(0, parseInt(el.value || 0) - 1);" class="w-7 h-7 flex items-center justify-center bg-gray-100 dark:bg-slate-700 rounded hover:text-imvidia transition cursor-pointer text-gray-500 dark:text-gray-400">
+                                                    <i class="fa-solid fa-minus text-xs"></i>
+                                                </button>
+                                                <button type="button" onclick="let el=document.getElementById('stock-qty'); el.value=parseInt(el.value || 0) + 1;" class="w-7 h-7 flex items-center justify-center bg-gray-100 dark:bg-slate-700 rounded hover:text-imvidia transition cursor-pointer text-gray-500 dark:text-gray-400">
+                                                    <i class="fa-solid fa-plus text-xs"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- NEW: Delivery Time -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Delivery Time</label>
+                                        <input type="text" value="1-2 Business Days" class="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition">
+                                    </div>
+
+                                    <!-- NEW: Warranty Period -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Warranty Period</label>
+                                        <input type="text" value="1 Year Included" class="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition">
                                     </div>
                                 </div>
                             </div>
@@ -291,11 +326,17 @@
                             <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800">
                                 <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b border-gray-100 dark:border-slate-800 pb-3">Gallery Images</h3>
                                 
-                                <div class="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:border-imvidia dark:hover:border-imvidia bg-gray-50 dark:bg-slate-800/50 transition-colors group">
+                                <div id="image-dropzone" class="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:border-imvidia dark:hover:border-imvidia bg-gray-50 dark:bg-slate-800/50 transition-colors group">
                                     <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 dark:text-gray-500 group-hover:text-imvidia mb-3 transition-colors"></i>
                                     <span class="text-sm font-medium text-gray-900 dark:text-white">Click to upload or drag and drop</span>
                                     <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">SVG, PNG, JPG or GIF (max. 5MB)</span>
                                 </div>
+                                
+                                <!-- Hidden File Input -->
+                                <input type="file" id="gallery-upload" multiple accept="image/*" class="hidden">
+                                
+                                <!-- Preview Container -->
+                                <div id="image-preview-container" class="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-4 empty:hidden"></div>
                             </div>
 
                             <button type="submit" class="w-full py-3 px-4 bg-imvidia hover:bg-imvidia-dark text-white rounded-lg shadow-md font-bold text-sm transition transform hover:-translate-y-0.5 flex items-center justify-center">
@@ -350,12 +391,10 @@
                 statusbar: false, 
                 promotion: false, 
 
-
                 plugins: [
                     'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 'image', 'link', 'lists', 'media', 'searchreplace', 'table', 'visualblocks', 'wordcount'
                 ],
                 
-  
                 toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
                 
                 skin: isDark ? 'oxide-dark' : 'oxide',
@@ -387,12 +426,100 @@
         function handleFormSubmit(event) {
             event.preventDefault(); 
             var htmlContent = document.getElementById('product-editor').value;
-            alert("Success! Table and Text data is ready for the database.\n\nDescription HTML Saved:\n" + htmlContent.substring(0, 150) + "...");
+            alert("Success! Product data is ready for the database.\nImages Ready: " + galleryFiles.length + "\n\nDescription HTML Saved:\n" + htmlContent.substring(0, 150) + "...");
+            
+            // Clean up the UI after successful submit
+            galleryFiles = [];
+            renderPreviews();
             showProductList();
         }
     </script>
 
-  
+    <!-- Gallery Upload Logic -->
+    <script>
+        let galleryFiles = [];
+        const dropzone = document.getElementById('image-dropzone');
+        const fileInput = document.getElementById('gallery-upload');
+        const previewContainer = document.getElementById('image-preview-container');
+
+        // Trigger file select dialog on click
+        dropzone.addEventListener('click', () => fileInput.click());
+
+        // Handle selected files
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        // Drag & Drop events
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('bg-gray-50', 'dark:bg-slate-800/50', 'border-gray-300', 'dark:border-slate-600');
+            dropzone.classList.add('bg-imvidia/10', 'border-imvidia');
+        });
+
+        dropzone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('bg-gray-50', 'dark:bg-slate-800/50', 'border-gray-300', 'dark:border-slate-600');
+            dropzone.classList.remove('bg-imvidia/10', 'border-imvidia');
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('bg-gray-50', 'dark:bg-slate-800/50', 'border-gray-300', 'dark:border-slate-600');
+            dropzone.classList.remove('bg-imvidia/10', 'border-imvidia');
+            
+            if (e.dataTransfer.files.length) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                // Max size check: 5MB
+                if (file.size > 5 * 1024 * 1024) {
+                    alert(`File "${file.name}" is too large. Maximum size is 5MB.`);
+                    return;
+                }
+                // File type check
+                if (!file.type.startsWith('image/')) {
+                    alert(`File "${file.name}" is not a valid image format.`);
+                    return;
+                }
+                
+                galleryFiles.push(file);
+                renderPreviews();
+            });
+            // Reset input so the same file can be chosen again if previously deleted
+            fileInput.value = '';
+        }
+
+        function removeGalleryImage(index) {
+            galleryFiles.splice(index, 1);
+            renderPreviews();
+        }
+
+        function renderPreviews() {
+            previewContainer.innerHTML = '';
+            
+            galleryFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const previewDiv = document.createElement('div');
+                    previewDiv.className = "relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700 shadow-sm group";
+                    previewDiv.innerHTML = `
+                        <img src="${e.target.result}" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                            <button type="button" onclick="removeGalleryImage(${index})" class="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition transform hover:scale-110 shadow-lg" title="Remove Image">
+                                <i class="fa-solid fa-trash-can text-sm"></i>
+                            </button>
+                        </div>
+                    `;
+                    previewContainer.appendChild(previewDiv);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    </script>
+
+    <!-- Dark mode logic -->
     <script>
         function updateLogoForMode() {
             const logo = document.getElementById('navbarLogo');
