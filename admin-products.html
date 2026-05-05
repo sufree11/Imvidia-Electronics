@@ -115,7 +115,7 @@
     </style>
 </head>
 
-<body class="bg-gray-50 text-gray-800 flex h-screen overflow-hidden dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
+<body class="bg-fixed bg-gray-50 text-gray-800 flex h-screen overflow-hidden dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
 
     <!-- sidebar stuff -->
     <aside class="w-64 bg-white dark:bg-slate-900 shadow-xl border-r border-gray-100 dark:border-slate-800 hidden md:flex flex-col z-20 transition-all duration-300 relative">
@@ -173,7 +173,7 @@
                 
                 <div class="flex items-center space-x-3 border-l border-gray-200 dark:border-slate-700 pl-4 cursor-pointer hover:opacity-80 transition">
                     <div class="text-right hidden sm:block">
-                        <p class="text-sm font-bold text-gray-900 dark:text-white leading-tight">JaneThiccAss</p>
+                        <p class="text-sm font-bold text-gray-900 dark:text-white leading-tight">The Architect</p>
                         <p class="text-xs text-gray-500 dark:text-gray-400">Administrator</p>
                     </div>
                     <div class="h-9 w-9 rounded-full bg-gray-200 dark:bg-slate-700 border-2 border-imvidia flex items-center justify-center overflow-hidden">
@@ -256,23 +256,9 @@
                             
                             <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800">
                                 <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b border-gray-100 dark:border-slate-800 pb-3">Product Description</h3>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Add specifications tables, highlight text, and insert inline images here.</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Describe the product, add tables, insert inline images, and customise the description fully.</p>
                                 
-                                <textarea id="product-editor" name="description_html">
-                                    <p>Enter your detailed product description here...</p>
-                                    <p>&nbsp;</p>
-                                    <h3><strong>Key Specifications:</strong></h3>
-                                    <table style="border-collapse: collapse; width: 100%;" border="1">
-                                        <tbody>
-                                            <tr>
-                                                <td style="width: 50%; padding: 8px;"><strong>Power Output</strong></td>
-                                                <td style="width: 50%; padding: 8px;">1200W</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="width: 50%; padding: 8px;"><strong>Warranty</strong></td>
-                                                <td style="width: 50%; padding: 8px;">1 Year</td>
-                                            </tr>
-                                        </tbody>
+                                <textarea id="product-editor" name="description_html" placeholder="Enter product description...">
                                     </table>
                                 </textarea>
                             </div>

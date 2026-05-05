@@ -55,28 +55,22 @@
     </style>
 </head>
 
-<body class="bg-gray-50 text-gray-800 antialiased dark:bg-slate-950 dark:text-gray-100 selection:bg-imvidia selection:text-white" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2px, transparent 2px); background-size: 40px 40px;">
+<body class="bg-fixedbg-gray-50 text-gray-800 antialiased dark:bg-slate-950 dark:text-gray-100 selection:bg-imvidia selection:text-white" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
 
     <!-- Minimal Navbar for Checkout (Distraction Free) -->
-    <header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-gray-200 dark:border-slate-800 sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <!-- Logo -->
-            <a href="index.html" class="flex items-center hover:opacity-80 transition">
-                <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-8 w-auto mr-2" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/e/e1/Logo_of_YouTube_%282015-2017%29.svg'; this.style.filter='grayscale(100%)';">
-                <span class="font-bold text-xl tracking-tight text-gray-900 dark:text-white">Im<span class="text-imvidia">Vidia</span></span>
-            </a>
-            
-            <div class="flex items-center space-x-4">
-                <a href="cart.html" class="text-sm font-medium text-gray-500 hover:text-imvidia dark:text-gray-400 transition hidden sm:block">
-                    <i class="fa-solid fa-arrow-left mr-1"></i> Return to Cart
+    <nav class="bg-white shadow-sm sticky top-0 z-50 dark:bg-slate-950">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-6">
+            <div class="flex justify-between md:justify-start h-16 items-center w-full">
+                <a href="Index.html" class="flex-shrink-0 flex items-center cursor-pointer hover:scale-105 transition transform duration-300">
+                    <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
+                    <span class="font-bold text-2xl tracking-tight text-gray-900 dark:text-white" >ImVidia<span class="text-imvidia">.</span></span>
                 </a>
-                <div class="h-6 w-px bg-gray-200 dark:bg-slate-700 hidden sm:block"></div>
-                <button id="dark-mode-toggle" type="button" class="p-2 rounded-full text-gray-400 hover:text-imvidia transition" onclick="toggleDarkMode()">
-                    <i id="dark-mode-icon" class="fa-solid fa-moon text-lg"></i>
+                <button id="dark-mode-toggle" type="button" class="p-2 rounded-full text-gray-600 hover:text-imvidia transition dark:text-gray-300" aria-label="Toggle dark mode" onclick="toggleDarkMode()">
+                    <i id="dark-mode-icon" class="fa-solid fa-moon"></i>
                 </button>
             </div>
         </div>
-    </header>
+    </nav> 
 
     <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         
@@ -230,6 +224,7 @@
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Name on Card</label>
                                     <input type="text" id="cc_name" placeholder="JANE DOE" class="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm uppercase">
+                                    
                                 </div>
                             </div>
                         </div>
@@ -428,6 +423,10 @@
                         value = value.substring(0, 2) + ' / ' + value.substring(2, 4);
                     }
                     e.target.value = value;
+                    if (e.target.value.substring(0, 2) > 12) {
+                        alert('Invalid month!\nPlease enter value between 01 & 12.');
+                        e.target.value = '';
+                    }
                 });
             }
 
@@ -443,7 +442,6 @@
                     // Strip anything that is NOT a letter (a-z, A-Z) or a space (\s)
                     e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, '').substring(0, 50).toUpperCase();
                 });
-            }
 
             // --- 3. Dynamic Cart Rendering ---
             const cartContainer = document.getElementById('checkout-items-container');
@@ -505,7 +503,7 @@
             }
 
             renderCart();
-        });
+            }});
     </script>
 
     <!-- Dark mode logic -->
