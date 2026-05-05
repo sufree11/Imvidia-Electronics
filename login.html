@@ -218,6 +218,10 @@
     </main>
 
     <script>
+        var email = "janedoe@gmail.com";
+        var password = "ihateputera";
+        var adminId = "ADMIN-067";
+        var adminPass = "iloveputera";
         const formId = document.getElementById('loginForm');
         const tabCustomer = document.getElementById('tab-customer');
         const tabAdmin = document.getElementById('tab-admin');
@@ -226,6 +230,11 @@
         const identityIcon = document.getElementById('identity-icon');
         const submitBtn = document.getElementById('submit-btn');
         const passwordInput = document.getElementById('password');
+
+        
+            
+        
+        
 
         function switchTab(role) {
             if (role === 'admin') {
@@ -246,7 +255,6 @@
                 submitBtn.classList.replace('bg-imvidia', 'bg-gray-900');
                 submitBtn.classList.replace('hover:bg-imvidia-dark', 'hover:bg-gray-800');
 
-                loginForm.action = "admin.html";
             } else {
                 tabCustomer.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
                 tabCustomer.classList.remove('text-gray-500', 'hover:text-gray-700');
@@ -264,9 +272,36 @@
                 submitBtn.innerText = "Sign In as Customer";
                 submitBtn.classList.replace('bg-gray-900', 'bg-imvidia');
                 submitBtn.classList.replace('hover:bg-gray-800', 'hover:bg-imvidia-dark');
-                loginForm.action = "index.html";
+                
             }
         }
+
+        if (formId) {
+            formId.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const identityValue = identityInput.value.trim();
+                const passwordValue = passwordInput.value;
+                    if (tabAdmin.classList.contains('bg-white')) {
+                        if (identityValue === adminId && passwordValue === adminPass) {
+                            alert("Admin login successful!");
+                            window.location.href = "admin.html";
+                        } else {
+                            alert("Invalid Admin ID or password.");
+                            identityInput.value = "";
+                        passwordInput.value = "";
+                        }
+                    } else if (tabCustomer.classList.contains('bg-white')) {
+                    if (identityValue === email && passwordValue === password) {
+                        alert("Customer login successful!");
+                        window.location.href = "Index.html";
+                    } else {
+                        alert("Invalid email or password.");
+                        identityInput.value = "";
+                        passwordInput.value = "";
+                    }
+        }})}
+                    ;
+        
     </script>
 
 </body>
