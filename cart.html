@@ -1,9 +1,10 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Details - ImVidia</title>
-    
+    <title>Your Cart - ImVidia</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -67,7 +68,7 @@
             box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.4), 0 4px 6px -4px rgba(15, 23, 42, 0.1) !important;
         }
 
-        /* Standardized spinner hiding logic to prevent warnings */
+        /* Hides native number spin buttons */
         .hide-spinner::-webkit-inner-spin-button, 
         .hide-spinner::-webkit-outer-spin-button { 
             -webkit-appearance: none; 
@@ -126,7 +127,7 @@
                         <i class="fa-solid fa-user text-xl"></i>
                     </button>
 
-                    
+                    <!-- Cart Icon with Red Badge -->
                     <button class="relative p-2 text-gray-600 hover:text-imvidia transition dark:text-gray-300" onclick="viewCart()">
                         <i class="fa-solid fa-cart-shopping text-xl"></i>
                         <span id="cart-badge" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-imvidia rounded-full transition-transform duration-200">
@@ -139,97 +140,67 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-24 w-full relative z-10">
+    <!-- Main Cart Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 w-full relative z-10">
         
-        <nav class="flex text-xs font-medium text-gray-400 dark:text-slate-500 mb-10 uppercase tracking-widest" aria-label="Breadcrumb">
-            <ol class="inline-flex items-center space-x-2">
-                <li><a href="Index.html" class="hover:text-imvidia transition">Home</a></li>
-                <li><span class="mx-1">/</span></li>
-                <li><a href="Index.html#catalog" class="hover:text-imvidia transition">Catalog</a></li>
-                <li><span class="mx-1">/</span></li>
-                <li><span class="hover:text-imvidia cursor-pointer transition">Category Placeholder</span></li>
-            </ol>
-        </nav>
+        <div class="mb-10">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">Your Cart</h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-2">Review your items before proceeding to checkout.</p>
+        </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
             
-            <!-- Gallery -->
-            <div class="lg:col-span-7 flex flex-col space-y-6">
-                <!-- Main Image -->
-                <div id="mainPic" class="aspect-square bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden flex items-center justify-center relative shadow-sm border border-gray-100/50 dark:border-slate-800/50">
-                    <img id="main-image" src="assets/hero1.jpg" alt="Product Image" class="w-full h-full object-cover transition-opacity duration-200" style="opacity: 1;">
-                </div>
+            <!-- LEFT COLUMN: Cart Items -->
+            <div class="lg:col-span-8">
                 
-                <!-- Thumbnails -->
-                <div class="flex space-x-4">
-                    <button onclick="changeImage(this)" data-full-image="assets/hero1.jpg" class="thumb-btn w-20 h-20 bg-white dark:bg-slate-900 rounded-2xl border-2 border-gray-900 dark:border-white opacity-100 overflow-hidden cursor-pointer transition-all duration-300">
-                         <img src="assets/hero1.jpg" alt="Thumb 1" class="w-full h-full object-cover pointer-events-none">
-                    </button>
-                    
-                    <button onclick="changeImage(this)" data-full-image="assets/TamaplushNo.png" class="thumb-btn w-20 h-20 bg-white dark:bg-slate-900 rounded-2xl border border-transparent opacity-50 hover:opacity-100 overflow-hidden cursor-pointer transition-all duration-300">
-                         <img src="assets/TamaplushNo.png" alt="Thumb 2" class="w-full h-full object-cover pointer-events-none">
-                    </button>
+                <!-- EMPTY STATE: Pacman Ghost -->
+                <div id="empty-cart-state" class="hidden flex-col items-center justify-center py-24 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-dashed border-gray-300 dark:border-slate-700">
+                    <a href="https://www.google.com/logos/2010/pacman10-i.html" target="_blank" rel="noopener noreferrer" title="A blue ghost...">
+                        <i class="fa-solid fa-ghost text-6xl text-gray-300 dark:text-slate-600 mb-6 hover:text-imvidia duration-300 hover:scale-110 transition transform"></i>
+                    </a>
+                    <h3 class="text-2xl font-bold text-gray-500 dark:text-gray-400">Your cart is feeling light...</h3>
+                    <p class="text-gray-400 dark:text-gray-500 mt-2 mb-8 text-sm">Looks like you haven't added anything yet.</p>
+                    <a href="Index.html#catalog" class="px-6 py-3 bg-imvidia hover:bg-imvidia-dark text-white rounded-xl shadow-md font-bold text-sm transition transform hover:-translate-y-0.5">
+                        <i class="fa-solid fa-store mr-2"></i> Browse Catalog
+                    </a>
+                </div>
+
+                <!-- FILLED STATE: Items Container -->
+                <div id="cart-items-container" class="space-y-4">
+                    <!-- Javascript will inject items here -->
                 </div>
             </div>
 
-            <!-- Product Details -->
-            <div class="lg:col-span-5 flex flex-col justify-center">
-                
-                <p class="text-sm text-imvidia font-bold tracking-widest uppercase mb-4">portable devices</p>
-                <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-6 tracking-tight leading-[1.1]">
-                    [Placeholder Product Name]
-                </h1>
-                
-                <p class="text-2xl md:text-3xl font-medium text-gray-900 dark:text-white mb-8">
-                    RM 0.00
-                </p>
-
-                <!-- Product Description -->
-                <div class="prose prose-lg text-gray-500 dark:text-gray-400 mb-10 leading-relaxed font-light">
-                    <p>
-                        TAMAMOTAMAMOTAMAMOTAMAMO HACHIMIHACHIMIHACHIMIHACHIMI Once connected to the database, this text will automatically update to the actual item.
-                    </p>
-                </div>
-
-                <!-- Policies -->
-                <div class="border-t border-b border-gray-200 dark:border-slate-800 py-6 mb-10">
-                    <div class="flex justify-between items-center py-2">
-                        <span class="text-gray-500 dark:text-gray-400 font-medium">Availability</span>
-                        <span class="text-gray-900 dark:text-white font-semibold">In Stock</span>
-                    </div>
-                    <div class="flex justify-between items-center py-2">
-                        <span class="text-gray-500 dark:text-gray-400 font-medium">Delivery</span>
-                        <span class="text-gray-900 dark:text-white font-semibold">1-2 Business Days</span>
-                    </div>
-                    <div class="flex justify-between items-center py-2">
-                        <span class="text-gray-500 dark:text-gray-400 font-medium">Warranty</span>
-                        <span class="text-gray-900 dark:text-white font-semibold">1 Year Included</span>
-                    </div>
-                </div>
-
-                <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+            <!-- RIGHT COLUMN: Order Summary -->
+            <div class="lg:col-span-4 relative">
+                <div class="sticky top-24 bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Order Summary</h2>
                     
-                    <!-- Quantity Input (Now using hide-spinner class) -->
-                    <div class="sm:w-32">
-                        <div class="flex items-center justify-between border border-gray-300 dark:border-slate-700 rounded-full h-14 px-4 bg-white dark:bg-slate-900">
-                            <button type="button" class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition" onclick="document.getElementById('qty').value = Math.max(1, parseInt(document.getElementById('qty').value) - 1)">
-                                <i class="fa-solid fa-minus text-xs"></i>
-                            </button>
-                            <input type="number" id="qty" value="1" min="1" class="hide-spinner w-10 text-center border-none bg-transparent font-semibold focus:ring-0 text-gray-900 dark:text-white p-0">
-                            <button type="button" class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition" onclick="document.getElementById('qty').value = parseInt(document.getElementById('qty').value) + 1">
-                                <i class="fa-solid fa-plus text-xs"></i>
-                            </button>
+                    <div class="space-y-4 text-sm mb-6 border-b border-gray-100 dark:border-slate-800 pb-6">
+                        <div class="flex justify-between text-gray-600 dark:text-gray-400">
+                            <span>Subtotal</span>
+                            <span id="summary-subtotal" class="font-medium text-gray-900 dark:text-white">RM 0.00</span>
+                        </div>
+                        <div class="flex justify-between text-gray-600 dark:text-gray-400">
+                            <span>Shipping</span>
+                            <span>Calculated at checkout</span>
                         </div>
                     </div>
 
-                    <!-- Add to Cart -->
-                    <button onclick="addToCart('[Placeholder Product]', 0.00)" class="flex-1 bg-imvidia dark:bg-imvidia-dark text-white dark:text-white hover:bg-imvidia dark:hover:bg-imvidia dark:hover:text-white h-14 rounded-full font-bold transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-imvidia/25 hover:-translate-y-1">
-                        <span>Add to Cart</span>
-                    </button>
-                </div>
+                    <div class="flex justify-between items-end mb-8">
+                        <span class="text-base font-bold text-gray-900 dark:text-white">Total</span>
+                        <div class="text-right">
+                            <span class="text-xs text-gray-500 dark:text-gray-400 mr-1">MYR</span>
+                            <span id="summary-total" class="text-2xl font-extrabold text-gray-900 dark:text-white">RM 0.00</span>
+                        </div>
+                    </div>
 
+                    <a href="checkout.html" id="checkout-btn" class="w-full py-4 px-4 bg-imvidia hover:bg-imvidia-dark text-white rounded-xl shadow-lg shadow-imvidia/30 font-bold text-lg transition transform hover:-translate-y-0.5 flex items-center justify-center text-center">
+                        Proceed to Checkout <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
             </div>
+            
         </div>
     </main>
 
@@ -289,31 +260,136 @@
         </div>
     </footer>
 
-    <!-- Image Gallery Scripts -->
+    <!-- CART LOGIC: Reads from LocalStorage, updates totals and handles increment/decrement/delete -->
     <script>
-        function changeImage(clickedElement) {
-            const fullImageSrc = clickedElement.getAttribute('data-full-image');
-            const mainImage = document.getElementById('main-image');
+        function loadCart() {
+            // Read the cart from localStorage
+            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
             
-            mainImage.style.opacity = '0';
+            const container = document.getElementById('cart-items-container');
+            const emptyState = document.getElementById('empty-cart-state');
+            const checkoutBtn = document.getElementById('checkout-btn');
+            const subtotalEl = document.getElementById('summary-subtotal');
+            const totalEl = document.getElementById('summary-total');
 
-            setTimeout(() => {
-                mainImage.src = fullImageSrc;
-                mainImage.style.opacity = '1';
-            }, 200);
+            // If empty, show the Ghost!
+            if (cart.length === 0) {
+                container.innerHTML = '';
+                container.classList.add('hidden');
+                
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
 
-            const allThumbs = document.querySelectorAll('.thumb-btn');
-            allThumbs.forEach(thumb => {
-                thumb.classList.remove('border-2', 'border-gray-900', 'dark:border-white', 'opacity-100');
-                thumb.classList.add('border', 'border-transparent', 'opacity-50', 'hover:opacity-100');
+                subtotalEl.innerText = 'RM 0.00';
+                totalEl.innerText = 'RM 0.00';
+
+                // Disable checkout button
+                checkoutBtn.classList.add('opacity-50', 'pointer-events-none');
+                checkoutBtn.href = "#";
+                updateCartBadge(0);
+                return;
+            }
+
+            // If not empty, hide ghost and render items
+            container.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+            emptyState.classList.remove('flex');
+            checkoutBtn.classList.remove('opacity-50', 'pointer-events-none');
+            checkoutBtn.href = "checkout.html";
+
+            let html = '';
+            let totalCost = 0;
+            let totalItems = 0;
+
+            cart.forEach((item, index) => {
+                const itemQty = item.quantity || 1;
+                const itemTotal = item.price * itemQty;
+                
+                totalCost += itemTotal;
+                totalItems += itemQty;
+
+                html += `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-6 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl shadow-sm transition">
+                        <!-- Thumbnail & Info -->
+                        <div class="flex items-center space-x-4 mb-4 sm:mb-0">
+                            <div class="w-20 h-20 bg-gray-50 dark:bg-slate-800 rounded-xl flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-slate-700">
+                                <i class="fa-solid fa-box-open text-2xl text-gray-300 dark:text-gray-500"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900 dark:text-white text-base sm:text-lg leading-tight mb-1">${item.name}</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Unit Price: RM ${parseFloat(item.price).toFixed(2)}</p>
+                            </div>
+                        </div>
+
+                        <!-- Controls & Price -->
+                        <div class="flex items-center justify-between sm:justify-end space-x-4 sm:space-x-8 w-full sm:w-auto">
+                            
+                            <!-- Custom Qty Scroller -->
+                            <div class="flex items-center justify-between border border-gray-300 dark:border-slate-700 rounded-full h-10 px-2 bg-gray-50 dark:bg-slate-800 w-24 flex-shrink-0">
+                                <button onclick="updateQuantity(${index}, -1)" class="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-imvidia transition rounded-full hover:bg-gray-200 dark:hover:bg-slate-700">
+                                    <i class="fa-solid fa-minus text-xs"></i>
+                                </button>
+                                <span class="font-semibold text-gray-900 dark:text-white text-sm select-none">${itemQty}</span>
+                                <button onclick="updateQuantity(${index}, 1)" class="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-imvidia transition rounded-full hover:bg-gray-200 dark:hover:bg-slate-700">
+                                    <i class="fa-solid fa-plus text-xs"></i>
+                                </button>
+                            </div>
+
+                            <!-- Item Total -->
+                            <div class="text-right w-24 hidden sm:block">
+                                <p class="font-bold text-gray-900 dark:text-white text-sm sm:text-base">RM ${itemTotal.toFixed(2)}</p>
+                            </div>
+
+                            <!-- Trash Button -->
+                            <button onclick="updateQuantity(${index}, -999)" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-500 rounded-full transition transform hover:scale-110 flex-shrink-0">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
             });
 
-            clickedElement.classList.remove('border', 'border-transparent', 'opacity-50', 'hover:opacity-100');
-            clickedElement.classList.add('border-2', 'border-gray-900', 'dark:border-white', 'opacity-100');
+            container.innerHTML = html;
+            subtotalEl.innerText = 'RM ' + totalCost.toFixed(2);
+            totalEl.innerText = 'RM ' + totalCost.toFixed(2);
+            
+            updateCartBadge(totalItems);
         }
+
+        // Change quantity (if dropped to 0, it removes it)
+        function updateQuantity(index, delta) {
+            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            
+            if (cart[index]) {
+                // Handle older cart arrays that might not have a quantity variable yet
+                if(!cart[index].quantity) cart[index].quantity = 1;
+                
+                cart[index].quantity += delta;
+                
+                if (cart[index].quantity <= 0) {
+                    cart.splice(index, 1);
+                }
+                
+                localStorage.setItem('imvidia_cart', JSON.stringify(cart));
+                loadCart();
+            }
+        }
+
+        function updateCartBadge(count) {
+            const badge = document.getElementById('cart-badge');
+            if(badge) {
+                badge.innerText = count;
+                // Pop animation on change
+                badge.classList.add('scale-150');
+                setTimeout(() => badge.classList.remove('scale-150'), 200);
+            }
+        }
+
+        // Initialize cart on load
+        document.addEventListener('DOMContentLoaded', loadCart);
     </script>
 
-    <!-- Dark Mode Scripts (Cleaned up duplicates!) -->
+    <!-- Dark mode logic -->
     <script>
         function updateLogoForMode() {
             const logo = document.getElementById('navbarLogo');
@@ -324,12 +400,13 @@
         function updateDarkToggleIcon() {
             const icon = document.getElementById('dark-mode-icon');
             if (!icon) return;
-            icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun text-lg' : 'fa-solid fa-moon text-lg';
         }
 
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
             localStorage.setItem('imvidiaDarkMode', document.documentElement.classList.contains('dark') ? 'true' : 'false');
+            
             updateLogoForMode();
             updateDarkToggleIcon();
         }
@@ -342,51 +419,6 @@
             updateLogoForMode();
             updateDarkToggleIcon();
         });
-    </script>
-
-    <!-- Cart Script -->
-    <script>
-        // 1. Updates the red bubble on the cart icon
-        function updateCartBadge() {
-            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
-            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-            
-            const badge = document.getElementById('cart-badge');
-            if (badge) {
-                badge.innerText = totalItems;
-                // Pop animation
-                badge.classList.add('scale-150');
-                setTimeout(() => badge.classList.remove('scale-150'), 200);
-            }
-        }
-
-        // 2. Add items to LocalStorage
-        function addToCart(productName, price) {
-            const qtyInput = document.getElementById('qty');
-            const qty = parseInt(qtyInput.value) || 1;
-            
-            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
-            
-            let existingItem = cart.find(item => item.name === productName);
-            if (existingItem) {
-                existingItem.quantity += qty;
-            } else {
-                cart.push({ name: productName, price: price, quantity: qty });
-            }
-            
-            localStorage.setItem('imvidia_cart', JSON.stringify(cart));
-            updateCartBadge();
-            
-            alert(`Added ${qty}x ${productName} to your cart!`);
-        }
-
-        // 3. Redirect to the actual cart.html page
-        function viewCart() {
-            window.location.href = 'cart.html';
-        }
-
-        // Check LocalStorage immediately when the page loads so the badge is correct!
-        document.addEventListener('DOMContentLoaded', updateCartBadge);
     </script>
 
 </body>

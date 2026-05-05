@@ -95,53 +95,51 @@
 </head>
 
 <body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
-    <nav class="bg-white/95 shadow-md sticky top-0 z-50 dark:bg-slate-950/95">
+   <!-- Navbar: Solid background (bg-white/dark:bg-slate-950) -->
+    <nav class="bg-white shadow-md sticky top-0 z-50 dark:bg-slate-950 transition-colors duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-             <div class="flex justify-between h-16 items-center">
-                <a href="#" id="homeLink1" class="flex-shrink-0 flex items-center cursor-pointer">
-                    <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
-                    <span class="font-bold text-2xl tracking-tight text-gray-900 dark:text-white">ImVidia<span class="text-imvidia">.</span></span>
-                </a>
-
-                <script>
-                    document.getElementById('homeLink1').addEventListener('click', function(e) {
-                    e.preventDefault();
-                        window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth'
-                        });
-                    });
-                </script>
-
-                    <div class="hidden md:flex space-x-8 items-center">
-                    <a href="#" id="homeLink2" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Home</a>
-                    <a href="#catalog" id="catalogLink1" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Catalog</a>
-                    <a href="#" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Support</a>
-                    <script>
-                    document.getElementById('homeLink2').addEventListener('click', function(e) {
-                    e.preventDefault();
-                        window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth'
-                        });
-                    });
-                </script>
-                    <script>
-                    document.getElementById('catalogLink1').addEventListener('click', function(e) {
-                    e.preventDefault();
-                        window.scrollTo({
-                        top: document.getElementById('catalog').offsetTop - 80,
-                        behavior: 'smooth'
-                        });
-                    });
-                </script>
-                    </div>
+             <!-- Added relative positioning to parent container for absolute centering -->
+             <div class="flex justify-between h-16 items-center relative">
+                
+                <!-- LEFT SECTION: Logo + Dark Mode Toggle -->
+                <div class="flex items-center space-x-6">
+                    <a href="#" id="homeLink1" class="flex-shrink-0 flex items-center cursor-pointer">
+                        <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
+                        <span class="font-bold text-2xl tracking-tight text-gray-900 dark:text-white">ImVidia<span class="text-imvidia">.</span></span>
+                    </a>
                     
-                    <div class="flex items-center space-x-4">
                     <button id="dark-mode-toggle" type="button" class="p-2 rounded-full text-gray-600 hover:text-imvidia transition dark:text-gray-300" aria-label="Toggle dark mode" onclick="toggleDarkMode()">
                         <i id="dark-mode-icon" class="fa-solid fa-moon"></i>
                     </button>
+                </div>
 
+                <script>
+                    document.getElementById('homeLink1').addEventListener('click', function(e) {
+                        e.preventDefault();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                </script>
+
+                <!-- MIDDLE SECTION: Absolutely centered Navigation Links -->
+                <div class="hidden md:flex space-x-8 items-center absolute left-1/2 transform -translate-x-1/2">
+                    <a href="#" id="homeLink2" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Home</a>
+                    <a href="#catalog" id="catalogLink1" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Catalog</a>
+                    <a href="#" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Support</a>
+                </div>
+
+                <script>
+                    document.getElementById('homeLink2').addEventListener('click', function(e) {
+                        e.preventDefault();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                    document.getElementById('catalogLink1').addEventListener('click', function(e) {
+                        e.preventDefault();
+                        window.scrollTo({ top: document.getElementById('catalog').offsetTop - 80, behavior: 'smooth' });
+                    });
+                </script>
+                    
+                <!-- RIGHT SECTION: Auth + User + Cart -->
+                <div class="flex items-center space-x-4">
                     <a href="login.html" class="hidden md:block text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">
                         Log In
                     </a>
@@ -150,6 +148,12 @@
                         Register
                     </a>
 
+                    <!-- User Profile Icon (Placeholder) -->
+                    <button class="relative p-2 text-gray-600 hover:text-imvidia transition dark:text-gray-300" title="User Profile">
+                        <i class="fa-solid fa-user text-xl"></i>
+                    </button>
+
+                    <!-- Cart Icon with Red Badge -->
                     <button class="relative p-2 text-gray-600 hover:text-imvidia transition dark:text-gray-300" onclick="viewCart()">
                         <i class="fa-solid fa-cart-shopping text-xl"></i>
                         <span id="cart-badge" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-imvidia rounded-full transition-transform duration-200">
@@ -157,39 +161,10 @@
                         </span>
                     </button>
                 </div>
+
              </div>
         </div>
     </nav>
-
-    <script>
-        function updateLogoForMode() {
-            const logo = document.getElementById('navbarLogo');
-            if (!logo) return;
-            logo.src = document.documentElement.classList.contains('dark') ? 'assets/logo-light.svg' : 'assets/logo.svg';
-        }
-
-        function updateDarkToggleIcon() {
-            const icon = document.getElementById('dark-mode-icon');
-            if (!icon) return;
-            icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
-        }
-
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            localStorage.setItem('imvidiaDarkMode', document.documentElement.classList.contains('dark') ? 'true' : 'false');
-            updateLogoForMode();
-            updateDarkToggleIcon();
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const stored = localStorage.getItem('imvidiaDarkMode');
-            if (stored === 'true') {
-                document.documentElement.classList.add('dark');
-            }
-            updateLogoForMode();
-            updateDarkToggleIcon();
-        });
-    </script>
 
     <header class="bg-gray-900 text-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28 flex flex-col md:flex-row items-center">
@@ -444,40 +419,6 @@
         });
     </script>
 
-    <!-- Cart Logic -->
-    <script>
-        let cart = [];
-        const cartNum = document.getElementById('cart-badge');
-
-        function addToCart(productName, price) {
-            cart.push({ name: productName, price: price });
-            cartNum.innerText = cart.length;
-            
-            cartNum.classList.add('scale-150');
-            setTimeout(() => {
-                cartNum.classList.remove('scale-150');
-            }, 200);
-        }
-
-        function viewCart() {
-            if (cart.length === 0) {
-                alert("Your ImVidia cart is empty!");
-                return;
-            }
-            
-            let message = "🛒 YOUR CART:\n\n";
-            let total = 0;
-            
-            cart.forEach((item, index) => {
-                message += `${index + 1}. ${item.name} - RM ${item.price.toFixed(2)}\n`;
-                total += item.price;
-            });
-            
-            message += `\nTotal: RM ${total.toFixed(2)}\n\n(This will go to the checkout page later!)`;
-            alert(message);
-        }
-    </script>
-
     <!-- category anim -->
     <script>
         let activeCategoryId = null;
@@ -533,6 +474,79 @@
                 }, 300); 
             }
         }
+    </script>
+
+    <!-- Dark Mode Scripts (Cleaned up duplicates) -->
+    <script>
+        function updateLogoForMode() {
+            const logo = document.getElementById('navbarLogo');
+            if (!logo) return;
+            logo.src = document.documentElement.classList.contains('dark') ? 'assets/logo-light.svg' : 'assets/logo.svg';
+        }
+
+        function updateDarkToggleIcon() {
+            const icon = document.getElementById('dark-mode-icon');
+            if (!icon) return;
+            icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('imvidiaDarkMode', document.documentElement.classList.contains('dark') ? 'true' : 'false');
+            updateLogoForMode();
+            updateDarkToggleIcon();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const stored = localStorage.getItem('imvidiaDarkMode');
+            if (stored === 'true') {
+                document.documentElement.classList.add('dark');
+            }
+            updateLogoForMode();
+            updateDarkToggleIcon();
+        });
+    </script>
+
+    <!-- Cart Logic -->
+    <script>
+        // 1. Updates the red bubble on the cart icon from memory
+        function updateCartBadge() {
+            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            const badge = document.getElementById('cart-badge');
+            if (badge) {
+                badge.innerText = totalItems;
+                // Pop animation
+                badge.classList.add('scale-150');
+                setTimeout(() => badge.classList.remove('scale-150'), 200);
+            }
+        }
+
+        // 2. Safely add to cart (in case you add 'Quick Add' buttons to the homepage later)
+        function addToCart(productName, price) {
+            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            
+            let existingItem = cart.find(item => item.name === productName);
+            if (existingItem) {
+                existingItem.quantity += 1; // Default to 1 for quick adds
+            } else {
+                cart.push({ name: productName, price: price, quantity: 1 });
+            }
+            
+            localStorage.setItem('imvidia_cart', JSON.stringify(cart));
+            updateCartBadge();
+            
+            alert(`Added 1x ${productName} to your cart!`);
+        }
+
+        // 3. Redirect to the actual cart.html page
+        function viewCart() {
+            window.location.href = 'cart.html';
+        }
+
+        // Check LocalStorage immediately when the page loads so the badge is correct!
+        document.addEventListener('DOMContentLoaded', updateCartBadge);
     </script>
 
 </body>
