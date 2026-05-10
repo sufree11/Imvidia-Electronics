@@ -1,5 +1,5 @@
 <?php
-$host = getenv('DB_HOST') ?: 'localhost';
+$host = getenv('DB_HOST') ?: 'db-imvidia-do-user-36450203-0.f.db.ondigitalocean.com';
 $port = getenv('DB_PORT') ?: 25060;
 $dbname = getenv('DB_NAME') ?: 'db';
 $username = getenv('DB_USER') ?: 'db';
