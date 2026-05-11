@@ -1,3 +1,13 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
+    header("Location: login.php");
+    exit();
+}
+
+include 'db/database.php';
+?>
+
 <html>
 <head>
     <meta charset="UTF-8">
@@ -115,7 +125,7 @@
 
         <!-- logout -->
         <div class="p-4 border-t border-gray-100 dark:border-slate-800">
-            <a href="login.php" class="flex items-center px-4 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition group">
+            <a href="logout.php" class="flex items-center px-4 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition group">
                 <i class="fa-solid fa-arrow-right-from-bracket w-6 group-hover:-translate-x-1 transition"></i>
                 <span class="font-medium">Log Out</span>
             </a>
@@ -150,7 +160,9 @@
                 <div class="flex items-center space-x-3 border-l border-gray-200 dark:border-slate-700 pl-4 cursor-pointer hover:opacity-80 transition">
                     <div class="text-right hidden sm:block">
                         <!-- profile placeholder -->
-                        <p class="text-sm font-bold text-gray-900 dark:text-white leading-tight">The Architect</p>
+                        <p class="text-sm font-bold text-gray-900 dark:text-white leading-tight">
+                            <?php echo htmlspecialchars($_SESSION['user_name']); ?>
+                        </p>
                         <p class="text-xs text-gray-500 dark:text-gray-400">Administrator</p>
                     </div>
                     <!-- pfp placeholder -->
