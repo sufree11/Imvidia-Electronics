@@ -220,7 +220,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 identityLabel.innerText = "Admin ID";
                 identityInput.type = "text";
-                identityInput.placeholder = "ADMIN-000";
+                identityInput.placeholder = "e.g. ADMIN-067";
                 identityIcon.className = "fa-solid fa-id-badge text-gray-400";
                 submitBtn.innerText = "Sign In as Admin";
                 submitBtn.classList.replace('bg-imvidia', 'bg-gray-900');
