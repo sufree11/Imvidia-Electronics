@@ -2,6 +2,7 @@
 session_start();
 require_once 'db/database.php';
 
+// Security Bouncer
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'customer') {
     header("Location: login.php");
     exit();
@@ -21,15 +22,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $address_state = mysqli_real_escape_string($conn, $_POST['address_state']);
     $address_zip = mysqli_real_escape_string($conn, $_POST['address_zip']);
     
+    $current_password = $_POST['current_password'] ?? '';
+    $new_password = $_POST['new_password'] ?? '';
+    $confirm_new_password = $_POST['confirm_new_password'] ?? '';
+    
     $avatar_query_part = "";
+    $password_query_part = "";
     
+    // Handle Password Change
+    if (!empty($current_password) || !empty($new_password) || !empty($confirm_new_password)) {
+        $pass_check_query = "SELECT password_hash FROM users WHERE id = '$user_id' LIMIT 1";
+        $pass_check_result = mysqli_query($conn, $pass_check_query);
+        $user_data = mysqli_fetch_assoc($pass_check_result);
+        
+        if ($current_password !== $user_data['password_hash']) {
+            $message = "Current password is incorrect.";
+            $msg_type = "error";
+        } else if ($new_password !== $confirm_new_password) {
+            $message = "New passwords do not match.";
+            $msg_type = "error";
+        } else if (strlen($new_password) < 8) {
+            $message = "New password must be at least 8 characters.";
+            $msg_type = "error";
+        } else {
+            $password_query_part = ", password_hash='$new_password'";
+        }
+    }
     
-    if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
-        $upload_dir = 'uploads/avatars/';
+    // Handle Profile Picture Upload
+    if ($msg_type !== "error" && isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
         
+        // Fix: Use __DIR__ to give PHP the ABSOLUTE path to save the file securely on the server's hard drive
+        $upload_dir_absolute = __DIR__ . '/uploads/avatars/';
         
-        if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0777, true);
+        // Relative path to save in the database so the HTML <img> tag can actually read it
+        $upload_dir_relative = 'uploads/avatars/';
+        
+        // Create the folder if it doesn't exist yet!
+        if (!is_dir($upload_dir_absolute)) {
+            mkdir($upload_dir_absolute, 0777, true);
         }
         
         $file_ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
@@ -38,10 +69,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (in_array($file_ext, $allowed_exts)) {
             // Generate a unique name: e.g., user_4_17000000.jpg
             $new_filename = 'user_' . $user_id . '_' . time() . '.' . $file_ext;
-            $target_path = $upload_dir . $new_filename;
             
-            if (move_uploaded_file($_FILES['avatar']['tmp_name'], $target_path)) {
-                $avatar_query_part = ", profile_picture='$target_path'";
+            $target_path_absolute = $upload_dir_absolute . $new_filename;
+            $target_path_relative = $upload_dir_relative . $new_filename;
+            
+            if (move_uploaded_file($_FILES['avatar']['tmp_name'], $target_path_absolute)) {
+                $avatar_query_part = ", profile_picture='$target_path_relative'";
             } else {
                 $message = "Failed to upload image.";
                 $msg_type = "error";
@@ -63,6 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             address_state='$address_state', 
                             address_zip='$address_zip'
                             $avatar_query_part
+                            $password_query_part
                          WHERE id='$user_id'";
         
         if (mysqli_query($conn, $update_query)) {
@@ -76,6 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Fetch the updated user data
 $query = "SELECT * FROM users WHERE id = '$user_id' LIMIT 1";
 $result = mysqli_query($conn, $query);
 $user = mysqli_fetch_assoc($result);
@@ -87,11 +122,11 @@ $states = [
     'SGR' => 'Selangor', 'TRG' => 'Terengganu'
 ];
 
+// Determine the Avatar URL (Use their uploaded picture, or fallback to their initials!)
 $avatar_url = !empty($user['profile_picture']) 
     ? htmlspecialchars($user['profile_picture']) 
     : "https://ui-avatars.com/api/?name=" . urlencode($user['first_name'] . ' ' . $user['last_name']) . "&background=49C2FA&color=fff&size=128";
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -152,12 +187,10 @@ $avatar_url = !empty($user['profile_picture'])
 
 <body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
     
-    <!-- Navbar: Solid background, perfectly centered links -->
     <nav class="bg-white shadow-md sticky top-0 z-50 dark:bg-slate-950 transition-colors duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
              <div class="flex justify-between h-16 items-center relative">
                 
-                <!-- LEFT SECTION -->
                 <div class="flex items-center space-x-6">
                     <a href="index.html" class="flex-shrink-0 flex items-center cursor-pointer hover:scale-105 transition transform duration-300">
                         <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
@@ -169,29 +202,17 @@ $avatar_url = !empty($user['profile_picture'])
                     </button>
                 </div>
 
-                <!-- MIDDLE SECTION -->
                 <div class="hidden md:flex space-x-8 items-center absolute left-1/2 transform -translate-x-1/2">
                     <a href="index.html" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Home</a>
                     <a href="index.html#catalog" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Catalog</a>
                     <a href="#" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Support</a>
                 </div>
                     
-                <!-- RIGHT SECTION -->
                 <div class="flex items-center space-x-4">
-                    <a href="login.php" class="hidden md:block text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">
-                        Log In
-                    </a>
-
-                    <a href="register.php" class="hidden md:block bg-imvidia hover:bg-imvidia-dark text-white font-medium py-2 px-4 rounded-lg shadow-sm transition">
-                        Register
-                    </a>
-
-                    <!-- User Profile Icon -->
                     <a href="profile.php" class="relative p-2 text-imvidia transition dark:text-imvidia" title="User Profile">
                         <i class="fa-solid fa-user text-xl"></i>
                     </a>
 
-                    <!-- Cart Icon -->
                     <button class="relative p-2 text-gray-600 hover:text-imvidia transition dark:text-gray-300" onclick="viewCart()">
                         <i class="fa-solid fa-cart-shopping text-xl"></i>
                         <span id="cart-badge" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-imvidia rounded-full transition-transform duration-200">
@@ -204,7 +225,6 @@ $avatar_url = !empty($user['profile_picture'])
         </div>
     </nav>
 
-    <!-- Main Content -->
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full relative z-10">
         
         <nav class="flex text-xs font-medium text-gray-400 dark:text-slate-500 mb-8 uppercase tracking-widest" aria-label="Breadcrumb">
@@ -332,6 +352,27 @@ $avatar_url = !empty($user['profile_picture'])
                     </div>
                 </section>
 
+                <!-- Section 3: Change Password -->
+                <section class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-5 border-b border-gray-100 dark:border-slate-800 pb-3">Security & Password</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Leave these fields blank if you do not wish to change your password.</p>
+                    
+                    <div class="grid grid-cols-1 gap-6 max-w-md">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Current Password</label>
+                            <input type="password" name="current_password" placeholder="••••••••" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
+                            <input type="password" name="new_password" minlength="8" placeholder="••••••••" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm New Password</label>
+                            <input type="password" name="confirm_new_password" minlength="8" placeholder="••••••••" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Action Buttons -->
                 <div class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-4 pt-4">
                     <button type="button" onclick="window.location.reload();" class="mt-3 sm:mt-0 px-6 py-3 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-slate-600 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition font-medium">
@@ -357,7 +398,6 @@ $avatar_url = !empty($user['profile_picture'])
                     </div>
                     <p class="text-sm mb-4">Innovative & affordable electronics for the modern household.</p>
                 </div>
-                <!-- Reduced footer details for brevity, assumes standard footer structure -->
                 <div>
                     <h4 class="text-white font-bold mb-4 uppercase tracking-wider text-sm">Directories</h4>
                     <ul class="space-y-2 text-sm">
@@ -378,6 +418,7 @@ $avatar_url = !empty($user['profile_picture'])
         </div>
     </footer>
 
+    <!-- Form & Image Logic -->
     <script>
         // Profile Picture Preview Logic
         function previewAvatar(event) {
@@ -405,9 +446,8 @@ $avatar_url = !empty($user['profile_picture'])
         }
     </script>
 
-
-    <!-- Global Layout Logic (Dark mode & Cart) -->
-   <script>
+    <!-- Global Layout Logic -->
+    <script>
         // 1. Dark Mode
         function updateLogoForMode() {
             const logo = document.getElementById('navbarLogo');
