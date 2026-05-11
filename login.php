@@ -20,22 +20,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (mysqli_num_rows($result) > 0) {
         $user = mysqli_fetch_assoc($result);
         
-        if ($password === $user['password_hash']) {
+        if ($role === 'user') {
+            if ($password === $user['password_hash'] && $identity === $user['email']) {
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['user_role'] = $user['role'];
+                $_SESSION['user_name'] = $user['first_name'];
+
+                header("Location: index.html");
+                exit();
+            } else if ($identity !== $user['email']) {
+                $error_message = "Invalid password.";
+            } else {
+                $error_message = "No account found with that email address.";
+            }
+        } else if ($role === 'admin') {
+        if ($password === $user['password_hash'] &&  $identity === $user['admin_id'] ) {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_role'] = $user['role'];
             $_SESSION['user_name'] = $user['first_name'];
 
-            if ($role === 'admin') {
-                header("Location: admin.php");
-            } else {
-                header("Location: index.php");
-            }
+            header("Location: admin.html");
             exit();
-        } else {
+        } else if ($identity === $user['admin_id']){
             $error_message = "Invalid password.";
         }
     } else {
-        $error_message = "No account found with those details.";
+        $error_message = "no admin account found.";
     }
 }
 ?>
