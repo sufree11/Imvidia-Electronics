@@ -1,3 +1,37 @@
+<?php
+session_start();
+require_once 'db/dataabase.php';
+$error_message = '';
+
+if ($_SERVER[REQUEST_METHOD] === 'POST') {
+    $identity = mysqli_real__escape_string($conn, $_POST['identity']);
+    $password = $_POST['password'];
+    $role = $POST_['role'];
+
+    $query = "SELECT + FROM users WHERE email = '$identity' AND password = '$password' AND role = '$role' LIMIT 1";
+    $result = mysqli_query($conn, $query);
+
+    if (mysqli_num_rows($result) > 0) {
+        $user = mysqli_fetch_assoc($result);
+        if ($password === $user['password_hash']) {
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user_role'] = $user['role'];
+            $_SESSION['user_name'] = $user['first_name'];
+            if ($role === 'admin') {
+                header("Location: admin.php");
+            } else {
+                header("Location: index.php");
+            }
+            exit();
+        } else {
+            $error_message = "Invalid password.";
+        }
+    } else {
+        $error_message = "No account found.";
+    }
+}
+?>
+
 <html>
 <!-- 
   INTERNAL DEV NOTE: 
@@ -147,6 +181,12 @@
                 <p class="text-gray-500 text-sm">Please sign in to your account.</p>
             </div>
 
+            <?php if (!empty($error_message)): ?>
+                <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm text-center font-medium">
+                    <i class="fa-solid fa-circle-exclamation mr-1"></i> <?php echo $error_message; ?>
+                </div>
+            <?php endif; ?>
+
             <div class="flex bg-gray-100 p-1 rounded-lg mb-8 relative">
                 <button id="tab-customer" onclick="switchTab('customer')" class="flex-1 py-2 text-sm font-semibold rounded-md transition-all duration-300 bg-white text-gray-900 shadow-sm">
                     Customer
@@ -156,7 +196,9 @@
                 </button>
             </div>
 
-            <form id="loginForm" class="space-y-6">
+            <form id="loginForm" method="POST" action="login.php" class="space-y-6">
+
+                <input type="hidden" name="role" id="role-input" value="customer">
                 
                 <div>
                     <label id="identity-label" for="identity" class="block text-sm font-medium text-gray-700 mb-1">
@@ -219,18 +261,13 @@
     </main>
 
     <script>
-        var email = "janedoe@gmail.com";
-        var password = "ihateputera";
-        var adminId = "ADMIN-067";
-        var adminPass = "iloveputera";
-        const formId = document.getElementById('loginForm');
         const tabCustomer = document.getElementById('tab-customer');
         const tabAdmin = document.getElementById('tab-admin');
         const identityLabel = document.getElementById('identity-label');
         const identityInput = document.getElementById('identity-input');
         const identityIcon = document.getElementById('identity-icon');
         const submitBtn = document.getElementById('submit-btn');
-        const passwordInput = document.getElementById('password');
+        const roleInput = document.getElementById('role-input');
 
         
             
