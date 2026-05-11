@@ -1,5 +1,95 @@
 <?php
 session_start();
+require_once 'db/database.php';
+
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'customer') {
+    header("Location: login.php");
+    exit();
+}
+
+$user_id = $_SESSION['user_id'];
+$message = '';
+$msg_type = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $fname = mysqli_real_escape_string($conn, $_POST['fname']);
+    $lname = mysqli_real_escape_string($conn, $_POST['lname']);
+    $email = mysqli_real_escape_string($conn, $_POST['email']);
+    $phone = mysqli_real_escape_string($conn, $_POST['phone']);
+    $address_street = mysqli_real_escape_string($conn, $_POST['address_street']);
+    $address_city = mysqli_real_escape_string($conn, $_POST['address_city']);
+    $address_state = mysqli_real_escape_string($conn, $_POST['address_state']);
+    $address_zip = mysqli_real_escape_string($conn, $_POST['address_zip']);
+    
+    $avatar_query_part = "";
+    
+    
+    if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
+        $upload_dir = 'uploads/avatars/';
+        
+        
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
+        
+        $file_ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
+        $allowed_exts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        
+        if (in_array($file_ext, $allowed_exts)) {
+            // Generate a unique name: e.g., user_4_17000000.jpg
+            $new_filename = 'user_' . $user_id . '_' . time() . '.' . $file_ext;
+            $target_path = $upload_dir . $new_filename;
+            
+            if (move_uploaded_file($_FILES['avatar']['tmp_name'], $target_path)) {
+                $avatar_query_part = ", profile_picture='$target_path'";
+            } else {
+                $message = "Failed to upload image.";
+                $msg_type = "error";
+            }
+        } else {
+            $message = "Invalid image format. Allowed: JPG, PNG, GIF, WEBP.";
+            $msg_type = "error";
+        }
+    }
+
+    if ($msg_type !== "error") {
+        $update_query = "UPDATE users SET 
+                            first_name='$fname', 
+                            last_name='$lname', 
+                            email='$email', 
+                            phone='$phone',
+                            address_street='$address_street', 
+                            address_city='$address_city', 
+                            address_state='$address_state', 
+                            address_zip='$address_zip'
+                            $avatar_query_part
+                         WHERE id='$user_id'";
+        
+        if (mysqli_query($conn, $update_query)) {
+            $message = "Profile updated successfully!";
+            $msg_type = "success";
+            $_SESSION['user_name'] = $fname; 
+        } else {
+            $message = "Database error: " . mysqli_error($conn);
+            $msg_type = "error";
+        }
+    }
+}
+
+$query = "SELECT * FROM users WHERE id = '$user_id' LIMIT 1";
+$result = mysqli_query($conn, $query);
+$user = mysqli_fetch_assoc($result);
+
+$states = [
+    'JHR' => 'Johor', 'KDH' => 'Kedah', 'KEL' => 'Kelantan', 'KUL' => 'Kuala Lumpur',
+    'MLK' => 'Melaka', 'NSN' => 'Negeri Sembilan', 'PHG' => 'Pahang', 'PEN' => 'Penang',
+    'PRK' => 'Perak', 'PJY' => 'Putrajaya', 'SBH' => 'Sabah', 'SRW' => 'Sarawak',
+    'SGR' => 'Selangor', 'TRG' => 'Terengganu'
+];
+
+$avatar_url = !empty($user['profile_picture']) 
+    ? htmlspecialchars($user['profile_picture']) 
+    : "https://ui-avatars.com/api/?name=" . urlencode($user['first_name'] . ' ' . $user['last_name']) . "&background=49C2FA&color=fff&size=128";
 ?>
 
 <!DOCTYPE html>
@@ -97,7 +187,7 @@ session_start();
                     </a>
 
                     <!-- User Profile Icon -->
-                    <a href="profile.html" class="relative p-2 text-imvidia transition dark:text-imvidia" title="User Profile">
+                    <a href="profile.php" class="relative p-2 text-imvidia transition dark:text-imvidia" title="User Profile">
                         <i class="fa-solid fa-user text-xl"></i>
                     </a>
 
@@ -132,7 +222,13 @@ session_start();
             <p class="text-gray-500 dark:text-gray-400 mt-1">Manage your personal details and security.</p>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <?php if (!empty($message)): ?>
+            <div class="mb-6 px-4 py-3 rounded-lg text-sm font-medium text-center <?php echo $msg_type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'; ?>">
+                <?php echo $message; ?>
+            </div>
+        <?php endif; ?>
+
+        <form action="profile.php" method="POST" enctype="multipart/form-data" class="grid grid-cols-1 lg:grid-cols-12 gap-10">
             
             <!-- LEFT COLUMN: Profile Sidebar -->
             <div class="lg:col-span-4 xl:col-span-3 space-y-6">
@@ -142,7 +238,7 @@ session_start();
                     <!-- Profile Picture Upload Area -->
                     <div class="relative w-32 h-32 mx-auto mb-4 group cursor-pointer" onclick="document.getElementById('avatar-upload').click()">
                         <div class="w-full h-full rounded-full overflow-hidden border-4 border-white dark:border-slate-800 shadow-md">
-                            <img id="avatar-preview" src="https://ui-avatars.com/api/?name=Jane+Doe&background=49C2FA&color=fff&size=128" alt="Profile Picture" class="w-full h-full object-cover">
+                            <img id="avatar-preview" src="<?php echo $avatar_url; ?>" alt="Profile Picture" class="w-full h-full object-cover bg-white">
                         </div>
                         
                         <!-- Hover Overlay -->
@@ -150,18 +246,18 @@ session_start();
                             <i class="fa-solid fa-camera text-white text-2xl"></i>
                         </div>
                         
-                        <!-- Hidden input -->
-                        <input type="file" id="avatar-upload" accept="image/*" class="hidden" onchange="previewAvatar(event)">
+                        <!-- Hidden input for the image -->
+                        <input type="file" name="avatar" id="avatar-upload" accept="image/*" class="hidden" onchange="previewAvatar(event)">
                     </div>
 
-                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Jane Doe</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">jane.doe@example.com</p>
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white"><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4"><?php echo htmlspecialchars($user['email']); ?></p>
                 </div>
 
                 <!-- Navigation Links -->
                 <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden">
                     <nav class="flex flex-col">
-                        <a href="#" class="px-6 py-4 flex items-center bg-gray-50 dark:bg-slate-800/50 border-l-4 border-imvidia text-imvidia font-semibold transition">
+                        <a href="profile.php" class="px-6 py-4 flex items-center bg-gray-50 dark:bg-slate-800/50 border-l-4 border-imvidia text-imvidia font-semibold transition">
                             <i class="fa-regular fa-id-badge w-6"></i> Profile Details
                         </a>
                         <a href="#" class="px-6 py-4 flex items-center text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800/50 hover:text-imvidia dark:hover:text-imvidia transition border-l-4 border-transparent">
@@ -171,7 +267,7 @@ session_start();
                             <i class="fa-regular fa-heart w-6"></i> Wishlist
                         </a>
                         <div class="border-t border-gray-100 dark:border-slate-800 my-1"></div>
-                        <a href="login.php" class="px-6 py-4 flex items-center text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition border-l-4 border-transparent">
+                        <a href="logout.php" class="px-6 py-4 flex items-center text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition border-l-4 border-transparent">
                             <i class="fa-solid fa-arrow-right-from-bracket w-6"></i> Log Out
                         </a>
                     </nav>
@@ -181,95 +277,73 @@ session_start();
             <!-- RIGHT COLUMN: Forms -->
             <div class="lg:col-span-8 xl:col-span-9 space-y-8">
                 
-                <form id="profile-form" onsubmit="saveProfile(event)" class="space-y-8">
+                <!-- Section 1: Personal Info -->
+                <section class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-5 border-b border-gray-100 dark:border-slate-800 pb-3">Personal Information</h3>
                     
-                    <!-- Section 1: Personal Info -->
-                    <section class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-5 border-b border-gray-100 dark:border-slate-800 pb-3">Personal Information</h3>
-                        
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">First Name</label>
-                                <input type="text" value="Jane" required class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Last Name</label>
-                                <input type="text" value="Doe" required class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
-                                <input type="email" value="jane.doe@example.com" required class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
-                                <input type="tel" value="+60 12-345 6789" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
-                            </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">First Name</label>
+                            <input type="text" name="fname" value="<?php echo htmlspecialchars($user['first_name'] ?? ''); ?>" required class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
                         </div>
-                    </section>
-
-                    <!-- Section 2: Default Shipping Address -->
-                    <section class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-5 border-b border-gray-100 dark:border-slate-800 pb-3">Default Shipping Address</h3>
-                        
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <div class="sm:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Street Address</label>
-                                <input type="text" placeholder="123 Example Street, Apt 4B" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">City</label>
-                                <input type="text" placeholder="Kuala Lumpur" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">State / Province</label>
-                                <select class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm appearance-none cursor-pointer">
-                                    <option value="" disabled selected>Select State...</option>
-                                    <option value="SGR">Selangor</option>
-                                    <option value="KUL">Kuala Lumpur</option>
-                                    <option value="JHR">Johor</option>
-                                    <option value="PEN">Penang</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ZIP / Postal Code</label>
-                                <input type="text" placeholder="50000" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
-                            </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Last Name</label>
+                            <input type="text" name="lname" value="<?php echo htmlspecialchars($user['last_name'] ?? ''); ?>" required class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
                         </div>
-                    </section>
-
-                    <!-- Section 3: Change Password -->
-                    <section class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-5 border-b border-gray-100 dark:border-slate-800 pb-3">Security & Password</h3>
-                        
-                        <div class="grid grid-cols-1 gap-6 max-w-md">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Current Password</label>
-                                <input type="password" placeholder="••••••••" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
-                                <input type="password" placeholder="••••••••" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm New Password</label>
-                                <input type="password" placeholder="••••••••" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
-                            </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
+                            <input type="email" name="email" value="<?php echo htmlspecialchars($user['email'] ?? ''); ?>" required class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
                         </div>
-                    </section>
-
-                    <!-- Action Buttons -->
-                    <div class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-4 pt-4">
-                        <button type="button" class="mt-3 sm:mt-0 px-6 py-3 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-slate-600 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition font-medium">
-                            Discard Changes
-                        </button>
-                        <button type="submit" class="px-8 py-3 bg-imvidia hover:bg-imvidia-dark text-white rounded-xl shadow-md font-bold transition transform hover:-translate-y-0.5">
-                            Save Profile
-                        </button>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
+                            <input type="tel" name="phone" value="<?php echo htmlspecialchars($user['phone'] ?? ''); ?>" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                        </div>
                     </div>
-                </form>
+                </section>
+
+                <!-- Section 2: Default Shipping Address -->
+                <section class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-5 border-b border-gray-100 dark:border-slate-800 pb-3">Default Shipping Address</h3>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div class="sm:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Street Address</label>
+                            <input type="text" name="address_street" value="<?php echo htmlspecialchars($user['address_street'] ?? ''); ?>" placeholder="123 Example Street, Apt 4B" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">City</label>
+                            <input type="text" name="address_city" value="<?php echo htmlspecialchars($user['address_city'] ?? ''); ?>" placeholder="Kuala Lumpur" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">State / Province</label>
+                            <select name="address_state" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm appearance-none cursor-pointer">
+                                <option value="" disabled <?php echo empty($user['address_state']) ? 'selected' : ''; ?>>Select State...</option>
+                                <?php foreach($states as $code => $name): ?>
+                                    <option value="<?php echo $code; ?>" <?php echo ($user['address_state'] === $code) ? 'selected' : ''; ?>>
+                                        <?php echo $name; ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ZIP / Postal Code</label>
+                            <input type="text" name="address_zip" value="<?php echo htmlspecialchars($user['address_zip'] ?? ''); ?>" placeholder="50000" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-4 pt-4">
+                    <button type="button" onclick="window.location.reload();" class="mt-3 sm:mt-0 px-6 py-3 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-slate-600 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition font-medium">
+                        Discard Changes
+                    </button>
+                    <button type="submit" class="px-8 py-3 bg-imvidia hover:bg-imvidia-dark text-white rounded-xl shadow-md font-bold transition transform hover:-translate-y-0.5">
+                        Save Profile
+                    </button>
+                </div>
 
             </div>
-        </div>
+        </form>
     </main>
 
     <!-- Footer -->
@@ -304,7 +378,6 @@ session_start();
         </div>
     </footer>
 
-    <!-- Form & Image Logic -->
     <script>
         // Profile Picture Preview Logic
         function previewAvatar(event) {
@@ -316,13 +389,13 @@ session_start();
                     return;
                 }
                 
-                // Max size: 2MB for profile pics
+                // Max size: 2MB
                 if (file.size > 2 * 1024 * 1024) {
                     alert("Profile picture must be less than 2MB.");
                     return;
                 }
 
-                // Create a temporary local preview of the image
+                // Temporary local preview
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     document.getElementById('avatar-preview').src = e.target.result;
@@ -330,20 +403,11 @@ session_start();
                 reader.readAsDataURL(file);
             }
         }
-
-        // Save Profile Validation Simulator
-        function saveProfile(event) {
-            event.preventDefault(); // Prevent page reload
-            
-            // In a real app, Putera Mikail would grab the form data and the file input here 
-            // and send it via an AJAX POST request to update the database.
-            
-            alert("Success! Your profile details have been saved.");
-        }
     </script>
 
+
     <!-- Global Layout Logic (Dark mode & Cart) -->
-    <script>
+   <script>
         // 1. Dark Mode
         function updateLogoForMode() {
             const logo = document.getElementById('navbarLogo');
