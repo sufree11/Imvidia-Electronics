@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (mysqli_num_rows($result) > 0) {
         $user = mysqli_fetch_assoc($result);
         
-        if ($role === 'user') {
+        if ($role === 'customer') {
             if ($password === $user['password_hash'] && $identity === $user['email']) {
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['user_role'] = $user['role'];
