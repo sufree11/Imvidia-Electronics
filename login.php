@@ -191,7 +191,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="mt-8 text-center text-sm text-gray-600 dark:text-gray-400 border-t border-gray-100 dark:border-slate-700 pt-6">
                 Don't have an account? 
-                <a href="register.html" class="font-bold text-imvidia hover:text-imvidia-dark transition">
+                <a href="register.php" class="font-bold text-imvidia hover:text-imvidia-dark transition">
                     Register here
                 </a>
             </div>

@@ -12,8 +12,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $address_city = mysqli_real_escape_string($conn, $_POST['address_city']);
     $address_state = mysqli_real_escape_string($conn, $_POST['address_state']);
     $address_zip = mysqli_real_escape_string($conn, $_POST['address_zip']);
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $confirm_password = password_hash($_POST['confirm_password'], PASSWORD_DEFAULT);
+    $password = $_POST['password'];
+    $confirm_password = $_POST['confirm_password'];
 
     if ($password !== $confirm_password) {
         $error_message = "Your passwords do not match!";
@@ -191,15 +191,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
-                            <input type="password" name="password" required minlength="8" maxlength="20" class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm transition">
+                            <input type="password" id="reg-password" name="password" required minlength="8" maxlength="20" class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm transition">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm Password</label>
-                            <input type="password" name="confirm_password" required minlength="8" maxlength="20" class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm transition">
+                            <input type="password" id="reg-confirm" name="confirm_password" required minlength="8" maxlength="20" class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm transition">
+                            <p id="password-error" class="text-red-500 text-xs mt-1 font-medium hidden">Passwords do not match!</p>
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full py-3 px-4 rounded-lg shadow-md text-sm font-bold text-white bg-imvidia hover:bg-imvidia-dark transition mt-4">
+                    <button type="submit" id="reg-submit-btn" class="w-full py-3 px-4 rounded-lg shadow-md text-sm font-bold text-white bg-imvidia hover:bg-imvidia-dark transition mt-4">
                         Create Account
                     </button>
                     
@@ -216,6 +217,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </main>
 
     <script>
+    
+        const regPassword = document.getElementById('reg-password');
+        const regConfirm = document.getElementById('reg-confirm');
+        const pwdError = document.getElementById('password-error');
+        const submitBtn = document.getElementById('reg-submit-btn');
+
+        function validatePasswords() {
+            if (regConfirm.value !== '' && regPassword.value !== regConfirm.value) {
+                
+                pwdError.classList.remove('hidden');
+                regConfirm.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                
+                pwdError.classList.add('hidden');
+                regConfirm.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        if(regPassword && regConfirm) {
+            regPassword.addEventListener('input', validatePasswords);
+            regConfirm.addEventListener('input', validatePasswords);
+        }
+
+        
         function updateLogoForMode() {
             const logo = document.getElementById('navbarLogo');
             if (!logo) return;
