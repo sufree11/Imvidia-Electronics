@@ -12,6 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $address_city = mysqli_real_escape_string($conn, $_POST['address_city']);
     $address_state = mysqli_real_escape_string($conn, $_POST['address_state']);
     $address_zip = mysqli_real_escape_string($conn, $_POST['address_zip']);
+    $phonenum = mysqli_real_escape_string($conn, $_POST['phone']);
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
 
@@ -24,8 +25,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (mysqli_num_rows($check_result) > 0) {
             $error_message = "An account with that email address already exists.";
         } else {
-            $insert_query = "INSERT INTO users (role, first_name, last_name, email, password_hash, address_street, address_city, address_state, address_zip) 
-                             VALUES ('customer', '$fname', '$lname', '$email', '$password', '$address_street', '$address_city', '$address_state', '$address_zip')";
+            $insert_query = "INSERT INTO users (role, first_name, last_name, email, password_hash, phone, address_street, address_city, address_state, address_zip) 
+                             VALUES ('customer', '$fname', '$lname', '$email', '$password', '$phonenum', '$address_street', '$address_city', '$address_state', '$address_zip')";
             
             if (mysqli_query($conn, $insert_query)) {
                 $_SESSION['user_id'] = mysqli_insert_id($conn);
@@ -151,7 +152,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
                         <input type="email" name="email" required class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm transition" placeholder="jane@example.com">
                     </div>
-
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
+                        <input type="tel" name="phone" required class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm transition" placeholder="+60 12-XXX XXXX">
+                    </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Street Address</label>
                         <input type="text" name="address_street" required class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm transition" placeholder="123 Example Street, Apt 4B">
