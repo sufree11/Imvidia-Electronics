@@ -1,5 +1,8 @@
 <?php
 require_once 'db/session.php';
+require 'vendor/autoload.php';
+use Aws\S3\S3Client;
+use Aws\Exception\AwsException;
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
@@ -54,31 +57,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Handle Profile Picture Upload
     if ($msg_type !== "error" && isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
         
-        // Fix: Use __DIR__ to give PHP the ABSOLUTE path to save the file securely on the server's hard drive
-        $upload_dir_absolute = __DIR__ . '/uploads/avatars/';
-        
-        // Relative path to save in the database so the HTML <img> tag can actually read it
-        $upload_dir_relative = 'uploads/avatars/';
-        
-        // Create the folder if it doesn't exist yet!
-        if (!is_dir($upload_dir_absolute)) {
-            mkdir($upload_dir_absolute, 0777, true);
-        }
-        
         $file_ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
         $allowed_exts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
         
         if (in_array($file_ext, $allowed_exts)) {
-            // Generate a unique name: e.g., user_4_17000000.jpg
-            $new_filename = 'user_' . $user_id . '_' . time() . '.' . $file_ext;
+            $new_filename = 'avatars/user_' . $user_id . '_' . time() . '.' . $file_ext;
             
-            $target_path_absolute = $upload_dir_absolute . $new_filename;
-            $target_path_relative = $upload_dir_relative . $new_filename;
-            
-            if (move_uploaded_file($_FILES['avatar']['tmp_name'], $target_path_absolute)) {
-                $avatar_query_part = ", profile_picture='$target_path_relative'";
-            } else {
-                $message = "Failed to upload image.";
+            // Connect to DigitalOcean Spaces
+            $s3 = new S3Client([
+                'version' => 'latest',
+                'region'  => getenv('SPACES_REGION'),
+                'endpoint' => getenv('SPACES_ENDPOINT'),
+                'credentials' => [
+                    'key'    => getenv('SPACES_KEY'),
+                    'secret' => getenv('SPACES_SECRET'),
+                ],
+            ]);
+
+            try {
+                // Upload the file to the Spaces Bucket
+                $result = $s3->putObject([
+                    'Bucket'      => getenv('SPACES_BUCKET'),
+                    'Key'         => $new_filename,
+                    'SourceFile'  => $_FILES['avatar']['tmp_name'],
+                    'ACL'         => 'public-read', // Makes the image visible on the web
+                    'ContentType' => mime_content_type($_FILES['avatar']['tmp_name'])
+                ]);
+
+                // Grab the public URL DigitalOcean created for the image
+                $public_url = $result['ObjectURL'];
+                $avatar_query_part = ", profile_picture='$public_url'";
+                
+            } catch (AwsException $e) {
+                $message = "Failed to upload to cloud storage.";
+                // $message = "Cloud Error: " . $e->getMessage(); // Uncomment for debugging
                 $msg_type = "error";
             }
         } else {
