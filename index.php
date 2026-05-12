@@ -169,8 +169,7 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
                         window.scrollTo({ top: document.getElementById('catalog').offsetTop - 80, behavior: 'smooth' });
                     });
                 </script>
-                    
-                <!-- RIGHT SECTION: Auth + User + Cart -->
+    
                 <div class="flex items-center space-x-4">
                     <?php if ($is_logged_in): ?>
     <div class="hidden md:block mr-2 text-right">
