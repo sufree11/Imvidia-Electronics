@@ -196,7 +196,7 @@ $avatar_url = !empty($user['profile_picture'])
              <div class="flex justify-between h-16 items-center relative">
                 
                 <div class="flex items-center space-x-6">
-                    <a href="index.html" class="flex-shrink-0 flex items-center cursor-pointer hover:scale-105 transition transform duration-300">
+                    <a href="index.php" class="flex-shrink-0 flex items-center cursor-pointer hover:scale-105 transition transform duration-300">
                         <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
                         <span class="font-bold text-2xl tracking-tight text-gray-900 dark:text-white">ImVidia<span class="text-imvidia">.</span></span>
                     </a>
@@ -207,8 +207,8 @@ $avatar_url = !empty($user['profile_picture'])
                 </div>
 
                 <div class="hidden md:flex space-x-8 items-center absolute left-1/2 transform -translate-x-1/2">
-                    <a href="index.html" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Home</a>
-                    <a href="index.html#catalog" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Catalog</a>
+                    <a href="index.php" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Home</a>
+                    <a href="index.php#catalog" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Catalog</a>
                     <a href="#" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Support</a>
                 </div>
                     
@@ -233,7 +233,7 @@ $avatar_url = !empty($user['profile_picture'])
         
         <nav class="flex text-xs font-medium text-gray-400 dark:text-slate-500 mb-8 uppercase tracking-widest" aria-label="Breadcrumb">
             <ol class="inline-flex items-center space-x-2">
-                <li><a href="index.html" class="hover:text-imvidia transition">Home</a></li>
+                <li><a href="index.php" class="hover:text-imvidia transition">Home</a></li>
                 <li><span class="mx-1">/</span></li>
                 <li><a href="#" class="hover:text-imvidia transition">My Account</a></li>
                 <li><span class="mx-1">/</span></li>
@@ -405,8 +405,8 @@ $avatar_url = !empty($user['profile_picture'])
                 <div>
                     <h4 class="text-white font-bold mb-4 uppercase tracking-wider text-sm">Directories</h4>
                     <ul class="space-y-2 text-sm">
-                        <li><a href="index.html" class="hover:text-imvidia transition">Home</a></li>
-                        <li><a href="index.html#catalog" class="hover:text-imvidia transition">Product Catalog</a></li>
+                        <li><a href="index.php" class="hover:text-imvidia transition">Home</a></li>
+                        <li><a href="index.php#catalog" class="hover:text-imvidia transition">Product Catalog</a></li>
                     </ul>
                 </div>
                 <div>

@@ -95,7 +95,7 @@ include 'db/database.php';
         
         <!-- Sidebar Header (Logo) -->
         <div class="h-16 flex items-center px-6 border-b border-gray-100 dark:border-slate-800 w-full">
-            <a href="index.html" class="flex items-center cursor-pointer hover:scale-105 transition transform duration-300">
+            <a href="index.php" class="flex items-center cursor-pointer hover:scale-105 transition transform duration-300">
                 <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-8 w-auto mr-2">
                 <span class="font-bold text-xl tracking-tight text-gray-900 dark:text-white">Admin<span class="text-imvidia">Panel</span></span>
             </a>
