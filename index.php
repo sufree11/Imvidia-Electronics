@@ -2,7 +2,6 @@
 session_start();
 
 // 🛑 THE ANTI-CACHE BOUNCER 🛑
-// This forces the homepage to ACTUALLY check if you are logged in, breaking the cache loop!
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
@@ -11,14 +10,11 @@ $is_logged_in = false;
 $first_name = '';
 $avatar_url = '';
 
-// Check if the user is logged in
 if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
     $is_logged_in = true;
-    
-    // Connect to the database to grab their latest profile picture and name
     require_once 'db/database.php';
-    $user_id = mysqli_real_escape_string($conn, $_SESSION['user_id']);
     
+    $user_id = mysqli_real_escape_string($conn, $_SESSION['user_id']);
     $query = "SELECT first_name, last_name, profile_picture FROM users WHERE id = '$user_id' LIMIT 1";
     $result = mysqli_query($conn, $query);
     
@@ -26,17 +22,16 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
         $user = mysqli_fetch_assoc($result);
         $first_name = htmlspecialchars($user['first_name']);
         
-        // Check if they uploaded a picture, otherwise use the initials avatar
         if (!empty($user['profile_picture'])) {
             $avatar_url = htmlspecialchars($user['profile_picture']);
         } else {
-            $avatar_url = "https://ui-avatars.com/api/?name=" . urlencode($user['first_name'] . ' ' . $user['last_name']) . "&background=49C2FA&color=fff&size=128";
+            $avatar_url = "[https://ui-avatars.com/api/?name=](https://ui-avatars.com/api/?name=)" . urlencode($user['first_name'] . ' ' . $user['last_name']) . "&background=49C2FA&color=fff&size=128";
         }
     }
 }
 ?>
-<!DOCTYPE html>
-<html lang="en">
+
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -72,6 +67,7 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
             --surface: #ffffff;
             --text-primary: #111827;
             --text-secondary: #475569;
+            --text-muted: #64748b;
             --border-color: #e2e8f0;
         }
         .dark {
@@ -79,219 +75,446 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
             --surface: #111827;
             --text-primary: #f8fafc;
             --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
             --border-color: #334155;
         }
-        body { background-color: var(--bg) !important; color: var(--text-primary) !important; }
+        body {
+            background-color: var(--bg) !important;
+            color: var(--text-primary) !important;
+        }
         .dark .bg-white { background-color: var(--surface) !important; }
         .dark .bg-gray-50 { background-color: #020617 !important; }
+        .dark .bg-gray-100 { background-color: #17203a !important; }
+        .dark .bg-gray-900 { background-color: #020617 !important; }
+        .dark .bg-gray-700 { background-color: #1f2937 !important; }
+        .dark .text-gray-900,
+        .dark .text-gray-800,
+        .dark .text-gray-700 {
+            color: var(--text-primary) !important;
+        }
+        .dark .text-gray-600,
+        .dark .text-gray-500,
+        .dark .text-gray-400 {
+            color: var(--text-secondary) !important;
+        }
+        .dark .border-gray-100,
+        .dark .border-gray-200 {
+            border-color: var(--border-color) !important;
+        }
+        .dark .shadow-sm,
+        .dark .shadow-xl {
+            box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.4), 0 4px 6px -4px rgba(15, 23, 42, 0.1) !important;
+        }
+
         
-        .hero-gradient {
-            background: linear-gradient(135deg, #1F2468 0%, #49C2FA 100%);
+        .dropdown-wrapper {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dropdown-wrapper.open {
+            grid-template-rows: 1fr;
+        }
+        .dropdown-inner {
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-10px); 
+            transition: opacity 0.4s ease-out, transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dropdown-wrapper.open .dropdown-inner {
+            opacity: 1;
+            transform: translateY(0); 
         }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100">
-    
-    <nav class="bg-white shadow-sm sticky top-0 z-50 dark:bg-slate-950 transition-colors duration-300">
+
+<body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
+   <!-- Navbar: Solid background (bg-white/dark:bg-slate-950) -->
+    <nav class="bg-white shadow-md sticky top-0 z-50 dark:bg-slate-950 transition-colors duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
+             <!-- Added relative positioning to parent container for absolute centering -->
+             <div class="flex justify-between h-16 items-center relative">
                 
-                <!-- Logo -->
-                <a href="index.php" class="flex-shrink-0 flex items-center cursor-pointer hover:scale-105 transition transform duration-300">
-                    <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
-                    <span class="font-bold text-2xl tracking-tight text-gray-900 dark:text-white">ImVidia<span class="text-imvidia">.</span></span>
-                </a>
-                
-                <!-- Center Links -->
+                <!-- LEFT SECTION: Logo + Dark Mode Toggle -->
+                <div class="flex items-center space-x-6">
+                    <a href="#" id="homeLink1" class="flex-shrink-0 flex items-center cursor-pointer">
+                        <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
+                        <span class="font-bold text-2xl tracking-tight text-gray-900 dark:text-white">ImVidia<span class="text-imvidia">.</span></span>
+                    </a>
+                    
+                    <button id="dark-mode-toggle" type="button" class="p-2 rounded-full text-gray-600 hover:text-imvidia transition dark:text-gray-300" aria-label="Toggle dark mode" onclick="toggleDarkMode()">
+                        <i id="dark-mode-icon" class="fa-solid fa-moon"></i>
+                    </button>
+                </div>
+
+                <script>
+                    document.getElementById('homeLink1').addEventListener('click', function(e) {
+                        e.preventDefault();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                </script>
+
+                <!-- MIDDLE SECTION: Absolutely centered Navigation Links -->
                 <div class="hidden md:flex space-x-8 items-center absolute left-1/2 transform -translate-x-1/2">
-                    <a href="index.php" class="text-imvidia font-bold transition">Home</a>
-                    <a href="#catalog" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Catalog</a>
+                    <a href="#" id="homeLink2" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Home</a>
+                    <a href="#catalog" id="catalogLink1" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Catalog</a>
                     <a href="#" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Support</a>
                 </div>
 
-                <!-- Right Side Actions -->
-                <div class="flex items-center space-x-3 sm:space-x-4">
-                    <button id="dark-mode-toggle" type="button" class="p-2 rounded-full text-gray-600 hover:text-imvidia transition dark:text-gray-300" onclick="toggleDarkMode()">
-                        <i id="dark-mode-icon" class="fa-solid fa-moon text-lg"></i>
-                    </button>
+                <script>
+                    document.getElementById('homeLink2').addEventListener('click', function(e) {
+                        e.preventDefault();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                    document.getElementById('catalogLink1').addEventListener('click', function(e) {
+                        e.preventDefault();
+                        window.scrollTo({ top: document.getElementById('catalog').offsetTop - 80, behavior: 'smooth' });
+                    });
+                </script>
                     
-                    <!-- PHP DYNAMIC LOGIN/PROFILE AREA -->
+                <!-- RIGHT SECTION: Auth + User + Cart -->
+                <div class="flex items-center space-x-4">
                     <?php if ($is_logged_in): ?>
-                        <div class="hidden md:block mr-2">
-                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Welcome, <?php echo $first_name; ?>.</span>
-                        </div>
-                        <a href="profile.php" class="relative group cursor-pointer transition transform hover:scale-105" title="User Profile">
-                            <img src="<?php echo $avatar_url; ?>" alt="Profile" class="w-9 h-9 rounded-full border-2 border-imvidia object-cover bg-white shadow-sm">
-                        </a>
-                    <?php else: ?>
-                        <div class="hidden md:flex items-center space-x-4">
-                            <a href="login.php" class="text-sm font-semibold text-gray-600 hover:text-imvidia transition dark:text-gray-300">Log In</a>
-                            <a href="register.php" class="text-sm font-bold bg-imvidia hover:bg-imvidia-dark text-white px-4 py-2 rounded-lg shadow-md transition transform hover:-translate-y-0.5">Register</a>
-                        </div>
-                        <a href="login.php" class="md:hidden relative p-2 text-gray-600 hover:text-imvidia transition dark:text-gray-300">
-                            <i class="fa-solid fa-user text-xl"></i>
-                        </a>
-                    <?php endif; ?>
+    <div class="hidden md:block mr-2 text-right">
+        <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Welcome, <?php echo $first_name; ?>.</span>
+    </div>
+    <a href="profile.php" class="relative group cursor-pointer transition transform hover:scale-105" title="User Profile">
+        <img src="<?php echo $avatar_url; ?>" alt="Profile Picture" class="w-9 h-9 rounded-full border-2 border-imvidia object-cover bg-white shadow-sm">
+    </a>
+<?php else: ?>
+    <div class="hidden md:flex items-center space-x-4">
+        <a href="login.php" class="text-sm font-semibold text-gray-600 hover:text-imvidia transition dark:text-gray-300">Log In</a>
+        <a href="register.php" class="text-sm font-bold bg-imvidia hover:bg-imvidia-dark text-white px-4 py-2 rounded-lg shadow-md transition transform hover:-translate-y-0.5">Register</a>
+    </div>
+    <a href="login.php" class="md:hidden relative p-2 text-gray-600 hover:text-imvidia transition dark:text-gray-300">
+        <i class="fa-solid fa-user text-xl"></i>
+    </a>
+<?php endif; ?>
 
-                    <!-- Cart -->
+                    <!-- Cart Icon with Red Badge -->
                     <button class="relative p-2 text-gray-600 hover:text-imvidia transition dark:text-gray-300" onclick="viewCart()">
                         <i class="fa-solid fa-cart-shopping text-xl"></i>
-                        <span id="cart-badge" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-imvidia rounded-full transition-transform duration-200">0</span>
+                        <span id="cart-badge" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-imvidia rounded-full transition-transform duration-200">
+                            0
+                        </span>
                     </button>
                 </div>
-            </div>
+
+             </div>
         </div>
     </nav>
 
-    <main class="flex-grow">
-        <!-- Hero Section -->
-        <div class="relative bg-white dark:bg-slate-900 overflow-hidden">
-            <div class="max-w-7xl mx-auto">
-                <div class="relative z-10 pb-8 bg-white dark:bg-slate-900 sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32 pt-10 sm:pt-16 lg:pt-20 px-4 sm:px-6 lg:px-8">
-                    <div class="sm:text-center lg:text-left">
-                        <h1 class="text-4xl tracking-tight font-extrabold text-gray-900 dark:text-white sm:text-5xl md:text-6xl">
-                            <span class="block xl:inline">Next-gen tech for</span>
-                            <span class="block text-imvidia">the modern home</span>
-                        </h1>
-                        <p class="mt-3 text-base text-gray-500 dark:text-gray-400 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                            ImVidia brings you cutting-edge, affordable electronics designed to seamlessly integrate into your daily life. Upgrade your reality today.
-                        </p>
-                        <div class="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
-                            <div class="rounded-md shadow">
-                                <a href="#catalog" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-imvidia hover:bg-imvidia-dark md:py-4 md:text-lg transition transform hover:-translate-y-0.5">
-                                    Shop Now
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+    <header class="bg-gray-900 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28 flex flex-col md:flex-row items-center">
+            <div class="md:w-1/2 mb-10 md:mb-0">
+                <h1 class="text-4xl md:text-5xl font-extrabold leading-tight mb-4">
+                    Powering <span class="text-imvidia-light">Lives</span>, <br> at a better <span class="text-imvidia">Price</span>.
+                </h1>
+
+                <p class="text-lg text-gray-300 mb-8">
+                    Delivering innovative, affordable, and user-friendly solutions that improve your home comfort. Power your life with ImVidia today.
+                </p>
+
+                <div class="flex space-x-4">
+                    <a href="#catalog" id="catalogLink2" class="bg-imvidia hover:bg-imvidia-dark text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:-translate-y-1">
+                        Shop Now
+                    </a>
+
+                    <script>
+                    document.getElementById('catalogLink2').addEventListener('click', function(e) {
+                    e.preventDefault();
+                        window.scrollTo({
+                        top: document.getElementById('catalog').offsetTop - 80,
+                        behavior: 'smooth'
+                        });
+                    });
+                </script>
+                <a href="product.html"><button  class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:-translate-y-1">
+                        Learn More
+                    </button></a>
+                    
                 </div>
             </div>
-            <div class="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2 bg-gray-100 dark:bg-slate-800 flex items-center justify-center">
-                <!-- Fallback hero graphic since actual image paths might differ -->
-                <div class="w-full h-64 sm:h-72 md:h-96 lg:h-full hero-gradient flex items-center justify-center text-white opacity-90">
-                    <i class="fa-solid fa-microchip text-9xl drop-shadow-lg"></i>
-                </div>
+            <div class="md:w-1/2 w-full flex justify-center relative h-64 md:h-80 mt-10 md:mt-0">
+
+                <img src="assets/hero1.jpg" alt="ImVidia Fryer" class="carousel-image w-1/2 max-w-md rounded-xl shadow-2xl transition-all duration-700 ease-in-out object-cover aspect-video">
+                
+                <img src="assets/hero2.jpg" alt="ImVidia Stove" class="carousel-image w-1/2 max-w-md rounded-xl shadow-2xl duration-700 ease-in-out object-cover aspect-video">
+                
+                <img src="assets/hero3.jpg" alt="ImVidia Mixer" class="carousel-image w-1/2 max-w-md rounded-xl shadow-2xl duration-700 ease-in-out object-cover aspect-video">
             </div>
+
+        </div>
+    </header>
+
+    <main id="catalog" class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
+        
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Products</h2>
+            <div class="w-24 h-1 bg-imvidia mx-auto mt-4 rounded"></div>
+            
+                <div class="grid grid-cols-1 md:grid-cols-5 lg:grid-cols-5 gap-8 mt-12 relative z-10">
+                    <button id="cat-kitchen" onclick="toggleCategory('Kitchen Appliances', 'cat-kitchen')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group">
+                        <iconify-icon icon="material-symbols-light:kitchen-outline" class="z-10 text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
+                        <br>
+                        <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Kitchen<br>Appliances</span>
+                        <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
+                    </button>
+                    
+                    <button id="cat-audio" onclick="toggleCategory('Audio Visual', 'cat-audio')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group">
+                        <iconify-icon icon="fluent:tv-48-regular" class="text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
+                        <br>
+                        <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Audio<br>Visual</span>
+                        <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
+                    </button>
+                    
+                    <button id="cat-portable" onclick="toggleCategory('Portable Devices', 'cat-portable')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group">
+                        <iconify-icon icon="fluent:phone-laptop-20-regular" class="text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
+                        <br>
+                        <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Portable<br>Devices</span>
+                        <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
+                    </button>
+                    
+                    <button id="cat-personal" onclick="toggleCategory('Personal Care', 'cat-personal')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group">
+                        <iconify-icon icon="ph:hair-dryer-light" class="text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
+                        <br>
+                        <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Personal<br>Care</span>
+                        <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
+                    </button>
+                    
+                    <button id="cat-home" onclick="toggleCategory('Home Appliances', 'cat-home')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group">
+                        <iconify-icon icon="material-symbols-light:dishwasher-gen-outline-rounded" class="text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
+                        <br>
+                        <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Home<br>Appliances</span>
+                        <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
+                    </button>
+                </div>
         </div>
 
-        <!-- Featured Catalog Section -->
-        <div id="catalog" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-            <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-8">Featured Products</h2>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-6 xl:gap-x-8">
-                
-                <!-- Product 1 -->
-                <div class="group relative bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 transition hover:shadow-lg">
-                    <div class="w-full min-h-60 bg-gray-100 dark:bg-slate-700 aspect-w-1 aspect-h-1 rounded-xl overflow-hidden group-hover:opacity-75 flex items-center justify-center">
-                        <i class="fa-solid fa-headphones text-6xl text-gray-300 dark:text-slate-500"></i>
+        
+        <div id="productContainer" class="dropdown-wrapper mt-6 relative z-0">
+            <div class="dropdown-inner">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    
+                    
+                    <div id="productPanel" class="col-span-1 sm:col-span-2 lg:col-span-4 flex flex-col items-center justify-center py-16 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-dashed border-gray-300 dark:border-slate-700">
+                        <a href="https://www.google.com/logos/2010/pacman10-i.html" target="_blank" rel="noopener noreferrer" title="A blue ghost...">
+                            <i class="fa-solid fa-ghost text-6xl text-gray-300 dark:text-slate-600 mb-4 hover:text-imvidia duration-300 hover:scale-110 transition transform"></i>
+                        </a>
+                        
+                        <h3 class="text-2xl font-bold text-gray-500 dark:text-gray-400">Nothing here just yet...</h3>
+                        <p id="category-text" class="text-gray-400 dark:text-gray-500 mt-2">Products will appear here.</p>
                     </div>
-                    <div class="mt-4 flex justify-between">
-                        <div>
-                            <h3 class="text-sm text-gray-700 dark:text-gray-200 font-bold">
-                                <a href="product.html">
-                                    <span aria-hidden="true" class="absolute inset-0"></span>
-                                    ImVidia Sonic Pro
-                                </a>
-                            </h3>
-                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Noise Cancelling</p>
-                        </div>
-                        <p class="text-sm font-bold text-gray-900 dark:text-white">RM 299.00</p>
-                    </div>
-                </div>
 
-                <!-- Product 2 -->
-                <div class="group relative bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 transition hover:shadow-lg">
-                    <div class="w-full min-h-60 bg-gray-100 dark:bg-slate-700 aspect-w-1 aspect-h-1 rounded-xl overflow-hidden group-hover:opacity-75 flex items-center justify-center">
-                        <i class="fa-solid fa-stopwatch text-6xl text-gray-300 dark:text-slate-500"></i>
-                    </div>
-                    <div class="mt-4 flex justify-between">
-                        <div>
-                            <h3 class="text-sm text-gray-700 dark:text-gray-200 font-bold">
-                                <a href="product.html">
-                                    <span aria-hidden="true" class="absolute inset-0"></span>
-                                    ImVidia Watch Series 2
-                                </a>
-                            </h3>
-                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Midnight Black</p>
-                        </div>
-                        <p class="text-sm font-bold text-gray-900 dark:text-white">RM 499.00</p>
-                    </div>
                 </div>
-
-                <!-- Product 3 -->
-                <div class="group relative bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 transition hover:shadow-lg">
-                    <div class="w-full min-h-60 bg-gray-100 dark:bg-slate-700 aspect-w-1 aspect-h-1 rounded-xl overflow-hidden group-hover:opacity-75 flex items-center justify-center">
-                        <i class="fa-solid fa-gamepad text-6xl text-gray-300 dark:text-slate-500"></i>
-                    </div>
-                    <div class="mt-4 flex justify-between">
-                        <div>
-                            <h3 class="text-sm text-gray-700 dark:text-gray-200 font-bold">
-                                <a href="product.html">
-                                    <span aria-hidden="true" class="absolute inset-0"></span>
-                                    ImVidia PlayPad
-                                </a>
-                            </h3>
-                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Wireless Controller</p>
-                        </div>
-                        <p class="text-sm font-bold text-gray-900 dark:text-white">RM 150.00</p>
-                    </div>
-                </div>
-
-                <!-- Product 4 -->
-                <div class="group relative bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 transition hover:shadow-lg">
-                    <div class="w-full min-h-60 bg-gray-100 dark:bg-slate-700 aspect-w-1 aspect-h-1 rounded-xl overflow-hidden group-hover:opacity-75 flex items-center justify-center">
-                        <i class="fa-solid fa-plug text-6xl text-gray-300 dark:text-slate-500"></i>
-                    </div>
-                    <div class="mt-4 flex justify-between">
-                        <div>
-                            <h3 class="text-sm text-gray-700 dark:text-gray-200 font-bold">
-                                <a href="product.html">
-                                    <span aria-hidden="true" class="absolute inset-0"></span>
-                                    ImVidia PowerBank 20k
-                                </a>
-                            </h3>
-                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Fast Charging</p>
-                        </div>
-                        <p class="text-sm font-bold text-gray-900 dark:text-white">RM 89.00</p>
-                    </div>
-                </div>
-
             </div>
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-gray-400 py-12 border-t border-gray-800 mt-auto">
+    <footer class="bg-gray-900 text-gray-400 py-12 border-t-4 border-imvidia">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div>
-                    <div class="flex items-center mb-4">
+                    <div class="flex items-center cursor-pointer mb-4">
                         <img src="assets/logo-light.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
                         <span class="font-bold text-2xl tracking-tight text-white">ImVidia<span class="text-imvidia">.</span></span>
                     </div>
-                    <p class="text-sm mb-4">Innovative & affordable electronics for the modern household.</p>
+                    <p class="text-sm mb-4">
+                        Innovative & affordable electronics for the modern household. Power your life with ImVidia.
+                    </p>
+                    <p class="text-sm">
+                        Disclaimer: <br> This is not a legitimate company. This is a group project for <span class="text-white font-medium">CSC264</span> & <span class="text-white font-medium">ISP250</span>.
+                    </p>
                 </div>
+
                 <div>
                     <h4 class="text-white font-bold mb-4 uppercase tracking-wider text-sm">Directories</h4>
                     <ul class="space-y-2 text-sm">
-                        <li><a href="index.php" class="hover:text-imvidia transition">Home</a></li>
-                        <li><a href="index.php#catalog" class="hover:text-imvidia transition">Product Catalog</a></li>
+                        <li><a href="#" id="homeLink3" class="hover:text-imvidia transition">Home</a>
+                        <script>
+                            document.getElementById('homeLink3').addEventListener('click', function(e) {
+                    e.preventDefault();
+                        window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                        });
+                    });
+                        </script></li>
+                        
+                        <li><a href="#catalog" id="catalogLink3" class="hover:text-imvidia transition">Product Catalog</a>
+                        <script>
+                            document.getElementById('catalogLink3').addEventListener('click', function(e) {
+                    e.preventDefault();
+                        window.scrollTo({
+                        top: document.getElementById('catalog').offsetTop - 80,
+                        behavior: 'smooth'
+                        });
+                    });
+                        </script></li>
+                        <li><a href="#" class="hover:text-imvidia transition">About the Company</a></li>
+                        <li><a href="#" class="hover:text-imvidia transition">Contact Support</a></li>
                     </ul>
                 </div>
+
                 <div>
                     <h4 class="text-white font-bold mb-4 uppercase tracking-wider text-sm">Connect With Us</h4>
                     <ul class="space-y-2 text-sm mb-6">
-                        <li><i class="fa-solid fa-envelope mr-2 text-imvidia"></i> support@imvidia.com</li>
+                        <li><i class="fa-solid fa-envelope mr-2 text-imvidia"></i> imvidia67@gmail.com</li>
+                        <li><i class="fa-solid fa-phone mr-2 text-imvidia"></i> +6017 676 7676</li>
                     </ul>
+                    <div class="flex space-x-4">
+                        <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center">
+                            <i class="fa-brands fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center">
+                            <i class="fa-brands fa-twitter"></i>
+                        </a>
+                        <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center">
+                            <i class="fa-brands fa-instagram"></i>
+                        </a>
+                        <a href="https://github.com/sufree11/Imvidia-Electronics" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center">
+                            <i class="fa-brands fa-github"></i>
+                        </a>
+                    </div>
                 </div>
+
             </div>
+
             <div class="mt-12 pt-8 border-t border-gray-800 text-sm text-center">
-                <p>&copy; 2015 ImVidia Electronics.</p>
+                <p>&copy; 2015 ImVidia Electronics. Developed by Mohd Imran Shakir, Mohammad Sufree, Putera Mikhail Fallon, and Muhammad Firas Faiq.</p>
             </div>
         </div>
     </footer>
 
-    <!-- Global Scripts -->
+    <!-- Carousel Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const images = document.querySelectorAll('.carousel-image');
+            let currentindex = 0;
+            let pullingindex = -1;
+            let isInitialized = false;
+            let intervalId;
+            let timeoutId;
+
+            function updateCarousel() {
+                images.forEach((img, index) => {
+                    let baseClasses = 'carousel-image absolute top-1/2 rounded-xl shadow-2xl object-cover aspect-video';
+                    if (isInitialized) {
+                        baseClasses += ' transition-all duration-700 ease-in-out';
+                    }
+                    img.className = baseClasses;
+                    
+                    if (index === pullingindex) {
+                        img.classList.add('z-50', 'w-[70%]', 'left-[85%]', '-translate-x-1/2', '-translate-y-[55%]', 'scale-100', 'brightness-100', 'opacity-100', 'rotate-12');
+                    } else if (index === currentindex) {
+                        img.classList.add('z-40', 'w-[75%]', 'left-1/2', '-translate-x-1/2', '-translate-y-[60%]', 'scale-100', 'brightness-100', 'opacity-100', 'rotate-0');
+                    } else if (index === (currentindex + 1) % 3) {
+                        img.classList.add('z-10', 'w-[60%]', 'left-[80%]', '-translate-x-1/2', '-translate-y-[40%]', 'scale-90', 'brightness-50', 'opacity-70', 'rotate-3');
+                    } else {
+                        img.classList.add('z-20', 'w-[60%]', 'left-[20%]', '-translate-x-1/2', '-translate-y-[40%]', 'scale-90', 'brightness-50', 'opacity-70', '-rotate-3');
+                    }
+                });
+            }
+
+            function startCarousel() {
+                if (intervalId) clearInterval(intervalId);
+                
+                intervalId = setInterval(() => {
+                    const nextindex = (currentindex + 1) % images.length;
+                    
+                    pullingindex = nextindex;
+                    currentindex = nextindex;
+                    updateCarousel();
+                    
+                    timeoutId = setTimeout(() => {
+                        pullingindex = -1; 
+                        updateCarousel();
+                    }, 350); 
+                }, 3000);
+            }
+
+            function stopCarousel() {
+                clearInterval(intervalId);
+                clearTimeout(timeoutId);
+                pullingindex = -1;
+                updateCarousel(); 
+            }
+
+            updateCarousel();
+
+            setTimeout(() => {
+                isInitialized = true;
+                startCarousel();
+            }, 15);
+
+            document.addEventListener("visibilitychange", () => {
+                if (document.hidden) {
+                    stopCarousel();
+                } else {
+                    startCarousel();
+                }
+            });
+        });
+    </script>
+
+    <!-- category anim -->
+    <script>
+        let activeCategoryId = null;
+
+        function toggleCategory(categoryName, btnId) {
+            const container = document.getElementById('productContainer');
+            const catText = document.getElementById('category-text');
+            const clickedBtn = document.getElementById(btnId);
+            const clickedArrow = clickedBtn.querySelector('.arrow-icon');
+
+            // Test if open if open then close 
+            if (activeCategoryId === btnId) {
+                container.classList.remove('open');
+                
+                
+                clickedArrow.classList.remove('rotate-180', 'text-imvidia', 'opacity-100');
+                
+                activeCategoryId = null;
+            } 
+            
+            else {
+                
+                if (activeCategoryId) {
+                    const prevBtn = document.getElementById(activeCategoryId);
+                    if (prevBtn) {
+                        const prevArrow = prevBtn.querySelector('.arrow-icon');
+                        if (prevArrow) prevArrow.classList.remove('rotate-180', 'text-imvidia', 'opacity-100');
+                    }
+                }
+
+                
+                if ( categoryName === 'Audio Visual' || categoryName==='Personal Care')
+                {
+                    catText.innerText = categoryName + " products will appear here.";
+                } else {
+                catText.innerText = categoryName + " will appear here.";
+                }
+                
+                container.classList.add('open');
+
+               
+                clickedArrow.classList.add('rotate-180', 'text-imvidia', 'opacity-100');
+
+                activeCategoryId = btnId;
+
+                
+                setTimeout(() => {
+                    const catalogTop = document.getElementById('catalog').offsetTop;
+                    window.scrollTo({
+                        top: catalogTop + 100, 
+                        behavior: 'smooth'
+                    });
+                }, 300); 
+            }
+        }
+    </script>
+
+    <!-- Dark Mode Scripts (Cleaned up duplicates) -->
     <script>
         function updateLogoForMode() {
             const logo = document.getElementById('navbarLogo');
@@ -302,7 +525,7 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
         function updateDarkToggleIcon() {
             const icon = document.getElementById('dark-mode-icon');
             if (!icon) return;
-            icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun text-lg' : 'fa-solid fa-moon text-lg';
+            icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
         }
 
         function toggleDarkMode() {
@@ -313,15 +536,18 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('imvidiaDarkMode') === 'true') {
+            const stored = localStorage.getItem('imvidiaDarkMode');
+            if (stored === 'true') {
                 document.documentElement.classList.add('dark');
             }
             updateLogoForMode();
             updateDarkToggleIcon();
-            updateCartBadge();
         });
+    </script>
 
-        // Cart Logic
+    <!-- Cart Logic -->
+    <script>
+        // 1. Updates the red bubble on the cart icon from memory
         function updateCartBadge() {
             let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -329,12 +555,37 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
             const badge = document.getElementById('cart-badge');
             if (badge) {
                 badge.innerText = totalItems;
+                // Pop animation
+                badge.classList.add('scale-150');
+                setTimeout(() => badge.classList.remove('scale-150'), 200);
             }
         }
 
+        // 2. Safely add to cart (in case you add 'Quick Add' buttons to the homepage later)
+        function addToCart(productName, price) {
+            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            
+            let existingItem = cart.find(item => item.name === productName);
+            if (existingItem) {
+                existingItem.quantity += 1; // Default to 1 for quick adds
+            } else {
+                cart.push({ name: productName, price: price, quantity: 1 });
+            }
+            
+            localStorage.setItem('imvidia_cart', JSON.stringify(cart));
+            updateCartBadge();
+            
+            alert(`Added 1x ${productName} to your cart!`);
+        }
+
+        // 3. Redirect to the actual cart.html page
         function viewCart() {
             window.location.href = 'cart.html';
         }
+
+        // Check LocalStorage immediately when the page loads so the badge is correct!
+        document.addEventListener('DOMContentLoaded', updateCartBadge);
     </script>
+
 </body>
 </html>
