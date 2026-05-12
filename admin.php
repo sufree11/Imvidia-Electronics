@@ -1,11 +1,9 @@
 <?php
-session_start();
+require_once 'db/session.php';
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
     header("Location: login.php");
     exit();
 }
-
-include 'db/database.php';
 ?>
 
 <html>

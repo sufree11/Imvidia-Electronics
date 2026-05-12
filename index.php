@@ -1,7 +1,6 @@
 <?php
-session_start();
+require_once 'db/session.php';
 
-// 🛑 THE ANTI-CACHE BOUNCER 🛑
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
@@ -12,7 +11,6 @@ $avatar_url = '';
 
 if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
     $is_logged_in = true;
-    require_once 'db/database.php';
     
     $user_id = mysqli_real_escape_string($conn, $_SESSION['user_id']);
     $query = "SELECT first_name, last_name, profile_picture FROM users WHERE id = '$user_id' LIMIT 1";
