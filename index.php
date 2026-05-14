@@ -106,38 +106,15 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
         .dropdown-wrapper.open {
             grid-template-rows: 1fr;
         }
-        .dropdown-wrapper.closing {
-            grid-template-rows: 0fr;
-        }
         .dropdown-inner {
             overflow: hidden;
             opacity: 0;
-            transform: translateY(-20px); 
+            transform: translateY(-10px); 
             transition: opacity 0.4s ease-out, transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .dropdown-wrapper.open .dropdown-inner {
             opacity: 1;
             transform: translateY(0); 
-        }
-        .dropdown-wrapper.closing .dropdown-inner {
-            opacity: 0;
-            transform: translateY(-20px);
-        }
-        .category-btn {
-            min-height: 140px;
-        }
-        .product-card {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-        .product-image {
-            flex-shrink: 0;
-        }
-        .product-info {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
         }
     </style>
 </head>
@@ -267,66 +244,69 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
 
     <div id="catalog" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
         
-        <!-- RESTORED HTML CATEGORY BUTTONS -->
-        <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-6 mt-12 relative z-10">
-            <button id="cat-kitchen" onclick="toggleCategory('Kitchen Appliances', 'cat-kitchen')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group min-h-[140px]">
+        <!-- UPGRADED BUTTONS: Converted to Flexbox to make buttons wider within a single row -->
+        <div class="flex flex-col md:flex-row gap-4 mt-12 relative z-10 w-full">
+            <button id="cat-kitchen" onclick="toggleCategory('Kitchen Appliances', 'cat-kitchen')" class="category-btn flex-1 w-full relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group min-h-[140px]">
                 <iconify-icon icon="material-symbols-light:kitchen-outline" class="z-10 text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
                 <br>
-                <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Kitchen<br>Appliances</span>
+                <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300 text-center">Kitchen<br>Appliances</span>
                 <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
             </button>
             
-            <button id="cat-audio" onclick="toggleCategory('Audio Visual', 'cat-audio')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group min-h-[140px]">
+            <button id="cat-audio" onclick="toggleCategory('Audio Visual', 'cat-audio')" class="category-btn flex-1 w-full relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group min-h-[140px]">
                 <iconify-icon icon="fluent:tv-48-regular" class="text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
                 <br>
-                <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Audio<br>Visual</span>
+                <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300 text-center">Audio<br>Visual</span>
                 <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
             </button>
             
-            <button id="cat-portable" onclick="toggleCategory('Portable Devices', 'cat-portable')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group min-h-[140px]">
+            <button id="cat-portable" onclick="toggleCategory('Portable Devices', 'cat-portable')" class="category-btn flex-1 w-full relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group min-h-[140px]">
                 <iconify-icon icon="fluent:phone-laptop-20-regular" class="text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
                 <br>
-                <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Portable<br>Devices</span>
+                <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300 text-center">Portable<br>Devices</span>
                 <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
             </button>
             
-            <button id="cat-personal" onclick="toggleCategory('Personal Care', 'cat-personal')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group min-h-[140px]">
+            <button id="cat-personal" onclick="toggleCategory('Personal Care', 'cat-personal')" class="category-btn flex-1 w-full relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group min-h-[140px]">
                 <iconify-icon icon="ph:hair-dryer-light" class="text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
                 <br>
-                <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Personal<br>Care</span>
+                <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300 text-center">Personal<br>Care</span>
                 <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
             </button>
             
-            <button id="cat-home" onclick="toggleCategory('Home Appliances', 'cat-home')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group min-h-[140px]">
+            <button id="cat-home" onclick="toggleCategory('Home Appliances', 'cat-home')" class="category-btn flex-1 w-full relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group min-h-[140px]">
                 <iconify-icon icon="material-symbols-light:dishwasher-gen-outline-rounded" class="text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
                 <br>
-                <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Home<br>Appliances</span>
+                <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300 text-center">Home<br>Appliances</span>
                 <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
             </button>
         </div>
 
         <!-- RESTORED HTML SLIDER WRAPPER -->
-        <div id="productContainer" class="dropdown-wrapper mt-6 relative z-0 flex justify-center">
-            <div class="dropdown-inner w-full">
+        <div id="productContainer" class="dropdown-wrapper mt-6 relative z-0">
+            <div class="dropdown-inner w-full flex justify-center">
                 
                 <!-- We dynamically render a hidden grid for EACH category -->
                 <?php foreach($products_by_category as $cat_key => $products): ?>
-                    <div id="grid-<?php echo $cat_key; ?>" class="category-grid hidden">
+                    <!-- Fixed mismatch: ID is now grid-$cat_key so the JavaScript finds it correctly! -->
+                    <div id="grid-<?php echo $cat_key; ?>" class="category-grid hidden w-full max-w-6xl mx-auto pt-6 pb-2">
                         
                         <?php if (count($products) > 0): ?>
-                            <div class="grid gap-8" style="grid-template-columns: repeat(3, 1fr); width: 100%; max-width: 1200px; margin: 0 auto;">
+                            <!-- Fixed layout to exactly 3 columns so it never stretches downward weirdly -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                                 <?php foreach($products as $prod):
+                                    // Fixed: Requesting product_id safely as stored in DB
                                     $prod_id = $prod['product_id'];
                                     $prod_name = htmlspecialchars($prod['name']);
                                     $prod_price = number_format($prod['price'], 2);
                                     $prod_cat = htmlspecialchars($prod['category']);
                                     $prod_img = !empty($prod['image_url']) ? htmlspecialchars($prod['image_url']) : 'https://ui-avatars.com/api/?name=No+Image&background=f1f5f9&color=94a3b8';
                                 ?>
-                                    <div class="product-card group relative bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 transition hover:shadow-lg h-80">
-                                        <div class="product-image w-full h-48 bg-white dark:bg-slate-700 rounded-xl overflow-hidden group-hover:opacity-75 flex items-center justify-center p-2">
+                                    <div class="group relative bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 transition hover:shadow-lg flex flex-col h-80">
+                                        <div class="w-full h-48 bg-white dark:bg-slate-700 rounded-xl overflow-hidden group-hover:opacity-75 flex items-center justify-center p-2">
                                             <img src="<?php echo $prod_img; ?>" alt="<?php echo $prod_name; ?>" class="max-w-full max-h-full object-contain drop-shadow-md">
                                         </div>
-                                        <div class="product-info mt-4 flex justify-between flex-col">
+                                        <div class="mt-4 flex justify-between flex-col flex-grow">
                                             <div>
                                                 <h3 class="text-sm text-gray-700 dark:text-gray-200 font-bold line-clamp-2">
                                                     <a href="product.php?id=<?php echo $prod_id; ?>">
@@ -336,14 +316,14 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
                                                 </h3>
                                                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider"><?php echo $prod_cat; ?></p>
                                             </div>
-                                            <p class="text-sm font-bold text-gray-900 dark:text-white ml-3 whitespace-nowrap mt-auto">RM <?php echo $prod_price; ?></p>
+                                            <p class="text-sm font-bold text-gray-900 dark:text-white whitespace-nowrap mt-auto">RM <?php echo $prod_price; ?></p>
                                         </div>
                                     </div>
                                 <?php endforeach; ?>
                             </div>
                         <?php else: ?>
-                            <!-- Restored Ghost Empty State -->
-                            <div class="flex flex-col items-center justify-center py-16 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-dashed border-gray-300 dark:border-slate-700">
+                            <!-- Restored Ghost Empty State (Using full col span) -->
+                            <div class="col-span-full flex flex-col items-center justify-center py-16 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-dashed border-gray-300 dark:border-slate-700 w-full">
                                 <a href="https://www.google.com/logos/2010/pacman10-i.html" target="_blank" rel="noopener noreferrer" title="A blue ghost...">
                                     <i class="fa-solid fa-ghost text-6xl text-gray-300 dark:text-slate-600 mb-4 hover:text-imvidia duration-300 hover:scale-110 transition transform"></i>
                                 </a>
@@ -359,7 +339,7 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
         </div>
     </div>
 
-    <footer class="bg-gray-900 text-gray-400 py-12 border-t-4 border-imvidia">
+    <footer class="bg-gray-900 text-gray-400 py-12 border-t-4 border-imvidia mt-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div>
@@ -490,15 +470,10 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
             });
 
             if (activeCategoryId === btnId) {
-                // Clicking the same button closes the slider with animation
+                // Clicking the same button closes the slider
                 container.classList.remove('open');
-                container.classList.add('closing');
                 clickedArrow.classList.remove('rotate-180', 'text-imvidia', 'opacity-100');
-                
-                setTimeout(() => {
-                    container.classList.remove('closing');
-                    activeCategoryId = null;
-                }, 650);
+                activeCategoryId = null;
             } else {
                 // If another button was active, remove its white styling
                 if (activeCategoryId) {
@@ -564,8 +539,7 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            const stored = localStorage.getItem('imvidiaDarkMode');
-            if (stored === 'true') {
+            if (localStorage.getItem('imvidiaDarkMode') === 'true') {
                 document.documentElement.classList.add('dark');
             }
             updateLogoForMode();
