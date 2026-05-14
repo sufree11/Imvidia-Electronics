@@ -255,7 +255,7 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
 
                 if ($catalog_result && mysqli_num_rows($catalog_result) > 0) {
                     while ($prod = mysqli_fetch_assoc($catalog_result)) {
-                        $prod_id = $prod['id'];
+                        $prod_id = $prod['product_id'];
                         $prod_name = htmlspecialchars($prod['name']);
                         $prod_price = number_format($prod['price'], 2);
                         $prod_cat = htmlspecialchars($prod['category']);
@@ -285,7 +285,7 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
                         </div>';
                     }
                 } else {
-                    echo '<<div class="col-span-1 sm:col-span-2 lg:col-span-4 flex flex-col items-center justify-center py-16 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-dashed border-gray-300 dark:border-slate-700">
+                    echo '<div class="col-span-1 sm:col-span-2 lg:col-span-4 flex flex-col items-center justify-center py-16 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-dashed border-gray-300 dark:border-slate-700">
                         <a href="https://www.google.com/logos/2010/pacman10-i.html" target="_blank" rel="noopener noreferrer" title="A blue ghost...">
                             <i class="fa-solid fa-ghost text-6xl text-gray-300 dark:text-slate-600 mb-4 hover:text-imvidia duration-300 hover:scale-110 transition transform"></i>
                         </a>
