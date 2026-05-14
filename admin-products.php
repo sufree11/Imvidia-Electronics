@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($msg_type !== "error") {
-        $insert_query = "INSERT INTO products (name, description, price, category, stock_quantity, image_url) 
+        $insert_query = "INSERT INTO product (name, description, price, category, stock_quantity, image_url) 
                          VALUES ('$name', '$desc', '$price', '$category', '$stock', '$image_url')";
         
         if (mysqli_query($conn, $insert_query)) {

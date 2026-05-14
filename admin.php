@@ -105,7 +105,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
                 <i class="fa-solid fa-chart-pie w-6"></i>
                 <span class="font-medium">Overview</span>
             </a>
-            <a href="admin-products.html" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia rounded-lg transition">
+            <a href="admin-products.php" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia rounded-lg transition">
                 <i class="fa-solid fa-box-open w-6"></i>
                 <span class="font-medium">Products</span>
             </a>
