@@ -1,3 +1,83 @@
+<?php
+require_once 'db/session.php';
+require_once 'db/database.php';
+require 'vendor/autoload.php';
+
+use Aws\S3\S3Client;
+use Aws\Exception\AwsException;
+
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
+    header("Location: login.php");
+    exit();
+}
+
+$message = '';
+$msg_type = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    $name = mysqli_real_escape_string($conn, $_POST['product_name'] ?? '');
+    $price = floatval($_POST['product_price'] ?? 0);
+    $category = mysqli_real_escape_string($conn, $_POST['product_category'] ?? 'Uncategorized');
+    $stock = intval($_POST['product_stock'] ?? 0);
+    $desc = mysqli_real_escape_string($conn, $_POST['product_desc'] ?? '');
+    
+    $image_url = '';
+
+
+    if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
+        $file_ext = strtolower(pathinfo($_FILES['product_image']['name'], PATHINFO_EXTENSION));
+        $allowed_exts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        
+        if (in_array($file_ext, $allowed_exts)) {
+
+            $new_filename = 'products/prod_' . time() . '_' . rand(100,999) . '.' . $file_ext;
+            
+            $s3 = new S3Client([
+                'version' => 'latest',
+                'region'  => getenv('SPACES_REGION'),
+                'endpoint' => getenv('SPACES_ENDPOINT'),
+                'credentials' => [
+                    'key'    => getenv('SPACES_KEY'),
+                    'secret' => getenv('SPACES_SECRET'),
+                ],
+            ]);
+
+            try {
+                $result = $s3->putObject([
+                    'Bucket'      => getenv('SPACES_BUCKET'),
+                    'Key'         => $new_filename,
+                    'SourceFile'  => $_FILES['product_image']['tmp_name'],
+                    'ACL'         => 'public-read',
+                    'ContentType' => mime_content_type($_FILES['product_image']['tmp_name'])
+                ]);
+
+                $image_url = $result['ObjectURL'];
+            } catch (AwsException $e) {
+                $message = "Failed to upload image to cloud storage.";
+                $msg_type = "error";
+            }
+        } else {
+            $message = "Invalid image format. Allowed: JPG, PNG, GIF, WEBP.";
+            $msg_type = "error";
+        }
+    }
+
+    if ($msg_type !== "error") {
+        $insert_query = "INSERT INTO products (name, description, price, category, stock_quantity, image_url) 
+                         VALUES ('$name', '$desc', '$price', '$category', '$stock', '$image_url')";
+        
+        if (mysqli_query($conn, $insert_query)) {
+            $message = "Product added successfully!";
+            $msg_type = "success";
+        } else {
+            $message = "Database error: " . mysqli_error($conn);
+            $msg_type = "error";
+        }
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -229,7 +309,7 @@
                         </button>
                     </div>
 
-                    <form id="addProductForm" onsubmit="handleFormSubmit(event)" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <form id="addProductForm" method="POST" enctype="multipart/form-data" onsubmit="handleFormSubmit(event)" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         
                         <div class="lg:col-span-2 space-y-6">
                             
@@ -239,13 +319,13 @@
                                 <div class="space-y-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product Name <span class="text-red-500">*</span></label>
-                                        <input type="text" required class="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition" placeholder="e.g. ImVidia Pro Hairdryer">
+                                        <input type="text" name="product_name" required class="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition" placeholder="e.g. ImVidia Pro Hairdryer">
                                     </div>
 
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category <span class="text-red-500">*</span></label>
-                                            <select required class="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition cursor-pointer">
+                                            <select name="product_category" required class="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition cursor-pointer">
                                                 <option value="" disabled selected>Select a category...</option>
                                                 <option value="kitchen">Kitchen Appliances</option>
                                                 <option value="audio">Audio Visual</option>
@@ -266,7 +346,7 @@
                                 <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b border-gray-100 dark:border-slate-800 pb-3">Product Description</h3>
                                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Describe the product, add tables, insert inline images, and customise the description fully.</p>
                                 
-                                <textarea id="product-editor" name="description_html" placeholder="Enter product description...">
+                                <textarea id="product-editor" name="product_desc" placeholder="Enter product description...">
                                 </textarea>
                             </div>
                         </div>
@@ -284,7 +364,7 @@
                                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                                 <span class="text-gray-500 sm:text-sm">RM</span>
                                             </div>
-                                            <input type="number" id="selling-price" step="any" onblur="if(this.value) this.value = parseFloat(this.value).toFixed(2)" onkeydown="if(event.key==='ArrowUp'){this.value=(parseFloat(this.value||0)+1).toFixed(2);event.preventDefault();} if(event.key==='ArrowDown'){this.value=Math.max(0, parseFloat(this.value||0)-1).toFixed(2);event.preventDefault();}" required class="hide-spinner w-full pl-10 pr-20 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition" placeholder="0.00">
+                                            <input name="product_price" type="number" id="selling-price" step="any" onblur="if(this.value) this.value = parseFloat(this.value).toFixed(2)" onkeydown="if(event.key==='ArrowUp'){this.value=(parseFloat(this.value||0)+1).toFixed(2);event.preventDefault();} if(event.key==='ArrowDown'){this.value=Math.max(0, parseFloat(this.value||0)-1).toFixed(2);event.preventDefault();}" required class="hide-spinner w-full pl-10 pr-20 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition" placeholder="0.00">
                                             <div class="absolute inset-y-0 right-1.5 flex items-center space-x-1">
                                                 <button type="button" onclick="let el=document.getElementById('selling-price'); el.value=Math.max(0, parseFloat(el.value || 0) - 1).toFixed(2);" class="w-7 h-7 flex items-center justify-center bg-gray-100 dark:bg-slate-700 rounded hover:text-imvidia transition cursor-pointer text-gray-500 dark:text-gray-400">
                                                     <i class="fa-solid fa-minus text-xs"></i>
@@ -300,7 +380,7 @@
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stock Quantity</label>
                                         <div class="relative flex items-center">
-                                            <input type="number" id="stock-qty" value="10" min="0" onkeydown="if(event.key==='ArrowUp'){this.value=parseInt(this.value||0)+1;event.preventDefault();} if(event.key==='ArrowDown'){this.value=Math.max(0, parseInt(this.value||0)-1);event.preventDefault();}" class="hide-spinner w-full px-4 pr-20 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition">
+                                            <input name="product_stock" type="number" id="stock-qty" value="10" min="0" onkeydown="if(event.key==='ArrowUp'){this.value=parseInt(this.value||0)+1;event.preventDefault();} if(event.key==='ArrowDown'){this.value=Math.max(0, parseInt(this.value||0)-1);event.preventDefault();}" class="hide-spinner w-full px-4 pr-20 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition">
                                             <div class="absolute inset-y-0 right-1.5 flex items-center space-x-1">
                                                 <button type="button" onclick="let el=document.getElementById('stock-qty'); el.value=Math.max(0, parseInt(el.value || 0) - 1);" class="w-7 h-7 flex items-center justify-center bg-gray-100 dark:bg-slate-700 rounded hover:text-imvidia transition cursor-pointer text-gray-500 dark:text-gray-400">
                                                     <i class="fa-solid fa-minus text-xs"></i>
@@ -336,7 +416,7 @@
                                 </div>
                                 
                                 <!-- Hidden File Input -->
-                                <input type="file" id="gallery-upload" multiple accept="image/*" class="hidden">
+                                <input name="product_image" type="file" id="gallery-upload" multiple accept="image/*" class="hidden">
                                 
                                 <!-- Preview Container -->
                                 <div id="image-preview-container" class="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-4 empty:hidden"></div>
