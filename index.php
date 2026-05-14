@@ -244,69 +244,59 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
         </div>
     </header>
 
-    <main id="catalog" class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
-        
-        <div class="text-center mb-12">
-            <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Products</h2>
-            <div class="w-24 h-1 bg-imvidia mx-auto mt-4 rounded"></div>
+    <div id="catalog" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+            <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-8">Featured Products</h2>
             
-                <div class="grid grid-cols-1 md:grid-cols-5 lg:grid-cols-5 gap-8 mt-12 relative z-10">
-                    <button id="cat-kitchen" onclick="toggleCategory('Kitchen Appliances', 'cat-kitchen')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group">
-                        <iconify-icon icon="material-symbols-light:kitchen-outline" class="z-10 text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
-                        <br>
-                        <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Kitchen<br>Appliances</span>
-                        <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
-                    </button>
-                    
-                    <button id="cat-audio" onclick="toggleCategory('Audio Visual', 'cat-audio')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group">
-                        <iconify-icon icon="fluent:tv-48-regular" class="text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
-                        <br>
-                        <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Audio<br>Visual</span>
-                        <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
-                    </button>
-                    
-                    <button id="cat-portable" onclick="toggleCategory('Portable Devices', 'cat-portable')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group">
-                        <iconify-icon icon="fluent:phone-laptop-20-regular" class="text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
-                        <br>
-                        <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Portable<br>Devices</span>
-                        <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
-                    </button>
-                    
-                    <button id="cat-personal" onclick="toggleCategory('Personal Care', 'cat-personal')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group">
-                        <iconify-icon icon="ph:hair-dryer-light" class="text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
-                        <br>
-                        <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Personal<br>Care</span>
-                        <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
-                    </button>
-                    
-                    <button id="cat-home" onclick="toggleCategory('Home Appliances', 'cat-home')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group">
-                        <iconify-icon icon="material-symbols-light:dishwasher-gen-outline-rounded" class="text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
-                        <br>
-                        <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Home<br>Appliances</span>
-                        <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
-                    </button>
-                </div>
-        </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-6 xl:gap-x-8">
+                <?php
+                // Fetch the latest products from the database (Using your singular 'product' table!)
+                $catalog_query = "SELECT * FROM product ORDER BY id DESC LIMIT 8";
+                $catalog_result = mysqli_query($conn, $catalog_query);
 
-        
-        <div id="productContainer" class="dropdown-wrapper mt-6 relative z-0">
-            <div class="dropdown-inner">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                    
-                    
-                    <div id="productPanel" class="col-span-1 sm:col-span-2 lg:col-span-4 flex flex-col items-center justify-center py-16 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-dashed border-gray-300 dark:border-slate-700">
+                if ($catalog_result && mysqli_num_rows($catalog_result) > 0) {
+                    while ($prod = mysqli_fetch_assoc($catalog_result)) {
+                        $prod_id = $prod['id'];
+                        $prod_name = htmlspecialchars($prod['name']);
+                        $prod_price = number_format($prod['price'], 2);
+                        $prod_cat = htmlspecialchars($prod['category']);
+                        
+                        // Use the Spaces URL, or fallback to a placeholder icon if they didn't upload an image
+                        $prod_img = !empty($prod['image_url']) 
+                            ? htmlspecialchars($prod['image_url']) 
+                            : 'https://ui-avatars.com/api/?name=No+Image&background=f1f5f9&color=94a3b8';
+
+                        echo '
+                        <div class="group relative bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 transition hover:shadow-lg flex flex-col">
+                            <div class="w-full h-60 bg-white dark:bg-slate-700 rounded-xl overflow-hidden group-hover:opacity-75 flex items-center justify-center p-2">
+                                <img src="' . $prod_img . '" alt="' . $prod_name . '" class="max-w-full max-h-full object-contain drop-shadow-md">
+                            </div>
+                            <div class="mt-4 flex justify-between flex-grow">
+                                <div>
+                                    <h3 class="text-sm text-gray-700 dark:text-gray-200 font-bold line-clamp-2">
+                                        <a href="product.php?id=' . $prod_id . '">
+                                            <span aria-hidden="true" class="absolute inset-0"></span>
+                                            ' . $prod_name . '
+                                        </a>
+                                    </h3>
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">' . $prod_cat . '</p>
+                                </div>
+                                <p class="text-sm font-bold text-gray-900 dark:text-white ml-3 whitespace-nowrap">RM ' . $prod_price . '</p>
+                            </div>
+                        </div>';
+                    }
+                } else {
+                    echo '<<div class="col-span-1 sm:col-span-2 lg:col-span-4 flex flex-col items-center justify-center py-16 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-dashed border-gray-300 dark:border-slate-700">
                         <a href="https://www.google.com/logos/2010/pacman10-i.html" target="_blank" rel="noopener noreferrer" title="A blue ghost...">
                             <i class="fa-solid fa-ghost text-6xl text-gray-300 dark:text-slate-600 mb-4 hover:text-imvidia duration-300 hover:scale-110 transition transform"></i>
                         </a>
                         
                         <h3 class="text-2xl font-bold text-gray-500 dark:text-gray-400">Nothing here just yet...</h3>
                         <p id="category-text" class="text-gray-400 dark:text-gray-500 mt-2">Products will appear here.</p>
-                    </div>
-
-                </div>
+                    </div>';
+                }
+                ?>
             </div>
         </div>
-    </main>
 
     <footer class="bg-gray-900 text-gray-400 py-12 border-t-4 border-imvidia">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
