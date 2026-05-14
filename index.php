@@ -23,13 +23,14 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
         if (!empty($user['profile_picture'])) {
             $avatar_url = htmlspecialchars($user['profile_picture']);
         } else {
-            $avatar_url = "[https://ui-avatars.com/api/?name=](https://ui-avatars.com/api/?name=)" . urlencode($user['first_name'] . ' ' . $user['last_name']) . "&background=49C2FA&color=fff&size=128";
+            $avatar_url = "https://ui-avatars.com/api/?name=" . urlencode($user['first_name'] . ' ' . $user['last_name']) . "&background=49C2FA&color=fff&size=128";
         }
     }
 }
 ?>
 
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -87,22 +88,14 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
         .dark .bg-gray-700 { background-color: #1f2937 !important; }
         .dark .text-gray-900,
         .dark .text-gray-800,
-        .dark .text-gray-700 {
-            color: var(--text-primary) !important;
-        }
+        .dark .text-gray-700 { color: var(--text-primary) !important; }
         .dark .text-gray-600,
         .dark .text-gray-500,
-        .dark .text-gray-400 {
-            color: var(--text-secondary) !important;
-        }
+        .dark .text-gray-400 { color: var(--text-secondary) !important; }
         .dark .border-gray-100,
-        .dark .border-gray-200 {
-            border-color: var(--border-color) !important;
-        }
+        .dark .border-gray-200 { border-color: var(--border-color) !important; }
         .dark .shadow-sm,
-        .dark .shadow-xl {
-            box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.4), 0 4px 6px -4px rgba(15, 23, 42, 0.1) !important;
-        }
+        .dark .shadow-xl { box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.4), 0 4px 6px -4px rgba(15, 23, 42, 0.1) !important; }
 
         
         .dropdown-wrapper {
@@ -127,13 +120,11 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
 </head>
 
 <body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
-   <!-- Navbar: Solid background (bg-white/dark:bg-slate-950) -->
+   
     <nav class="bg-white shadow-md sticky top-0 z-50 dark:bg-slate-950 transition-colors duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-             <!-- Added relative positioning to parent container for absolute centering -->
              <div class="flex justify-between h-16 items-center relative">
                 
-                <!-- LEFT SECTION: Logo + Dark Mode Toggle -->
                 <div class="flex items-center space-x-6">
                     <a href="#" id="homeLink1" class="flex-shrink-0 flex items-center cursor-pointer">
                         <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
@@ -152,7 +143,6 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
                     });
                 </script>
 
-                <!-- MIDDLE SECTION: Absolutely centered Navigation Links -->
                 <div class="hidden md:flex space-x-8 items-center absolute left-1/2 transform -translate-x-1/2">
                     <a href="#" id="homeLink2" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Home</a>
                     <a href="#catalog" id="catalogLink1" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Catalog</a>
@@ -172,23 +162,22 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
     
                 <div class="flex items-center space-x-4">
                     <?php if ($is_logged_in): ?>
-    <div class="hidden md:block mr-2 text-right">
-        <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Welcome, <?php echo $first_name; ?>.</span>
-    </div>
-    <a href="profile.php" class="relative group cursor-pointer transition transform hover:scale-105" title="User Profile">
-        <img src="<?php echo $avatar_url; ?>" alt="Profile Picture" class="w-9 h-9 rounded-full border-2 border-imvidia object-cover bg-white shadow-sm">
-    </a>
-<?php else: ?>
-    <div class="hidden md:flex items-center space-x-4">
-        <a href="login.php" class="text-sm font-semibold text-gray-600 hover:text-imvidia transition dark:text-gray-300">Log In</a>
-        <a href="register.php" class="text-sm font-bold bg-imvidia hover:bg-imvidia-dark text-white px-4 py-2 rounded-lg shadow-md transition transform hover:-translate-y-0.5">Register</a>
-    </div>
-    <a href="login.php" class="md:hidden relative p-2 text-gray-600 hover:text-imvidia transition dark:text-gray-300">
-        <i class="fa-solid fa-user text-xl"></i>
-    </a>
-<?php endif; ?>
+                        <div class="hidden md:block mr-2 text-right">
+                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Welcome, <?php echo $first_name; ?>.</span>
+                        </div>
+                        <a href="profile.php" class="relative group cursor-pointer transition transform hover:scale-105" title="User Profile">
+                            <img src="<?php echo $avatar_url; ?>" alt="Profile Picture" class="w-9 h-9 rounded-full border-2 border-imvidia object-cover bg-white shadow-sm">
+                        </a>
+                    <?php else: ?>
+                        <div class="hidden md:flex items-center space-x-4">
+                            <a href="login.php" class="text-sm font-semibold text-gray-600 hover:text-imvidia transition dark:text-gray-300">Log In</a>
+                            <a href="register.php" class="text-sm font-bold bg-imvidia hover:bg-imvidia-dark text-white px-4 py-2 rounded-lg shadow-md transition transform hover:-translate-y-0.5">Register</a>
+                        </div>
+                        <a href="login.php" class="md:hidden relative p-2 text-gray-600 hover:text-imvidia transition dark:text-gray-300">
+                            <i class="fa-solid fa-user text-xl"></i>
+                        </a>
+                    <?php endif; ?>
 
-                    <!-- Cart Icon with Red Badge -->
                     <button class="relative p-2 text-gray-600 hover:text-imvidia transition dark:text-gray-300" onclick="viewCart()">
                         <i class="fa-solid fa-cart-shopping text-xl"></i>
                         <span id="cart-badge" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-imvidia rounded-full transition-transform duration-200">
@@ -196,7 +185,6 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
                         </span>
                     </button>
                 </div>
-
              </div>
         </div>
     </nav>
@@ -207,96 +195,146 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
                 <h1 class="text-4xl md:text-5xl font-extrabold leading-tight mb-4">
                     Powering <span class="text-imvidia-light">Lives</span>, <br> at a better <span class="text-imvidia">Price</span>.
                 </h1>
-
                 <p class="text-lg text-gray-300 mb-8">
                     Delivering innovative, affordable, and user-friendly solutions that improve your home comfort. Power your life with ImVidia today.
                 </p>
-
                 <div class="flex space-x-4">
-                    <a href="#catalog" id="catalogLink2" class="bg-imvidia hover:bg-imvidia-dark text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:-translate-y-1">
-                        Shop Now
-                    </a>
-
+                    <a href="#catalog" id="catalogLink2" class="bg-imvidia hover:bg-imvidia-dark text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:-translate-y-1">Shop Now</a>
                     <script>
-                    document.getElementById('catalogLink2').addEventListener('click', function(e) {
-                    e.preventDefault();
-                        window.scrollTo({
-                        top: document.getElementById('catalog').offsetTop - 80,
-                        behavior: 'smooth'
+                        document.getElementById('catalogLink2').addEventListener('click', function(e) {
+                            e.preventDefault();
+                            window.scrollTo({ top: document.getElementById('catalog').offsetTop - 80, behavior: 'smooth' });
                         });
-                    });
-                </script>
-                <a href="product.html"><button  class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:-translate-y-1">
-                        Learn More
-                    </button></a>
-                    
+                    </script>
+                    <a href="product.html">
+                        <button class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:-translate-y-1">Learn More</button>
+                    </a>
                 </div>
             </div>
             <div class="md:w-1/2 w-full flex justify-center relative h-64 md:h-80 mt-10 md:mt-0">
-
                 <img src="assets/hero1.jpg" alt="ImVidia Fryer" class="carousel-image w-1/2 max-w-md rounded-xl shadow-2xl transition-all duration-700 ease-in-out object-cover aspect-video">
-                
                 <img src="assets/hero2.jpg" alt="ImVidia Stove" class="carousel-image w-1/2 max-w-md rounded-xl shadow-2xl duration-700 ease-in-out object-cover aspect-video">
-                
                 <img src="assets/hero3.jpg" alt="ImVidia Mixer" class="carousel-image w-1/2 max-w-md rounded-xl shadow-2xl duration-700 ease-in-out object-cover aspect-video">
             </div>
-
         </div>
     </header>
 
+    <?php
+    // Pre-load all products and organize them into arrays by category
+    $products_by_category = [
+        'kitchen' => [],
+        'audio' => [],
+        'portable' => [],
+        'personal' => [],
+        'home' => []
+    ];
+
+    $catalog_query = "SELECT * FROM product ORDER BY product_id DESC";
+    $catalog_result = mysqli_query($conn, $catalog_query);
+
+    if ($catalog_result && mysqli_num_rows($catalog_result) > 0) {
+        while ($prod = mysqli_fetch_assoc($catalog_result)) {
+            $cat = strtolower($prod['category']);
+            if (isset($products_by_category[$cat])) {
+                $products_by_category[$cat][] = $prod;
+            }
+        }
+    }
+    ?>
+
     <div id="catalog" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-            <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-8">Featured Products</h2>
+        
+        <!-- RESTORED HTML CATEGORY BUTTONS -->
+        <div class="grid grid-cols-1 md:grid-cols-5 lg:grid-cols-5 gap-8 mt-12 relative z-10">
+            <button id="cat-kitchen" onclick="toggleCategory('Kitchen Appliances', 'cat-kitchen')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group">
+                <iconify-icon icon="material-symbols-light:kitchen-outline" class="z-10 text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
+                <br>
+                <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Kitchen<br>Appliances</span>
+                <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
+            </button>
             
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-6 xl:gap-x-8">
-                <?php
-                // Fetch the latest products from the database (Using your singular 'product' table!)
-                $catalog_query = "SELECT * FROM product ORDER BY product_id DESC LIMIT 8";
-                $catalog_result = mysqli_query($conn, $catalog_query);
+            <button id="cat-audio" onclick="toggleCategory('Audio Visual', 'cat-audio')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group">
+                <iconify-icon icon="fluent:tv-48-regular" class="text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
+                <br>
+                <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Audio<br>Visual</span>
+                <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
+            </button>
+            
+            <button id="cat-portable" onclick="toggleCategory('Portable Devices', 'cat-portable')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group">
+                <iconify-icon icon="fluent:phone-laptop-20-regular" class="text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
+                <br>
+                <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Portable<br>Devices</span>
+                <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
+            </button>
+            
+            <button id="cat-personal" onclick="toggleCategory('Personal Care', 'cat-personal')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group">
+                <iconify-icon icon="ph:hair-dryer-light" class="text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
+                <br>
+                <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Personal<br>Care</span>
+                <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
+            </button>
+            
+            <button id="cat-home" onclick="toggleCategory('Home Appliances', 'cat-home')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group">
+                <iconify-icon icon="material-symbols-light:dishwasher-gen-outline-rounded" class="text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
+                <br>
+                <span class="font-medium text-lg text-gray-500 dark:text-gray-400 mb-2 transform group-hover:-translate-y-1 group-hover:text-white duration-300">Home<br>Appliances</span>
+                <i class="fa-solid fa-chevron-down absolute bottom-3 opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-300 transform arrow-icon text-sm"></i>
+            </button>
+        </div>
 
-                if ($catalog_result && mysqli_num_rows($catalog_result) > 0) {
-                    while ($prod = mysqli_fetch_assoc($catalog_result)) {
-                        $prod_id = $prod['product_id'];
-                        $prod_name = htmlspecialchars($prod['name']);
-                        $prod_price = number_format($prod['price'], 2);
-                        $prod_cat = htmlspecialchars($prod['category']);
+        <!-- RESTORED HTML SLIDER WRAPPER -->
+        <div id="productContainer" class="dropdown-wrapper mt-6 relative z-0">
+            <div class="dropdown-inner">
+                
+                <!-- We dynamically render a hidden grid for EACH category -->
+                <?php foreach($products_by_category as $cat_key => $products): ?>
+                    <div id="grid-<?php echo $cat_key; ?>" class="category-grid hidden">
                         
-                        // Use the Spaces URL, or fallback to a placeholder icon if they didn't upload an image
-                        $prod_img = !empty($prod['image_url']) 
-                            ? htmlspecialchars($prod['image_url']) 
-                            : 'https://ui-avatars.com/api/?name=No+Image&background=f1f5f9&color=94a3b8';
+                        <?php if (count($products) > 0): ?>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                                <?php foreach($products as $prod):
+                                    $prod_id = $prod['product_id'];
+                                    $prod_name = htmlspecialchars($prod['name']);
+                                    $prod_price = number_format($prod['price'], 2);
+                                    $prod_cat = htmlspecialchars($prod['category']);
+                                    $prod_img = !empty($prod['image_url']) ? htmlspecialchars($prod['image_url']) : 'https://ui-avatars.com/api/?name=No+Image&background=f1f5f9&color=94a3b8';
+                                ?>
+                                    <div class="group relative bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 transition hover:shadow-lg flex flex-col">
+                                        <div class="w-full h-60 bg-white dark:bg-slate-700 rounded-xl overflow-hidden group-hover:opacity-75 flex items-center justify-center p-2">
+                                            <img src="<?php echo $prod_img; ?>" alt="<?php echo $prod_name; ?>" class="max-w-full max-h-full object-contain drop-shadow-md">
+                                        </div>
+                                        <div class="mt-4 flex justify-between flex-grow">
+                                            <div>
+                                                <h3 class="text-sm text-gray-700 dark:text-gray-200 font-bold line-clamp-2">
+                                                    <a href="product.php?id=<?php echo $prod_id; ?>">
+                                                        <span aria-hidden="true" class="absolute inset-0"></span>
+                                                        <?php echo $prod_name; ?>
+                                                    </a>
+                                                </h3>
+                                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider"><?php echo $prod_cat; ?></p>
+                                            </div>
+                                            <p class="text-sm font-bold text-gray-900 dark:text-white ml-3 whitespace-nowrap">RM <?php echo $prod_price; ?></p>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php else: ?>
+                            <!-- Restored Ghost Empty State -->
+                            <div class="flex flex-col items-center justify-center py-16 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-dashed border-gray-300 dark:border-slate-700">
+                                <a href="https://www.google.com/logos/2010/pacman10-i.html" target="_blank" rel="noopener noreferrer" title="A blue ghost...">
+                                    <i class="fa-solid fa-ghost text-6xl text-gray-300 dark:text-slate-600 mb-4 hover:text-imvidia duration-300 hover:scale-110 transition transform"></i>
+                                </a>
+                                <h3 class="text-2xl font-bold text-gray-500 dark:text-gray-400">Nothing here just yet...</h3>
+                                <p id="text-<?php echo $cat_key; ?>" class="text-gray-400 dark:text-gray-500 mt-2 text-sm">Products will appear here.</p>
+                            </div>
+                        <?php endif; ?>
 
-                        echo '
-                        <div class="group relative bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 transition hover:shadow-lg flex flex-col">
-                            <div class="w-full h-60 bg-white dark:bg-slate-700 rounded-xl overflow-hidden group-hover:opacity-75 flex items-center justify-center p-2">
-                                <img src="' . $prod_img . '" alt="' . $prod_name . '" class="max-w-full max-h-full object-contain drop-shadow-md">
-                            </div>
-                            <div class="mt-4 flex justify-between flex-grow">
-                                <div>
-                                    <h3 class="text-sm text-gray-700 dark:text-gray-200 font-bold line-clamp-2">
-                                        <a href="product.php?id=' . $prod_id . '">
-                                            <span aria-hidden="true" class="absolute inset-0"></span>
-                                            ' . $prod_name . '
-                                        </a>
-                                    </h3>
-                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">' . $prod_cat . '</p>
-                                </div>
-                                <p class="text-sm font-bold text-gray-900 dark:text-white ml-3 whitespace-nowrap">RM ' . $prod_price . '</p>
-                            </div>
-                        </div>';
-                    }
-                } else {
-                    echo '<div class="col-span-1 sm:col-span-2 lg:col-span-4 flex flex-col items-center justify-center py-16 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-dashed border-gray-300 dark:border-slate-700">
-                        <a href="https://www.google.com/logos/2010/pacman10-i.html" target="_blank" rel="noopener noreferrer" title="A blue ghost...">
-                            <i class="fa-solid fa-ghost text-6xl text-gray-300 dark:text-slate-600 mb-4 hover:text-imvidia duration-300 hover:scale-110 transition transform"></i>
-                        </a>
-                        
-                        <h3 class="text-2xl font-bold text-gray-500 dark:text-gray-400">Nothing here just yet...</h3>
-                        <p id="category-text" class="text-gray-400 dark:text-gray-500 mt-2">Products will appear here.</p>
-                    </div>';
-                }
-                ?>
+                    </div>
+                <?php endforeach; ?>
+
             </div>
         </div>
+    </div>
 
     <footer class="bg-gray-900 text-gray-400 py-12 border-t-4 border-imvidia">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -306,43 +344,30 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
                         <img src="assets/logo-light.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
                         <span class="font-bold text-2xl tracking-tight text-white">ImVidia<span class="text-imvidia">.</span></span>
                     </div>
-                    <p class="text-sm mb-4">
-                        Innovative & affordable electronics for the modern household. Power your life with ImVidia.
-                    </p>
-                    <p class="text-sm">
-                        Disclaimer: <br> This is not a legitimate company. This is a group project for <span class="text-white font-medium">CSC264</span> & <span class="text-white font-medium">ISP250</span>.
-                    </p>
+                    <p class="text-sm mb-4">Innovative & affordable electronics for the modern household. Power your life with ImVidia.</p>
+                    <p class="text-sm">Disclaimer: <br> This is not a legitimate company. This is a group project for <span class="text-white font-medium">CSC264</span> & <span class="text-white font-medium">ISP250</span>.</p>
                 </div>
-
                 <div>
                     <h4 class="text-white font-bold mb-4 uppercase tracking-wider text-sm">Directories</h4>
                     <ul class="space-y-2 text-sm">
                         <li><a href="#" id="homeLink3" class="hover:text-imvidia transition">Home</a>
                         <script>
                             document.getElementById('homeLink3').addEventListener('click', function(e) {
-                    e.preventDefault();
-                        window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth'
-                        });
-                    });
+                                e.preventDefault();
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            });
                         </script></li>
-                        
                         <li><a href="#catalog" id="catalogLink3" class="hover:text-imvidia transition">Product Catalog</a>
                         <script>
                             document.getElementById('catalogLink3').addEventListener('click', function(e) {
-                    e.preventDefault();
-                        window.scrollTo({
-                        top: document.getElementById('catalog').offsetTop - 80,
-                        behavior: 'smooth'
-                        });
-                    });
+                                e.preventDefault();
+                                window.scrollTo({ top: document.getElementById('catalog').offsetTop - 80, behavior: 'smooth' });
+                            });
                         </script></li>
                         <li><a href="#" class="hover:text-imvidia transition">About the Company</a></li>
                         <li><a href="#" class="hover:text-imvidia transition">Contact Support</a></li>
                     </ul>
                 </div>
-
                 <div>
                     <h4 class="text-white font-bold mb-4 uppercase tracking-wider text-sm">Connect With Us</h4>
                     <ul class="space-y-2 text-sm mb-6">
@@ -350,23 +375,13 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
                         <li><i class="fa-solid fa-phone mr-2 text-imvidia"></i> +6017 676 7676</li>
                     </ul>
                     <div class="flex space-x-4">
-                        <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center">
-                            <i class="fa-brands fa-facebook-f"></i>
-                        </a>
-                        <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center">
-                            <i class="fa-brands fa-twitter"></i>
-                        </a>
-                        <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center">
-                            <i class="fa-brands fa-instagram"></i>
-                        </a>
-                        <a href="https://github.com/sufree11/Imvidia-Electronics" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center">
-                            <i class="fa-brands fa-github"></i>
-                        </a>
+                        <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center"><i class="fa-brands fa-twitter"></i></a>
+                        <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="https://github.com/sufree11/Imvidia-Electronics" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center"><i class="fa-brands fa-github"></i></a>
                     </div>
                 </div>
-
             </div>
-
             <div class="mt-12 pt-8 border-t border-gray-800 text-sm text-center">
                 <p>&copy; 2015 ImVidia Electronics. Developed by Mohd Imran Shakir, Mohammad Sufree, Putera Mikhail Fallon, and Muhammad Firas Faiq.</p>
             </div>
@@ -405,14 +420,11 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
 
             function startCarousel() {
                 if (intervalId) clearInterval(intervalId);
-                
                 intervalId = setInterval(() => {
                     const nextindex = (currentindex + 1) % images.length;
-                    
                     pullingindex = nextindex;
                     currentindex = nextindex;
                     updateCarousel();
-                    
                     timeoutId = setTimeout(() => {
                         pullingindex = -1; 
                         updateCarousel();
@@ -428,44 +440,39 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
             }
 
             updateCarousel();
-
-            setTimeout(() => {
-                isInitialized = true;
-                startCarousel();
-            }, 15);
+            setTimeout(() => { isInitialized = true; startCarousel(); }, 15);
 
             document.addEventListener("visibilitychange", () => {
-                if (document.hidden) {
-                    stopCarousel();
-                } else {
-                    startCarousel();
-                }
+                if (document.hidden) stopCarousel();
+                else startCarousel();
             });
         });
     </script>
 
-    <!-- category anim -->
+    <!-- Upgraded Category Anim -->
     <script>
         let activeCategoryId = null;
 
         function toggleCategory(categoryName, btnId) {
             const container = document.getElementById('productContainer');
-            const catText = document.getElementById('category-text');
             const clickedBtn = document.getElementById(btnId);
             const clickedArrow = clickedBtn.querySelector('.arrow-icon');
-
-            // Test if open if open then close 
-            if (activeCategoryId === btnId) {
-                container.classList.remove('open');
-                
-                
-                clickedArrow.classList.remove('rotate-180', 'text-imvidia', 'opacity-100');
-                
-                activeCategoryId = null;
-            } 
             
-            else {
-                
+            // Extract the simple category word from the ID (e.g. 'cat-kitchen' -> 'kitchen')
+            const categoryKey = btnId.replace('cat-', '');
+
+            // Hide ALL category grids first
+            document.querySelectorAll('.category-grid').forEach(grid => {
+                grid.classList.add('hidden');
+            });
+
+            if (activeCategoryId === btnId) {
+                // Clicking the same button closes the slider
+                container.classList.remove('open');
+                clickedArrow.classList.remove('rotate-180', 'text-imvidia', 'opacity-100');
+                activeCategoryId = null;
+            } else {
+                // If another button was active, remove its white styling
                 if (activeCategoryId) {
                     const prevBtn = document.getElementById(activeCategoryId);
                     if (prevBtn) {
@@ -474,26 +481,32 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
                     }
                 }
 
-                
-                if ( categoryName === 'Audio Visual' || categoryName==='Personal Care')
-                {
-                    catText.innerText = categoryName + " products will appear here.";
-                } else {
-                catText.innerText = categoryName + " will appear here.";
+                // Show the specific grid we requested
+                const targetGrid = document.getElementById('grid-' + categoryKey);
+                if (targetGrid) {
+                    targetGrid.classList.remove('hidden');
                 }
-                
+
+                // Update the ghost text (if the grid is empty)
+                const catText = document.getElementById('text-' + categoryKey);
+                if (catText) {
+                    if (categoryName === 'Audio Visual' || categoryName === 'Personal Care') {
+                        catText.innerText = categoryName + " products will appear here.";
+                    } else {
+                        catText.innerText = categoryName + " will appear here.";
+                    }
+                }
+
+                // Open the slider
                 container.classList.add('open');
-
-               
                 clickedArrow.classList.add('rotate-180', 'text-imvidia', 'opacity-100');
-
                 activeCategoryId = btnId;
 
-                
+                // Smooth scroll down slightly
                 setTimeout(() => {
                     const catalogTop = document.getElementById('catalog').offsetTop;
                     window.scrollTo({
-                        top: catalogTop + 100, 
+                        top: catalogTop + 50, 
                         behavior: 'smooth'
                     });
                 }, 300); 
@@ -501,7 +514,7 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
         }
     </script>
 
-    <!-- Dark Mode Scripts (Cleaned up duplicates) -->
+    <!-- Dark Mode Scripts -->
     <script>
         function updateLogoForMode() {
             const logo = document.getElementById('navbarLogo');
@@ -534,7 +547,6 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
 
     <!-- Cart Logic -->
     <script>
-        // 1. Updates the red bubble on the cart icon from memory
         function updateCartBadge() {
             let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -542,35 +554,28 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
             const badge = document.getElementById('cart-badge');
             if (badge) {
                 badge.innerText = totalItems;
-                // Pop animation
                 badge.classList.add('scale-150');
                 setTimeout(() => badge.classList.remove('scale-150'), 200);
             }
         }
 
-        // 2. Safely add to cart (in case you add 'Quick Add' buttons to the homepage later)
         function addToCart(productName, price) {
             let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
-            
             let existingItem = cart.find(item => item.name === productName);
             if (existingItem) {
-                existingItem.quantity += 1; // Default to 1 for quick adds
+                existingItem.quantity += 1; 
             } else {
                 cart.push({ name: productName, price: price, quantity: 1 });
             }
-            
             localStorage.setItem('imvidia_cart', JSON.stringify(cart));
             updateCartBadge();
-            
             alert(`Added 1x ${productName} to your cart!`);
         }
 
-        // 3. Redirect to the actual cart.html page
         function viewCart() {
             window.location.href = 'cart.html';
         }
 
-        // Check LocalStorage immediately when the page loads so the badge is correct!
         document.addEventListener('DOMContentLoaded', updateCartBadge);
     </script>
 
