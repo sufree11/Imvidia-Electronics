@@ -250,7 +250,7 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-6 xl:gap-x-8">
                 <?php
                 // Fetch the latest products from the database (Using your singular 'product' table!)
-                $catalog_query = "SELECT * FROM product ORDER BY id DESC LIMIT 8";
+                $catalog_query = "SELECT * FROM product ORDER BY product_id DESC LIMIT 8";
                 $catalog_result = mysqli_query($conn, $catalog_query);
 
                 if ($catalog_result && mysqli_num_rows($catalog_result) > 0) {
