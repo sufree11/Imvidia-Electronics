@@ -106,6 +106,9 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
         .dropdown-wrapper.open {
             grid-template-rows: 1fr;
         }
+        .dropdown-wrapper.closing {
+            grid-template-rows: 0fr;
+        }
         .dropdown-inner {
             overflow: hidden;
             opacity: 0;
@@ -115,6 +118,10 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
         .dropdown-wrapper.open .dropdown-inner {
             opacity: 1;
             transform: translateY(0); 
+        }
+        .dropdown-wrapper.closing .dropdown-inner {
+            opacity: 0;
+            transform: translateY(-20px);
         }
         .category-btn {
             min-height: 140px;
@@ -131,24 +138,6 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-        }
-        .category-grid > div {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            width: fit-content;
-            max-width: 100%;
-            gap: 2rem;
-            margin: 0 auto;
-        }
-        @media (max-width: 1024px) {
-            .category-grid > div {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        @media (max-width: 640px) {
-            .category-grid > div {
-                grid-template-columns: repeat(1, 1fr);
-            }
         }
     </style>
 </head>
@@ -279,7 +268,7 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
     <div id="catalog" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
         
         <!-- RESTORED HTML CATEGORY BUTTONS -->
-        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-8 mt-12 relative z-10">
+        <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-6 mt-12 relative z-10">
             <button id="cat-kitchen" onclick="toggleCategory('Kitchen Appliances', 'cat-kitchen')" class="category-btn relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group min-h-[140px]">
                 <iconify-icon icon="material-symbols-light:kitchen-outline" class="z-10 text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
                 <br>
@@ -317,15 +306,15 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
         </div>
 
         <!-- RESTORED HTML SLIDER WRAPPER -->
-        <div id="productContainer" class="dropdown-wrapper mt-6 relative z-0">
-            <div class="dropdown-inner">
+        <div id="productContainer" class="dropdown-wrapper mt-6 relative z-0 flex justify-center">
+            <div class="dropdown-inner w-full">
                 
                 <!-- We dynamically render a hidden grid for EACH category -->
                 <?php foreach($products_by_category as $cat_key => $products): ?>
                     <div id="grid-<?php echo $cat_key; ?>" class="category-grid hidden">
                         
                         <?php if (count($products) > 0): ?>
-                            <div>
+                            <div class="grid gap-8" style="grid-template-columns: repeat(3, 1fr); width: 100%; max-width: 1200px; margin: 0 auto;">
                                 <?php foreach($products as $prod):
                                     $prod_id = $prod['product_id'];
                                     $prod_name = htmlspecialchars($prod['name']);
@@ -501,10 +490,15 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
             });
 
             if (activeCategoryId === btnId) {
-                // Clicking the same button closes the slider
+                // Clicking the same button closes the slider with animation
                 container.classList.remove('open');
+                container.classList.add('closing');
                 clickedArrow.classList.remove('rotate-180', 'text-imvidia', 'opacity-100');
-                activeCategoryId = null;
+                
+                setTimeout(() => {
+                    container.classList.remove('closing');
+                    activeCategoryId = null;
+                }, 650);
             } else {
                 // If another button was active, remove its white styling
                 if (activeCategoryId) {
