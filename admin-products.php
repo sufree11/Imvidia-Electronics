@@ -300,14 +300,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div id="addProductView" class="hidden animate-fade-in-up">
                     <div class="flex items-center justify-between mb-8">
-                        <div>
-                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Add New Product</h1>
-                            <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Create a new product listing for the catalog.</p>
-                        </div>
-                        <button type="button" onclick="showProductList()" class="px-4 py-2 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-slate-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 shadow-sm transition flex items-center text-sm font-medium">
-                            <i class="fa-solid fa-arrow-left mr-2"></i> Cancel
-                        </button>
-                    </div>
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Add New Product</h1>
+        <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Create a new product listing for the catalog.</p>
+    </div>
+    <button type="button" onclick="showProductList()" class="px-4 py-2 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-slate-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 shadow-sm transition flex items-center text-sm font-medium">
+        <i class="fa-solid fa-arrow-left mr-2"></i> Cancel
+    </button>
+</div>
+
+<?php if (!empty($message)): ?>
+    <div class="mb-6 px-4 py-3 rounded-lg text-sm font-medium text-center <?php echo $msg_type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'; ?>">
+        <?php echo $message; ?>
+    </div>
+    <?php if ($msg_type === 'success'): ?>
+        <script>
+            // Automatically switch back to the product list view on success
+            document.addEventListener('DOMContentLoaded', function() {
+                showProductList();
+            });
+        </script>
+    <?php endif; ?>
+<?php endif; ?>
 
                     <form id="addProductForm" method="POST" enctype="multipart/form-data" onsubmit="handleFormSubmit(event)" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         
@@ -507,15 +521,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         function handleFormSubmit(event) {
-            event.preventDefault(); 
-            var htmlContent = document.getElementById('product-editor').value;
-            alert("Success! Product data is ready for the database.\nImages Ready: " + galleryFiles.length + "\n\nDescription HTML Saved:\n" + htmlContent.substring(0, 150) + "...");
             
-            // Clean up the UI after successful submit
-            galleryFiles = [];
-            renderPreviews();
-            showProductList();
+            tinymce.triggerSave(); 
+
+           
+            if (galleryFiles.length > 0) {
+                const dataTransfer = new DataTransfer();
+                
+                dataTransfer.items.add(galleryFiles[0]); 
+                document.getElementById('gallery-upload').files = dataTransfer.files;
+            }
+
+
         }
+        
     </script>
 
     <!-- Gallery Upload Logic -->
