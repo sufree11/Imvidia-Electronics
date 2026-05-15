@@ -1,9 +1,21 @@
 <?php
 require_once 'db/session.php';
+require_once 'db/database.php'; // Ensure database connection is included
+
+// Security Bouncer
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
     header("Location: login.php");
     exit();
 }
+
+// Fetch current Admin details for the header
+$user_id = $_SESSION['user_id'];
+$query = "SELECT first_name, last_name, profile_picture FROM users WHERE id = '$user_id' LIMIT 1";
+$result = mysqli_query($conn, $query);
+$admin_header_data = mysqli_fetch_assoc($result);
+
+$full_name = htmlspecialchars($admin_header_data['first_name'] . ' ' . $admin_header_data['last_name']);
+$profile_pic = !empty($admin_header_data['profile_picture']) ? htmlspecialchars($admin_header_data['profile_picture']) : "";
 ?>
 
 <html>
@@ -157,18 +169,21 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
                 
                 <div class="flex items-center space-x-3 border-l border-gray-200 dark:border-slate-700 pl-4 cursor-pointer hover:opacity-80 transition">
                     <div class="text-right hidden sm:block">
-                        <!-- profile placeholder -->
                         <p class="text-sm font-bold text-gray-900 dark:text-white leading-tight">
-                            <?php echo htmlspecialchars($_SESSION['user_name']); ?>
+                            <?php echo $full_name; ?>
                         </p>
                         <p class="text-xs text-gray-500 dark:text-gray-400">Administrator</p>
                     </div>
-                    <!-- pfp placeholder -->
-                    <a href="admin-profile.php" class = "hover:scale-110 transition transform duration-300">
-                    <div class="h-9 w-9 rounded-full bg-gray-200 dark:bg-slate-700 border-2 border-imvidia flex items-center justify-center overflow-hidden">
-                        <i class="fa-solid fa-user text-gray-400 dark:text-gray-500 text-sm"></i>
+
+                    <a href="admin-profile.php" class="hover:scale-110 transition transform duration-300">
+                        <div class="h-9 w-9 rounded-full bg-gray-200 dark:bg-slate-700 border-2 border-imvidia flex items-center justify-center overflow-hidden">
+                            <?php if ($profile_pic): ?>
+                                <img src="<?php echo $profile_pic; ?>" class="w-full h-full object-cover">
+                            <?php else: ?>
+                                <i class="fa-solid fa-user text-gray-400 dark:text-gray-500 text-sm"></i>
+                            <?php endif; ?>
                         </div>
-                        </a>
+                    </a>
                 </div>
             </div>
         </header>
