@@ -11,6 +11,16 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
     exit();
 }
 
+// --- NEW: FETCH LOGGED-IN ADMIN DATA ---
+$current_admin_id = $_SESSION['user_id'];
+$admin_query = "SELECT first_name, last_name, profile_picture FROM users WHERE id = '$current_admin_id' LIMIT 1";
+$admin_result = mysqli_query($conn, $admin_query);
+$admin_data = mysqli_fetch_assoc($admin_result);
+
+$full_name = htmlspecialchars($admin_data['first_name'] . ' ' . $admin_data['last_name']);
+$avatar_url = !empty($admin_data['profile_picture']) ? htmlspecialchars($admin_data['profile_picture']) : "";
+// ---------------------------------------
+
 $message = '';
 $msg_type = '';
 
@@ -91,7 +101,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js"></script>
 
-    <!--tinymce apicode-->
     <script src="https://cdn.tiny.cloud/1/be8dfp6y9j7hrwecamdcd0qll0us7grftmz5xjf4sb32mcqg/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
 
     <script>
@@ -207,7 +216,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <body class="bg-fixed bg-gray-50 text-gray-800 flex h-screen overflow-hidden dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
 
-    <!-- sidebar stuff -->
     <aside class="w-64 bg-white dark:bg-slate-900 shadow-xl border-r border-gray-100 dark:border-slate-800 hidden md:flex flex-col z-20 transition-all duration-300 relative">
         <div class="h-16 flex items-center px-6 border-b border-gray-100 dark:border-slate-800 w-full">
             <a href="index.php" class="flex items-center cursor-pointer hover:scale-105 transition transform duration-300">
@@ -246,7 +254,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="flex-1 flex flex-col h-screen overflow-hidden relative">
         
-        <!-- header -->
         <header class="h-16 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-sm border-b border-gray-100 dark:border-slate-800 flex items-center justify-between px-6 z-10">
             <button class="md:hidden text-gray-600 dark:text-gray-300 hover:text-imvidia transition">
                 <i class="fa-solid fa-bars text-xl"></i>
@@ -263,12 +270,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 <div class="flex items-center space-x-3 border-l border-gray-200 dark:border-slate-700 pl-4 cursor-pointer hover:opacity-80 transition">
                     <div class="text-right hidden sm:block">
-                        <p class="text-sm font-bold text-gray-900 dark:text-white leading-tight">The Architect</p>
+                        <p class="text-sm font-bold text-gray-900 dark:text-white leading-tight"><?php echo $full_name; ?></p>
                         <p class="text-xs text-gray-500 dark:text-gray-400">Administrator</p>
                     </div>
                     <a href="admin-profile.php" class = "hover:scale-110 transition transform duration-300">
                     <div class="h-9 w-9 rounded-full bg-gray-200 dark:bg-slate-700 border-2 border-imvidia flex items-center justify-center overflow-hidden">
-                        <i class="fa-solid fa-user text-gray-400 dark:text-gray-500 text-sm"></i>
+                        <?php if ($avatar_url): ?>
+                            <img src="<?php echo $avatar_url; ?>" class="w-full h-full object-cover">
+                        <?php else: ?>
+                            <i class="fa-solid fa-user text-gray-400 dark:text-gray-500 text-sm"></i>
+                        <?php endif; ?>
                     </div>
                     </a>
                 </div>
@@ -371,7 +382,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b border-gray-100 dark:border-slate-800 pb-3">Pricing, Stock & Policies</h3>
                                 
                                 <div class="space-y-4">
-                                    <!-- UPDATED PRICE FIELD: Hidden native spinners, added custom + / - buttons -->
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Selling Price (RM) <span class="text-red-500">*</span></label>
                                         <div class="relative flex items-center">
@@ -390,7 +400,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         </div>
                                     </div>
 
-                                    <!-- UPDATED STOCK FIELD: Matching custom + / - buttons -->
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stock Quantity</label>
                                         <div class="relative flex items-center">
@@ -406,13 +415,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         </div>
                                     </div>
 
-                                    <!-- NEW: Delivery Time -->
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Delivery Time</label>
                                         <input type="text" value="1-2 Business Days" class="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition">
                                     </div>
 
-                                    <!-- NEW: Warranty Period -->
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Warranty Period</label>
                                         <input type="text" value="1 Year Included" class="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition">
@@ -429,10 +436,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">SVG, PNG, JPG or GIF (max. 5MB)</span>
                                 </div>
                                 
-                                <!-- Hidden File Input -->
                                 <input name="product_image" type="file" id="gallery-upload" multiple accept="image/*" class="hidden">
                                 
-                                <!-- Preview Container -->
                                 <div id="image-preview-container" class="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-4 empty:hidden"></div>
                             </div>
 
@@ -521,36 +526,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         function handleFormSubmit(event) {
-            
             tinymce.triggerSave(); 
-
-           
             if (galleryFiles.length > 0) {
                 const dataTransfer = new DataTransfer();
-                
                 dataTransfer.items.add(galleryFiles[0]); 
                 document.getElementById('gallery-upload').files = dataTransfer.files;
             }
-
-
         }
-        
     </script>
 
-    <!-- Gallery Upload Logic -->
     <script>
         let galleryFiles = [];
         const dropzone = document.getElementById('image-dropzone');
         const fileInput = document.getElementById('gallery-upload');
         const previewContainer = document.getElementById('image-preview-container');
 
-        // Trigger file select dialog on click
         dropzone.addEventListener('click', () => fileInput.click());
-
-        // Handle selected files
         fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
-        // Drag & Drop events
         dropzone.addEventListener('dragover', (e) => {
             e.preventDefault();
             dropzone.classList.remove('bg-gray-50', 'dark:bg-slate-800/50', 'border-gray-300', 'dark:border-slate-600');
@@ -575,21 +568,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         function handleFiles(files) {
             Array.from(files).forEach(file => {
-                // Max size check: 5MB
                 if (file.size > 5 * 1024 * 1024) {
                     alert(`File "${file.name}" is too large. Maximum size is 5MB.`);
                     return;
                 }
-                // File type check
                 if (!file.type.startsWith('image/')) {
                     alert(`File "${file.name}" is not a valid image format.`);
                     return;
                 }
-                
                 galleryFiles.push(file);
                 renderPreviews();
             });
-            // Reset input so the same file can be chosen again if previously deleted
             fileInput.value = '';
         }
 
@@ -600,7 +589,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         function renderPreviews() {
             previewContainer.innerHTML = '';
-            
             galleryFiles.forEach((file, index) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -621,7 +609,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </script>
 
-    <!-- Dark mode logic -->
     <script>
         function updateLogoForMode() {
             const logo = document.getElementById('navbarLogo');
