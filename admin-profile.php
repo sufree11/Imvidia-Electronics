@@ -1,26 +1,15 @@
 <?php
-require_once 'db/session.php';
-require_once 'db/database.php';
-require 'vendor/autoload.php';
+require_once 'includes/auth.php';
+require_once 'includes/helpers.php';
 
-use Aws\S3\S3Client;
-use Aws\Exception\AwsException;
-
-header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-header("Cache-Control: post-check=0, pre-check=0", false);
-header("Pragma: no-cache");
-
-// 1. Security Bouncer
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
-    header("Location: login.php");
-    exit();
-}
+// Require admin login
+requireAdminLogin();
 
 $user_id = $_SESSION['user_id'];
 $message = '';
 $msg_type = '';
-$user_name = $_SESSION['user_name'] ?? 'Admin User';
-// 2. Handle Profile Update
+
+// Handle Profile Update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fname = mysqli_real_escape_string($conn, $_POST['fname'] ?? '');
     $lname = mysqli_real_escape_string($conn, $_POST['lname'] ?? '');
@@ -41,41 +30,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // DigitalOcean Spaces Image Upload Logic
     $avatar_query_part = "";
     if ($msg_type !== "error" && isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
-        $file_ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
-        $allowed_exts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        $upload_result = uploadToS3($_FILES['avatar'], 'avatars/admin_', $user_id);
         
-        if (in_array($file_ext, $allowed_exts)) {
-            // Save admin avatars with an 'admin_' prefix
-            $new_filename = 'avatars/admin_' . $user_id . '_' . time() . '.' . $file_ext;
-            
-            $s3 = new S3Client([
-                'version' => 'latest',
-                'region'  => getenv('SPACES_REGION'),
-                'endpoint' => getenv('SPACES_ENDPOINT'),
-                'credentials' => [
-                    'key'    => getenv('SPACES_KEY'),
-                    'secret' => getenv('SPACES_SECRET'),
-                ],
-            ]);
-
-            try {
-                $result = $s3->putObject([
-                    'Bucket'      => getenv('SPACES_BUCKET'),
-                    'Key'         => $new_filename,
-                    'SourceFile'  => $_FILES['avatar']['tmp_name'],
-                    'ACL'         => 'public-read',
-                    'ContentType' => mime_content_type($_FILES['avatar']['tmp_name'])
-                ]);
-
-                $public_url = $result['ObjectURL'];
-                $avatar_query_part = ", profile_picture='$public_url'";
-                
-            } catch (AwsException $e) {
-                $message = "Failed to upload to cloud storage.";
-                $msg_type = "error";
-            }
+        if ($upload_result['success']) {
+            $avatar_query_part = ", profile_picture='" . mysqli_real_escape_string($conn, $upload_result['url']) . "'";
         } else {
-            $message = "Invalid image format. Allowed: JPG, PNG, GIF, WEBP.";
+            $message = $upload_result['error'];
             $msg_type = "error";
         }
     }
@@ -106,48 +66,27 @@ $query = "SELECT * FROM users WHERE id = '$user_id' LIMIT 1";
 $result = mysqli_query($conn, $query);
 $user = mysqli_fetch_assoc($result);
 
-// Generate Avatar URL
-$avatar_url = !empty($user['profile_picture']) 
-    ? htmlspecialchars($user['profile_picture']) 
-    // Darker default placeholder for admins!
-    : "[https://ui-avatars.com/api/?name=](https://ui-avatars.com/api/?name=)" . urlencode($user['first_name'] . ' ' . $user['last_name']) . "&background=1F2937&color=fff&size=128";
+// Generate Avatar URL (admin color for default)
+$avatar_url = getAvatarUrl($user['first_name'], $user['last_name'], $user['profile_picture'], true);
+
+// Prepare admin data for navbar
+$admin_data = [
+    'id' => $user['id'],
+    'first_name' => $user['first_name'],
+    'last_name' => $user['last_name'],
+    'profile_picture' => $user['profile_picture']
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Profile - ImVidia Panel</title>
-    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+    <?php include 'includes/head.php'; ?>
+</head>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js"></script>
+<body class="bg-fixed bg-gray-50 text-gray-800 flex h-screen overflow-hidden dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
 
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        imvidia: {
-                            light: '#8DFFFF',
-                            DEFAULT: '#49C2FA',
-                            dark: '#1F2468',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
-    <style>
-        :root {
-            --bg: #f8fafc;
-            --surface: #ffffff;
-            --text-primary: #111827;
+    <?php include 'includes/navbar-admin.php'; ?>
             --text-secondary: #475569;
             --text-muted: #64748b;
             --border-color: #e2e8f0;

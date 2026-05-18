@@ -1,192 +1,21 @@
 <?php
-require_once 'db/session.php';
+require_once 'includes/auth.php';
+require_once 'includes/helpers.php';
 
-header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-header("Cache-Control: post-check=0, pre-check=0", false);
-header("Pragma: no-cache");
-
-$is_logged_in = false;
-$first_name = '';
-$avatar_url = '';
-
-if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
-    $is_logged_in = true;
-    
-    $user_id = mysqli_real_escape_string($conn, $_SESSION['user_id']);
-    $query = "SELECT first_name, last_name, profile_picture FROM users WHERE id = '$user_id' LIMIT 1";
-    $result = mysqli_query($conn, $query);
-    
-    if ($result && mysqli_num_rows($result) > 0) {
-        $user = mysqli_fetch_assoc($result);
-        $first_name = htmlspecialchars($user['first_name']);
-        
-        if (!empty($user['profile_picture'])) {
-            $avatar_url = htmlspecialchars($user['profile_picture']);
-        } else {
-            $avatar_url = "https://ui-avatars.com/api/?name=" . urlencode($user['first_name'] . ' ' . $user['last_name']) . "&background=49C2FA&color=fff&size=128";
-        }
-    }
-}
+// Get user data or guest status
+$user = checkCustomerOrGuest();
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ImVidia Electronics</title>
-    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js"></script>
-
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        imvidia: {
-                            light: '#8DFFFF',
-                            DEFAULT: '#49C2FA',
-                            dark: '#1F2468',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
-    <style>
-        :root {
-            --bg: #f8fafc;
-            --surface: #ffffff;
-            --text-primary: #111827;
-            --text-secondary: #475569;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-        }
-        .dark {
-            --bg: #020617;
-            --surface: #111827;
-            --text-primary: #f8fafc;
-            --text-secondary: #cbd5e1;
-            --text-muted: #94a3b8;
-            --border-color: #334155;
-        }
-        body {
-            background-color: var(--bg) !important;
-            color: var(--text-primary) !important;
-        }
-        .dark .bg-white { background-color: var(--surface) !important; }
-        .dark .bg-gray-50 { background-color: #020617 !important; }
-        .dark .bg-gray-100 { background-color: #17203a !important; }
-        .dark .bg-gray-900 { background-color: #020617 !important; }
-        .dark .bg-gray-700 { background-color: #1f2937 !important; }
-        .dark .text-gray-900,
-        .dark .text-gray-800,
-        .dark .text-gray-700 { color: var(--text-primary) !important; }
-        .dark .text-gray-600,
-        .dark .text-gray-500,
-        .dark .text-gray-400 { color: var(--text-secondary) !important; }
-        .dark .border-gray-100,
-        .dark .border-gray-200 { border-color: var(--border-color) !important; }
-        .dark .shadow-sm,
-        .dark .shadow-xl { box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.4), 0 4px 6px -4px rgba(15, 23, 42, 0.1) !important; }
-
-        .dropdown-wrapper {
-            display: grid;
-            grid-template-rows: 0fr;
-            transition: grid-template-rows 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .dropdown-wrapper.open {
-            grid-template-rows: 1fr;
-        }
-        .dropdown-inner {
-            overflow: hidden;
-            opacity: 0;
-            transform: translateY(-10px); 
-            transition: opacity 0.4s ease-out, transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .dropdown-wrapper.open .dropdown-inner {
-            opacity: 1;
-            transform: translateY(0); 
-        }
-    </style>
+    <?php include 'includes/head.php'; ?>
 </head>
 
 <body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
    
-    <nav class="bg-white shadow-md sticky top-0 z-50 dark:bg-slate-950 transition-colors duration-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-             <div class="flex justify-between h-16 items-center relative">
-                
-                <div class="flex items-center space-x-6">
-                    <a href="#" id="homeLink1" class="flex-shrink-0 flex items-center cursor-pointer">
-                        <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
-                        <span class="font-bold text-2xl tracking-tight text-gray-900 dark:text-white">ImVidia<span class="text-imvidia">.</span></span>
-                    </a>
-                    
-                    <button id="dark-mode-toggle" type="button" class="p-2 rounded-full text-gray-600 hover:text-imvidia transition dark:text-gray-300" aria-label="Toggle dark mode" onclick="toggleDarkMode()">
-                        <i id="dark-mode-icon" class="fa-solid fa-moon"></i>
-                    </button>
-                </div>
-
-                <script>
-                    document.getElementById('homeLink1').addEventListener('click', function(e) {
-                        e.preventDefault();
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    });
-                </script>
-
-                <div class="hidden md:flex space-x-8 items-center absolute left-1/2 transform -translate-x-1/2">
-                    <a href="#" id="homeLink2" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Home</a>
-                    <a href="#catalog" id="catalogLink1" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Catalog</a>
-                    <a href="#" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Support</a>
-                </div>
-
-                <script>
-                    document.getElementById('homeLink2').addEventListener('click', function(e) {
-                        e.preventDefault();
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    });
-                    document.getElementById('catalogLink1').addEventListener('click', function(e) {
-                        e.preventDefault();
-                        window.scrollTo({ top: document.getElementById('catalog').offsetTop - 80, behavior: 'smooth' });
-                    });
-                </script>
-    
-                <div class="flex items-center space-x-4">
-                    <?php if ($is_logged_in): ?>
-                        <div class="hidden md:block mr-2 text-right">
-                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Welcome, <?php echo $first_name; ?>.</span>
-                        </div>
-                        <a href="profile.php" class="relative group cursor-pointer transition transform hover:scale-105" title="User Profile">
-                            <img src="<?php echo $avatar_url; ?>" alt="Profile Picture" class="w-9 h-9 rounded-full border-2 border-imvidia object-cover bg-white shadow-sm">
-                        </a>
-                    <?php else: ?>
-                        <div class="hidden md:flex items-center space-x-4">
-                            <a href="login.php" class="text-sm font-semibold text-gray-600 hover:text-imvidia transition dark:text-gray-300">Log In</a>
-                            <a href="register.php" class="text-sm font-bold bg-imvidia hover:bg-imvidia-dark text-white px-4 py-2 rounded-lg shadow-md transition transform hover:-translate-y-0.5">Register</a>
-                        </div>
-                        <a href="login.php" class="md:hidden relative p-2 text-gray-600 hover:text-imvidia transition dark:text-gray-300">
-                            <i class="fa-solid fa-user text-xl"></i>
-                        </a>
-                    <?php endif; ?>
-
-                    <button class="relative p-2 text-gray-600 hover:text-imvidia transition dark:text-gray-300" onclick="viewCart()">
-                        <i class="fa-solid fa-cart-shopping text-xl"></i>
-                        <span id="cart-badge" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-imvidia rounded-full transition-transform duration-200">
-                            0
-                        </span>
-                    </button>
-                </div>
-             </div>
-        </div>
-    </nav>
+    <?php include 'includes/navbar-customer.php'; ?>
 
     <header class="bg-gray-900 text-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28 flex flex-col md:flex-row items-center">
@@ -344,59 +173,9 @@ if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'customer') {
         </div>
     </div>
 
-    <footer class="bg-gray-900 text-gray-400 py-12 border-t-4 border-imvidia mt-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div>
-                    <div class="flex items-center cursor-pointer mb-4">
-                        <img src="assets/logo-light.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
-                        <span class="font-bold text-2xl tracking-tight text-white">ImVidia<span class="text-imvidia">.</span></span>
-                    </div>
-                    <p class="text-sm mb-4">Innovative & affordable electronics for the modern household. Power your life with ImVidia.</p>
-                    <p class="text-sm">Disclaimer: <br> This is not a legitimate company. This is a group project for <span class="text-white font-medium">CSC264</span> & <span class="text-white font-medium">ISP250</span>.</p>
-                </div>
-                <div>
-                    <h4 class="text-white font-bold mb-4 uppercase tracking-wider text-sm">Directories</h4>
-                    <ul class="space-y-2 text-sm">
-                        <li><a href="#" id="homeLink3" class="hover:text-imvidia transition">Home</a>
-                        <script>
-                            document.getElementById('homeLink3').addEventListener('click', function(e) {
-                                e.preventDefault();
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                            });
-                        </script></li>
-                        <li><a href="#catalog" id="catalogLink3" class="hover:text-imvidia transition">Product Catalog</a>
-                        <script>
-                            document.getElementById('catalogLink3').addEventListener('click', function(e) {
-                                e.preventDefault();
-                                window.scrollTo({ top: document.getElementById('catalog').offsetTop - 80, behavior: 'smooth' });
-                            });
-                        </script></li>
-                        <li><a href="#" class="hover:text-imvidia transition">About the Company</a></li>
-                        <li><a href="#" class="hover:text-imvidia transition">Contact Support</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="text-white font-bold mb-4 uppercase tracking-wider text-sm">Connect With Us</h4>
-                    <ul class="space-y-2 text-sm mb-6">
-                        <li><i class="fa-solid fa-envelope mr-2 text-imvidia"></i> imvidia67@gmail.com</li>
-                        <li><i class="fa-solid fa-phone mr-2 text-imvidia"></i> +6017 676 7676</li>
-                    </ul>
-                    <div class="flex space-x-4">
-                        <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center"><i class="fa-brands fa-facebook-f"></i></a>
-                        <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center"><i class="fa-brands fa-twitter"></i></a>
-                        <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center"><i class="fa-brands fa-instagram"></i></a>
-                        <a href="https://github.com/sufree11/Imvidia-Electronics" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center"><i class="fa-brands fa-github"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="mt-12 pt-8 border-t border-gray-800 text-sm text-center">
-                <p>&copy; 2015 ImVidia Electronics. Developed by Mohd Imran Shakir, Mohammad Sufree, Putera Mikhail Fallon, and Muhammad Firas Faiq.</p>
-            </div>
-        </div>
-    </footer>
+    <?php include 'includes/footer.php'; ?>
 
-    <!-- Carousel Logic -->
+    <!-- Carousel & Product Toggle Scripts -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const images = document.querySelectorAll('.carousel-image');

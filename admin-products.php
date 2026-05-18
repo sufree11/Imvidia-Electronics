@@ -1,26 +1,12 @@
 <?php
-require_once 'db/session.php';
-require_once 'db/database.php';
-require 'vendor/autoload.php';
+require_once 'includes/auth.php';
+require_once 'includes/helpers.php';
 
-use Aws\S3\S3Client;
-use Aws\Exception\AwsException;
+// Require admin login
+requireAdminLogin();
 
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
-    header("Location: login.php");
-    exit();
-}
-
-
-// --- NEW: FETCH LOGGED-IN ADMIN DATA ---
-$current_admin_id = $_SESSION['user_id'];
-$admin_query = "SELECT first_name, last_name, profile_picture FROM users WHERE id = '$current_admin_id' LIMIT 1";
-$admin_result = mysqli_query($conn, $admin_query);
-$admin_data = mysqli_fetch_assoc($admin_result);
-
-$full_name = htmlspecialchars($admin_data['first_name'] . ' ' . $admin_data['last_name']);
-$avatar_url = !empty($admin_data['profile_picture']) ? htmlspecialchars($admin_data['profile_picture']) : "";
-// ---------------------------------------
+// Get admin data for navbar
+$admin_data = getAdminUserData();
 
 $message = '';
 $msg_type = '';
@@ -35,48 +21,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     $image_url = '';
 
-
     if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
-        $file_ext = strtolower(pathinfo($_FILES['product_image']['name'], PATHINFO_EXTENSION));
-        $allowed_exts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        $upload_result = uploadToS3($_FILES['product_image'], 'products/prod_', time() . '_' . rand(100,999));
         
-        if (in_array($file_ext, $allowed_exts)) {
-
-            $new_filename = 'products/prod_' . time() . '_' . rand(100,999) . '.' . $file_ext;
-            
-            $s3 = new S3Client([
-                'version' => 'latest',
-                'region'  => getenv('SPACES_REGION'),
-                'endpoint' => getenv('SPACES_ENDPOINT'),
-                'credentials' => [
-                    'key'    => getenv('SPACES_KEY'),
-                    'secret' => getenv('SPACES_SECRET'),
-                ],
-            ]);
-
-            try {
-                $result = $s3->putObject([
-                    'Bucket'      => getenv('SPACES_BUCKET'),
-                    'Key'         => $new_filename,
-                    'SourceFile'  => $_FILES['product_image']['tmp_name'],
-                    'ACL'         => 'public-read',
-                    'ContentType' => mime_content_type($_FILES['product_image']['tmp_name'])
-                ]);
-
-                $image_url = $result['ObjectURL'];
-            } catch (AwsException $e) {
-                $message = "Failed to upload image to cloud storage.";
-                $msg_type = "error";
-            }
+        if ($upload_result['success']) {
+            $image_url = $upload_result['url'];
         } else {
-            $message = "Invalid image format. Allowed: JPG, PNG, GIF, WEBP.";
+            $message = $upload_result['error'];
             $msg_type = "error";
         }
     }
 
     if ($msg_type !== "error") {
         $insert_query = "INSERT INTO product (name, description, price, category, stock_quantity, image_url, admin_id, created_at) 
-                         VALUES ('$name', '$desc', '$price', '$category', '$stock', '$image_url', " . $_SESSION['user_id'] . ", NOW())";
+                         VALUES ('$name', '$desc', '$price', '$category', '$stock', '" . mysqli_real_escape_string($conn, $image_url) . "', " . $_SESSION['user_id'] . ", NOW())";
         
         if (mysqli_query($conn, $insert_query)) {
             $message = "Product added successfully!";
@@ -92,62 +50,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Products - Admin Panel</title>
-    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js"></script>
-
+    <?php include 'includes/head.php'; ?>
     <script src="https://cdn.tiny.cloud/1/be8dfp6y9j7hrwecamdcd0qll0us7grftmz5xjf4sb32mcqg/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
+</head>
 
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        imvidia: {
-                            light: '#8DFFFF',
-                            DEFAULT: '#49C2FA',
-                            dark: '#1F2468',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+<body class="bg-fixed bg-gray-50 text-gray-800 flex h-screen overflow-hidden dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
 
-    <style>
-        :root {
-            --bg: #f8fafc;
-            --surface: #ffffff;
-            --text-primary: #111827;
-            --text-secondary: #475569;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-        }
-        .dark {
-            --bg: #020617;
-            --surface: #111827;
-            --text-primary: #f8fafc;
-            --text-secondary: #cbd5e1;
-            --text-muted: #94a3b8;
-            --border-color: #334155;
-        }
-        body {
-            background-color: var(--bg) !important;
-            color: var(--text-primary) !important;
-        }
-        .dark .bg-white { background-color: var(--surface) !important; }
-        .dark .bg-gray-50 { background-color: #020617 !important; }
-        .dark .bg-gray-100 { background-color: #17203a !important; }
-        .dark .bg-gray-900 { background-color: #020617 !important; }
-        .dark .bg-gray-800 { background-color: #1e293b !important; }
+    <?php include 'includes/navbar-admin.php'; ?>
         .dark .bg-gray-700 { background-color: #1f2937 !important; }
         .dark .text-gray-900,
         .dark .text-gray-800,

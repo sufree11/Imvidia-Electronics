@@ -1,98 +1,11 @@
 <?php
-require_once 'db/session.php';
-header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-header("Cache-Control: post-check=0, pre-check=0", false);
-header("Pragma: no-cache");
-
-$error_message = '';
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $identity = mysqli_real_escape_string($conn, $_POST['identity']);
-    $password = $_POST['password'];
-    $role = $_POST['role']; 
-
-    if ($role === 'admin') {
-        $query = "SELECT * FROM users WHERE admin_id = '$identity' AND role = 'admin' LIMIT 1";
-    } else {
-        $query = "SELECT * FROM users WHERE email = '$identity' AND role = 'customer' LIMIT 1";
-    }
-    
-    $result = mysqli_query($conn, $query);
-
-    if ($result && mysqli_num_rows($result) > 0) {
-        $user = mysqli_fetch_assoc($result);
-
-        if ($password === $user['password_hash']) {
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_role'] = $user['role'];
-            $_SESSION['user_name'] = $user['first_name'];
-
-            if ($role === 'admin') {
-                header("Location: admin.php");
-            } else {
-                header("Location: index.php");
-            }
-            exit();
-        } else {
-            $error_message = "Invalid password.";
-        }
-    } else {
-        $error_message = "No account found with those details.";
-    }
-}
+require_once 'includes/auth.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
-<!-- 
-  INTERNAL DEV NOTE: 
-  Please stop asking if we are related to NVIDIA. 
--->
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Log In - ImVidia</title>
-    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        imvidia: {
-                            light: '#8DFFFF',
-                            DEFAULT: '#49C2FA',
-                            dark: '#1F2468',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        :root {
-            --bg: #f8fafc;
-            --surface: #ffffff;
-            --text-primary: #111827;
-            --text-secondary: #475569;
-            --border-color: #e2e8f0;
-        }
-        .dark {
-            --bg: #020617;
-            --surface: #111827;
-            --text-primary: #f8fafc;
-            --text-secondary: #cbd5e1;
-            --border-color: #334155;
-        }
-        body { background-color: var(--bg) !important; color: var(--text-primary) !important; }
-        .dark .bg-white { background-color: var(--surface) !important; }
-        .dark .bg-gray-50 { background-color: #020617 !important; }
-    </style>
+    <?php include 'includes/head.php'; ?>
 </head>
 <body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
     

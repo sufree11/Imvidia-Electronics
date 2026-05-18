@@ -1,153 +1,24 @@
 <?php
-require_once 'db/session.php';
-require_once 'db/database.php'; // Ensure database connection is included
+require_once 'includes/auth.php';
+require_once 'includes/helpers.php';
 
-// Security Bouncer
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
-    header("Location: login.php");
-    exit();
-}
+// Require admin login
+requireAdminLogin();
 
-// Fetch current Admin details for the header
-$user_id = $_SESSION['user_id'];
-$query = "SELECT first_name, last_name, profile_picture FROM users WHERE id = '$user_id' LIMIT 1";
-$result = mysqli_query($conn, $query);
-$admin_header_data = mysqli_fetch_assoc($result);
-
-$full_name = htmlspecialchars($admin_header_data['first_name'] . ' ' . $admin_header_data['last_name']);
-$profile_pic = !empty($admin_header_data['profile_picture']) ? htmlspecialchars($admin_header_data['profile_picture']) : "";
+// Get admin user data for navbar
+$admin_data = getAdminUserData();
 ?>
 
+<!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - ImVidia</title>
-    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js"></script>
-
-    <!-- custom colour and theme configuration -->
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        imvidia: {
-                            light: '#8DFFFF',
-                            DEFAULT: '#49C2FA',
-                            dark: '#1F2468',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
-    <!-- darkmode theme config -->
-    <style>
-        :root {
-            --bg: #f8fafc;
-            --surface: #ffffff;
-            --text-primary: #111827;
-            --text-secondary: #475569;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-        }
-        .dark {
-            --bg: #020617;
-            --surface: #111827;
-            --text-primary: #f8fafc;
-            --text-secondary: #cbd5e1;
-            --text-muted: #94a3b8;
-            --border-color: #334155;
-        }
-        body {
-            background-color: var(--bg) !important;
-            color: var(--text-primary) !important;
-        }
-        .dark .bg-white { background-color: var(--surface) !important; }
-        .dark .bg-gray-50 { background-color: #020617 !important; }
-        .dark .bg-gray-100 { background-color: #17203a !important; }
-        .dark .bg-gray-900 { background-color: #020617 !important; }
-        .dark .bg-gray-700 { background-color: #1f2937 !important; }
-        .dark .text-gray-900,
-        .dark .text-gray-800,
-        .dark .text-gray-700 {
-            color: var(--text-primary) !important;
-        }
-        .dark .text-gray-600,
-        .dark .text-gray-500,
-        .dark .text-gray-400 {
-            color: var(--text-secondary) !important;
-        }
-        .dark .border-gray-100,
-        .dark .border-gray-200 {
-            border-color: var(--border-color) !important;
-        }
-        .dark .shadow-sm,
-        .dark .shadow-md,
-        .dark .shadow-xl {
-            box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.4), 0 4px 6px -4px rgba(15, 23, 42, 0.1) !important;
-        }
-    </style>
+    <?php include 'includes/head.php'; ?>
 </head>
 
 <body class="bg-fixed bg-gray-50 text-gray-800 flex h-screen overflow-hidden dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
 
-    <!-- sidebar stuff -->
-    <aside class="w-64 bg-white dark:bg-slate-900 shadow-xl border-r border-gray-100 dark:border-slate-800 hidden md:flex flex-col z-20 transition-all duration-300 relative">
-        
-        <!-- Sidebar Header (Logo) -->
-        <div class="h-16 flex items-center px-6 border-b border-gray-100 dark:border-slate-800 w-full">
-            <a href="index.php" class="flex items-center cursor-pointer hover:scale-105 transition transform duration-300">
-                <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-8 w-auto mr-2">
-                <span class="font-bold text-xl tracking-tight text-gray-900 dark:text-white">Admin<span class="text-imvidia">Panel</span></span>
-            </a>
-        </div>
-
-        <!-- sidebar links -->
-        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            <a href="#" class="flex items-center px-4 py-3 bg-imvidia text-white rounded-lg shadow-sm transition transform hover:-translate-y-0.5">
-                <i class="fa-solid fa-chart-pie w-6"></i>
-                <span class="font-medium">Overview</span>
-            </a>
-            <a href="admin-products.php" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia rounded-lg transition">
-                <i class="fa-solid fa-box-open w-6"></i>
-                <span class="font-medium">Products</span>
-            </a>
-            <a href="#" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia rounded-lg transition">
-                <i class="fa-solid fa-cart-shopping w-6"></i>
-                <span class="font-medium">Orders</span>
-                <!-- db link here too for badge -->
-                <span id="order-count-badge" class="ml-auto bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-gray-400 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
-            </a>
-            <a href="#" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia rounded-lg transition">
-                <i class="fa-solid fa-users w-6"></i>
-                <span class="font-medium">Customers</span>
-            </a>
-        </nav>
-
-        <!-- logout -->
-        <div class="p-4 border-t border-gray-100 dark:border-slate-800">
-            <a href="logout.php" class="flex items-center px-4 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition group">
-                <i class="fa-solid fa-arrow-right-from-bracket w-6 group-hover:-translate-x-1 transition"></i>
-                <span class="font-medium">Log Out</span>
-            </a>
-        </div>
-    </aside>
-
-
-    <div class="flex-1 flex flex-col h-screen overflow-hidden relative">
-        
-        <!-- header -->
-        <header class="h-16 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-sm border-b border-gray-100 dark:border-slate-800 flex items-center justify-between px-6 z-10">
-            
+    <?php include 'includes/navbar-admin.php'; ?>
             <!--mobile menu (bug) -->
             <button class="md:hidden text-gray-600 dark:text-gray-300 hover:text-imvidia transition">
                 <i class="fa-solid fa-bars text-xl"></i>

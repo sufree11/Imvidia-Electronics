@@ -1,103 +1,16 @@
 <?php
-require_once 'db/session.php';
-header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-header("Cache-Control: post-check=0, pre-check=0", false);
-header("Pragma: no-cache");
-
-$error_message = '';
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $fname = mysqli_real_escape_string($conn, $_POST['fname']);
-    $lname = mysqli_real_escape_string($conn, $_POST['lname']);
-    $email = mysqli_real_escape_string($conn, $_POST['email']);
-    $address_street = mysqli_real_escape_string($conn, $_POST['address_street']);
-    $address_city = mysqli_real_escape_string($conn, $_POST['address_city']);
-    $address_state = mysqli_real_escape_string($conn, $_POST['address_state']);
-    $address_zip = mysqli_real_escape_string($conn, $_POST['address_zip']);
-    $phonenum = mysqli_real_escape_string($conn, $_POST['phone']);
-    $password = $_POST['password'];
-    $confirm_password = $_POST['confirm_password'];
-
-    if ($password !== $confirm_password) {
-        $error_message = "Your passwords do not match!";
-    } else {
-        $check_query = "SELECT id FROM users WHERE email = '$email' LIMIT 1";
-        $check_result = mysqli_query($conn, $check_query);
-
-        if (mysqli_num_rows($check_result) > 0) {
-            $error_message = "An account with that email address already exists.";
-        } else {
-            $insert_query = "INSERT INTO users (role, first_name, last_name, email, password_hash, phone, address_street, address_city, address_state, address_zip) 
-                             VALUES ('customer', '$fname', '$lname', '$email', '$password', '$phonenum', '$address_street', '$address_city', '$address_state', '$address_zip')";
-            
-            if (mysqli_query($conn, $insert_query)) {
-                $_SESSION['user_id'] = mysqli_insert_id($conn);
-                $_SESSION['user_role'] = 'customer';
-                $_SESSION['user_name'] = $fname;
-                
-                header("Location: index.php");
-                exit();
-            } else {
-                $error_message = "Database error: " . mysqli_error($conn);
-            }
-        }
-    }
-}
+require_once 'includes/auth.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - ImVidia</title>
-    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        imvidia: {
-                            light: '#8DFFFF',
-                            DEFAULT: '#49C2FA',
-                            dark: '#1F2468',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        :root {
-            --bg: #f8fafc;
-            --surface: #ffffff;
-            --text-primary: #111827;
-            --text-secondary: #475569;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-        }
-        .dark {
-            --bg: #020617;
-            --surface: #111827;
-            --text-primary: #f8fafc;
-            --text-secondary: #cbd5e1;
-            --text-muted: #94a3b8;
-            --border-color: #334155;
-        }
-        body { background-color: var(--bg) !important; color: var(--text-primary) !important; }
-        .dark .bg-white { background-color: var(--surface) !important; }
-        .dark .bg-gray-50 { background-color: #020617 !important; }
-        .dark .bg-gray-100 { background-color: #17203a !important; }
-        .dark .bg-gray-900 { background-color: #020617 !important; }
-        .dark .bg-gray-700 { background-color: #1f2937 !important; }
-        
-        .animate-fade-in-up {
+    <?php include 'includes/head.php'; ?>
+</head>
+<body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
+    
+    <nav class="bg-white shadow-sm sticky top-0 z-50 dark:bg-slate-950">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-6">
             animation: fadeInUp 0.4s ease-out forwards;
         }
         @keyframes fadeInUp {

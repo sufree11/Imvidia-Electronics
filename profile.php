@@ -1,17 +1,9 @@
 <?php
-require_once 'db/session.php';
-require 'vendor/autoload.php';
-use Aws\S3\S3Client;
-use Aws\Exception\AwsException;
-header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-header("Cache-Control: post-check=0, pre-check=0", false);
-header("Pragma: no-cache");
+require_once 'includes/auth.php';
+require_once 'includes/helpers.php';
 
-// Security Bouncer
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'customer') {
-    header("Location: login.php");
-    exit();
-}
+// Require customer login
+requireCustomerLogin();
 
 $user_id = $_SESSION['user_id'];
 $message = '';
@@ -56,45 +48,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Handle Profile Picture Upload
     if ($msg_type !== "error" && isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
+        $upload_result = uploadToS3($_FILES['avatar'], 'avatars/user_', $user_id);
         
-        $file_ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
-        $allowed_exts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-        
-        if (in_array($file_ext, $allowed_exts)) {
-            $new_filename = 'avatars/user_' . $user_id . '_' . time() . '.' . $file_ext;
-            
-            // Connect to DigitalOcean Spaces
-            $s3 = new S3Client([
-                'version' => 'latest',
-                'region'  => getenv('SPACES_REGION'),
-                'endpoint' => getenv('SPACES_ENDPOINT'),
-                'credentials' => [
-                    'key'    => getenv('SPACES_KEY'),
-                    'secret' => getenv('SPACES_SECRET'),
-                ],
-            ]);
-
-            try {
-                // Upload the file to the Spaces Bucket
-                $result = $s3->putObject([
-                    'Bucket'      => getenv('SPACES_BUCKET'),
-                    'Key'         => $new_filename,
-                    'SourceFile'  => $_FILES['avatar']['tmp_name'],
-                    'ACL'         => 'public-read', // Makes the image visible on the web
-                    'ContentType' => mime_content_type($_FILES['avatar']['tmp_name'])
-                ]);
-
-                // Grab the public URL DigitalOcean created for the image
-                $public_url = $result['ObjectURL'];
-                $avatar_query_part = ", profile_picture='$public_url'";
-                
-            } catch (AwsException $e) {
-                $message = "Failed to upload to cloud storage.";
-                // $message = "Cloud Error: " . $e->getMessage(); // Uncomment for debugging
-                $msg_type = "error";
-            }
+        if ($upload_result['success']) {
+            $avatar_query_part = ", profile_picture='" . mysqli_real_escape_string($conn, $upload_result['url']) . "'";
         } else {
-            $message = "Invalid image format. Allowed: JPG, PNG, GIF, WEBP.";
+            $message = $upload_result['error'];
             $msg_type = "error";
         }
     }
@@ -136,68 +95,30 @@ $states = [
     'SGR' => 'Selangor', 'TRG' => 'Terengganu'
 ];
 
-// Determine the Avatar URL (Use their uploaded picture, or fallback to their initials!)
-$avatar_url = !empty($user['profile_picture']) 
-    ? htmlspecialchars($user['profile_picture']) 
-    : "https://ui-avatars.com/api/?name=" . urlencode($user['first_name'] . ' ' . $user['last_name']) . "&background=49C2FA&color=fff&size=128";
+// Get avatar URL using helper
+$avatar_url = getAvatarUrl($user['first_name'], $user['last_name'], $user['profile_picture']);
+
+// Prepare user data for navbar
+$user_data = [
+    'is_logged_in' => true,
+    'first_name' => $user['first_name'],
+    'last_name' => $user['last_name'],
+    'profile_picture' => $user['profile_picture']
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile - ImVidia</title>
-    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js"></script>
-
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        imvidia: {
-                            light: '#8DFFFF',
-                            DEFAULT: '#49C2FA',
-                            dark: '#1F2468',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
-    <style>
-        :root {
-            --bg: #f8fafc;
-            --surface: #ffffff;
-            --text-primary: #111827;
-            --text-secondary: #475569;
-            --border-color: #e2e8f0;
-        }
-        .dark {
-            --bg: #020617;
-            --surface: #0f172a;
-            --text-primary: #f8fafc;
-            --text-secondary: #cbd5e1;
-            --border-color: #1e293b;
-        }
-        body {
-            background-color: var(--bg) !important;
-            color: var(--text-primary) !important;
-            -webkit-font-smoothing: antialiased;
-        }
-        .dark .bg-white { background-color: var(--surface) !important; }
-        .dark .bg-gray-50 { background-color: #020617 !important; }
-        .dark .bg-gray-900 { background-color: #020617 !important; }
-        .dark .border-gray-100, .dark .border-gray-200 { border-color: var(--border-color) !important; }
-    </style>
+    <?php include 'includes/head.php'; ?>
 </head>
+<body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
+    
+    <?php 
+    // Pass user data to navbar
+    $user = $user_data;
+    include 'includes/navbar-customer.php'; 
+    ?>
 
 <body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
     

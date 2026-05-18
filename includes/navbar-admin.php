@@ -1,0 +1,114 @@
+<?php
+/**
+ * Admin Navbar/Sidebar Component
+ * Main navigation sidebar + header for admin pages
+ * 
+ * Requires: $admin_data (array with admin user info from getAdminUserData())
+ * Example: 
+ * $admin_data = getAdminUserData();
+ * include 'includes/navbar-admin.php';
+ */
+
+// If $admin_data not provided, try to get it
+if (!isset($admin_data) || !is_array($admin_data)) {
+    $admin_data = [
+        'id' => null,
+        'first_name' => 'Admin',
+        'last_name' => 'User',
+        'profile_picture' => ''
+    ];
+}
+
+$full_name = htmlspecialchars(($admin_data['first_name'] ?? 'Admin') . ' ' . ($admin_data['last_name'] ?? 'User'));
+$profile_pic = !empty($admin_data['profile_picture']) ? htmlspecialchars($admin_data['profile_picture']) : '';
+$admin_avatar = !empty($profile_pic) ? $profile_pic : getAvatarUrl($admin_data['first_name'] ?? 'Admin', $admin_data['last_name'] ?? 'User', '', true);
+?>
+
+<!-- SIDEBAR -->
+<aside class="w-64 bg-white dark:bg-slate-900 shadow-xl border-r border-gray-100 dark:border-slate-800 hidden md:flex flex-col z-20 transition-all duration-300 relative">
+    
+    <!-- Sidebar Header (Logo) -->
+    <div class="h-16 flex items-center px-6 border-b border-gray-100 dark:border-slate-800 w-full">
+        <a href="admin.php" class="flex items-center cursor-pointer hover:scale-105 transition transform duration-300">
+            <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-8 w-auto mr-2">
+            <span class="font-bold text-xl tracking-tight text-gray-900 dark:text-white">Admin<span class="text-imvidia">Panel</span></span>
+        </a>
+    </div>
+
+    <!-- Sidebar Links -->
+    <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+        <a href="admin.php" class="flex items-center px-4 py-3 bg-imvidia text-white rounded-lg shadow-sm transition transform hover:-translate-y-0.5">
+            <i class="fa-solid fa-chart-pie w-6"></i>
+            <span class="font-medium">Overview</span>
+        </a>
+        <a href="admin-products.php" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia rounded-lg transition">
+            <i class="fa-solid fa-box-open w-6"></i>
+            <span class="font-medium">Products</span>
+        </a>
+        <a href="#" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia rounded-lg transition">
+            <i class="fa-solid fa-cart-shopping w-6"></i>
+            <span class="font-medium">Orders</span>
+            <span id="order-count-badge" class="ml-auto bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-gray-400 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+        </a>
+        <a href="#" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia rounded-lg transition">
+            <i class="fa-solid fa-users w-6"></i>
+            <span class="font-medium">Customers</span>
+        </a>
+    </nav>
+
+    <!-- Logout Button -->
+    <div class="p-4 border-t border-gray-100 dark:border-slate-800">
+        <a href="logout.php" class="flex items-center px-4 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition group">
+            <i class="fa-solid fa-arrow-right-from-bracket w-6 group-hover:-translate-x-1 transition"></i>
+            <span class="font-medium">Log Out</span>
+        </a>
+    </div>
+</aside>
+
+<!-- MAIN CONTENT WRAPPER -->
+<div class="flex-1 flex flex-col h-screen overflow-hidden relative">
+    
+    <!-- HEADER -->
+    <header class="h-16 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-sm border-b border-gray-100 dark:border-slate-800 flex items-center justify-between px-6 z-10">
+        
+        <!-- Left: Hamburger Menu (Mobile) -->
+        <button class="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:text-imvidia transition">
+            <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+
+        <!-- Center: Page Title (Optional) -->
+        <div class="hidden md:flex items-center">
+            <h1 class="text-lg font-semibold text-gray-900 dark:text-white">Admin Dashboard</h1>
+        </div>
+
+        <!-- Right: Admin Info + Dark Mode Toggle + Dropdown -->
+        <div class="flex items-center space-x-6">
+            
+            <!-- Dark Mode Toggle -->
+            <button id="dark-mode-toggle" type="button" class="p-2 rounded-full text-gray-600 hover:text-imvidia transition dark:text-gray-300" aria-label="Toggle dark mode" onclick="toggleDarkMode()">
+                <i id="dark-mode-icon" class="fa-solid fa-moon"></i>
+            </button>
+
+            <!-- Admin Profile Dropdown -->
+            <div class="flex items-center space-x-3 cursor-pointer group">
+                <div class="hidden md:text-right">
+                    <p class="text-sm font-semibold text-gray-900 dark:text-white"><?php echo $full_name; ?></p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Administrator</p>
+                </div>
+                <img src="<?php echo $admin_avatar; ?>" alt="Admin Avatar" class="w-10 h-10 rounded-full border-2 border-imvidia object-cover bg-white shadow-sm">
+                
+                <!-- Dropdown Menu -->
+                <div class="absolute right-6 top-16 mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-gray-100 dark:border-slate-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <a href="admin-profile.php" class="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-imvidia rounded-t-lg transition">
+                        <i class="fa-solid fa-user mr-2"></i>My Profile
+                    </a>
+                    <a href="logout.php" class="block px-4 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-b-lg transition">
+                        <i class="fa-solid fa-arrow-right-from-bracket mr-2"></i>Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-slate-950">
