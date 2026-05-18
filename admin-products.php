@@ -11,6 +11,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
     exit();
 }
 
+
 // --- NEW: FETCH LOGGED-IN ADMIN DATA ---
 $current_admin_id = $_SESSION['user_id'];
 $admin_query = "SELECT first_name, last_name, profile_picture FROM users WHERE id = '$current_admin_id' LIMIT 1";

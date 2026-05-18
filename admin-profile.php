@@ -1,6 +1,8 @@
 <?php
-require_once 'db/session.php'; // This usually contains the $conn variable and session_start()
+require_once 'db/session.php';
+require_once 'db/database.php';
 require 'vendor/autoload.php';
+
 use Aws\S3\S3Client;
 use Aws\Exception\AwsException;
 
@@ -8,7 +10,7 @@ header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
 
-// 1. Security Bouncer: Ensure only Admins can access this
+// 1. Security Bouncer
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
     header("Location: login.php");
     exit();
@@ -18,13 +20,13 @@ $user_id = $_SESSION['user_id'];
 $message = '';
 $msg_type = '';
 
-// 2. Handle Profile Update (When "Save Profile" is clicked)
+// 2. Handle Profile Update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fname = mysqli_real_escape_string($conn, $_POST['fname'] ?? '');
     $lname = mysqli_real_escape_string($conn, $_POST['lname'] ?? '');
     $phone = mysqli_real_escape_string($conn, $_POST['phone'] ?? '');
     
-    // We only update password if the user typed something in the field
+    // Password Logic
     $new_password = $_POST['new_password'] ?? '';
     $password_query_part = "";
     if (!empty($new_password)) {
@@ -36,13 +38,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    // DigitalOcean Spaces Image Upload Logic
     $avatar_query_part = "";
-    // Handle Profile Picture Upload to DigitalOcean
     if ($msg_type !== "error" && isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
         $file_ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
         $allowed_exts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
         
         if (in_array($file_ext, $allowed_exts)) {
+            // Save admin avatars with an 'admin_' prefix
             $new_filename = 'avatars/admin_' . $user_id . '_' . time() . '.' . $file_ext;
             
             $s3 = new S3Client([
@@ -66,13 +69,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $public_url = $result['ObjectURL'];
                 $avatar_query_part = ", profile_picture='$public_url'";
+                
             } catch (AwsException $e) {
-                $message = "Cloud Upload Failed.";
+                $message = "Failed to upload to cloud storage.";
                 $msg_type = "error";
             }
+        } else {
+            $message = "Invalid image format. Allowed: JPG, PNG, GIF, WEBP.";
+            $msg_type = "error";
         }
     }
 
+    // Database Update
     if ($msg_type !== "error") {
         $update_query = "UPDATE users SET 
                             first_name='$fname', 
@@ -85,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (mysqli_query($conn, $update_query)) {
             $message = "Admin profile updated successfully!";
             $msg_type = "success";
-            $_SESSION['user_name'] = $fname; 
+            $_SESSION['user_name'] = $fname . ' ' . $lname;
         } else {
             $message = "Database error: " . mysqli_error($conn);
             $msg_type = "error";
@@ -93,15 +101,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// 3. Fetch current Admin details for display
+// Fetch Latest Data
 $query = "SELECT * FROM users WHERE id = '$user_id' LIMIT 1";
 $result = mysqli_query($conn, $query);
 $user = mysqli_fetch_assoc($result);
 
-$full_name = htmlspecialchars($user['first_name'] . ' ' . $user['last_name']);
+// Generate Avatar URL
 $avatar_url = !empty($user['profile_picture']) 
     ? htmlspecialchars($user['profile_picture']) 
-    : ""; 
+    // Darker default placeholder for admins!
+    : "[https://ui-avatars.com/api/?name=](https://ui-avatars.com/api/?name=)" . urlencode($user['first_name'] . ' ' . $user['last_name']) . "&background=1F2937&color=fff&size=128";
 ?>
 <!DOCTYPE html>
 <html lang="en">
