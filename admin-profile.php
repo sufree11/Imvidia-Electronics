@@ -19,7 +19,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
 $user_id = $_SESSION['user_id'];
 $message = '';
 $msg_type = '';
-
+$user_name = $_SESSION['user_name'] ?? 'Admin User';
 // 2. Handle Profile Update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fname = mysqli_real_escape_string($conn, $_POST['fname'] ?? '');
