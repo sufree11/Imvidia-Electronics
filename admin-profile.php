@@ -245,7 +245,7 @@ $avatar_url = !empty($user['profile_picture'])
                 
                 <div class="flex items-center space-x-3 border-l border-gray-200 dark:border-slate-700 pl-4 transition">
                     <div class="text-right hidden sm:block">
-                        <p class="text-sm font-bold text-gray-900 dark:text-white leading-tight"><?php echo $full_name; ?></p>
+                        <p class="text-sm font-bold text-gray-900 dark:text-white leading-tight"><?php echo $user_name; ?></p>
                         <p class="text-xs text-gray-500 dark:text-gray-400">Administrator</p>
                     </div>
                     <a href="admin-profile.php" class="h-9 w-9 rounded-full bg-imvidia border-2 border-imvidia flex items-center justify-center overflow-hidden hover:scale-105 transition transform shadow-sm">
@@ -303,7 +303,7 @@ $avatar_url = !empty($user['profile_picture'])
                                     <input type="file" name="avatar" id="avatar-upload" accept="image/*" class="hidden" onchange="previewAvatar(event)">
                             </div>
 
-                            <h2 class="text-xl font-bold text-gray-900 dark:text-white"><?php echo $full_name; ?></h2>
+                            <h2 class="text-xl font-bold text-gray-900 dark:text-white"><?php echo $user_name; ?></h2>
                             <p class="text-sm text-gray-500 dark:text-gray-400 mb-4"><?php echo htmlspecialchars($user['email']); ?></p>
                         </div>
 
