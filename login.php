@@ -65,62 +65,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </nav> 
 
     <main class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-
-        <div class="max-w-md w-full bg-white dark:bg-slate-900 px-8 pb-8 pt-14 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 relative mt-8 z-10">
+        <div class="max-w-md w-full bg-white dark:bg-slate-900 p-8 rounded-xl shadow-lg border border-gray-100 dark:border-slate-800">
+            <h2 class="text-2xl font-bold text-center text-gray-900 dark:text-white mb-6">Welcome Back</h2>
             
-            <div class="absolute -top-12 left-1/2 transform -translate-x-1/2 w-24 h-24 bg-white dark:bg-slate-800 rounded-full shadow-lg overflow-hidden flex items-center justify-center">
-                <img id="bigLogo" src="assets/logo.svg" alt="Logo" class="w-full h-full object-cover">
-            </div>
-
-            <div class="text-center mb-6">
-                <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-2">Welcome Back</h2>
-                <p class="text-gray-500 dark:text-gray-400 text-sm">Please sign in to your account.</p>
-            </div>
-
+            <!-- Error Message Display -->
             <?php if (!empty($error_message)): ?>
-                <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm text-center font-medium">
-                    <i class="fa-solid fa-circle-exclamation mr-1"></i> <?php echo $error_message; ?>
+                <div class="bg-red-50 text-red-500 p-3 rounded-lg mb-6 text-sm font-medium border border-red-100 text-center">
+                    <?php echo htmlspecialchars($error_message); ?>
                 </div>
             <?php endif; ?>
 
-            <div class="flex bg-gray-100 dark:bg-slate-800 p-1 rounded-lg mb-8 relative">
-                <button id="tab-customer" onclick="switchTab('customer')" class="flex-1 py-2 text-sm font-semibold rounded-md transition-all duration-300 bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm">
-                    Customer
-                </button>
-                <button id="tab-admin" onclick="switchTab('admin')" class="flex-1 py-2 text-sm font-semibold rounded-md transition-all duration-300 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
-                    Administrator
-                </button>
-            </div>
-
-            <form id="loginForm" method="POST" action="login.php" class="space-y-6">
-                
-                <input type="hidden" name="role" id="role-input" value="customer">
-
+            <!-- Corrected Form -->
+            <form action="login.php" method="POST" class="space-y-5">
                 <div>
-                    <label id="identity-label" for="identity-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Email Address
-                    </label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i id="identity-icon" class="fa-solid fa-envelope text-gray-400"></i>
-                        </div>
-                        <input id="identity-input" name="identity" type="text" required 
-                            class="appearance-none block w-full pl-10 px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white transition duration-200" 
-                            placeholder="e.g. six@seven.com">
-                    </div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
+                    <!-- IMPORTANT: The name="email" is what PHP reads. The value="..." makes it sticky! -->
+                    <input type="email" id="email" name="email" autocomplete="email" required
+                           value="<?php echo htmlspecialchars($email ?? ''); ?>"
+                           class="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-imvidia focus:border-imvidia outline-none transition bg-white dark:bg-slate-800 text-gray-900 dark:text-white">
                 </div>
 
                 <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Password
-                    </label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fa-solid fa-lock text-gray-400"></i>
-                        </div>
-                        <input id="password" name="password" type="password" required minlength="8" maxlength="20"
-                            class="appearance-none block w-full pl-10 px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white transition duration-200" >
-                    </div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
+                    <!-- IMPORTANT: The name="password" is required here -->
+                    <input type="password" id="password" name="password" autocomplete="current-password" required
+                           class="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-imvidia focus:border-imvidia outline-none transition bg-white dark:bg-slate-800 text-gray-900 dark:text-white">
                 </div>
 
                 <div class="flex items-center justify-between">
