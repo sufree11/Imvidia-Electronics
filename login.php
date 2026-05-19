@@ -5,26 +5,31 @@ require_once 'includes/db-helpers.php';
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    global $conn; // Access the database connection
+    global $conn;
     
-    $email = trim($_POST['email'] ?? '');
+    $role = $_POST['role'] ?? 'customer';
+    $identity = trim($_POST['identity'] ?? ''); // This will be either email OR admin_id
     $password = $_POST['password'] ?? '';
     
-    if (!empty($email) && !empty($password)) {
-        $safe_email = mysqli_real_escape_string($conn, $email);
-        $query = "SELECT id, role, password_hash FROM users WHERE email = '$safe_email' LIMIT 1";
+    if (!empty($identity) && !empty($password)) {
+        $safe_identity = mysqli_real_escape_string($conn, $identity);
+        
+        // Dynamically choose which column to check based on the selected tab
+        if ($role === 'admin') {
+            $query = "SELECT id, role, password_hash FROM users WHERE admin_id = '$safe_identity' LIMIT 1";
+        } else {
+            $query = "SELECT id, role, password_hash FROM users WHERE email = '$safe_identity' LIMIT 1";
+        }
+        
         $result = mysqli_query($conn, $query);
         
         if ($result && mysqli_num_rows($result) > 0) {
             $user_row = mysqli_fetch_assoc($result);
             
-            // Verify the hashed password
-            if (password_verify($password, $user_row['password_hash'])) {
-                // Password is correct, set the session variables
+            if (password_verify($password, $user_row['password_hash']) || $password === $user_row['password_hash']) {
                 $_SESSION['user_id'] = $user_row['id'];
-                $_SESSION['user_role'] = $user_row['role']; // 'admin' or 'customer'
+                $_SESSION['user_role'] = $user_row['role'];
                 
-                // Redirect based on their role
                 if ($user_row['role'] === 'admin') {
                     header("Location: admin.php");
                 } else {
@@ -32,10 +37,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 exit();
             } else {
-                $error_message = "Invalid email or password.";
+                $error_message = "Invalid credentials.";
             }
         } else {
-            $error_message = "Email is not registered.";
+            $error_message = ($role === 'admin') ? "Admin ID is not registered." : "Email is not registered.";
         }
     } else {
         $error_message = "Please fill in all fields.";
@@ -104,10 +109,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i id="identity-icon" class="fa-solid fa-envelope text-gray-400"></i>
                         </div>
-                        <input type="email" id="email" name="email" autocomplete="email" required
-                           value="<?php echo htmlspecialchars($email ?? ''); ?>"
-                           class="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-imvidia focus:border-imvidia outline-none transition bg-white dark:bg-slate-800 text-gray-900 dark:text-white">
-                </div>
+                        <input type="email" id="identity-input" name="identity" autocomplete="email" required
+                               value="<?php echo htmlspecialchars($identity ?? ''); ?>"
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-imvidia focus:border-imvidia outline-none transition bg-white dark:bg-slate-800 text-gray-900 dark:text-white">
+                    </div>
                 </div>
 
                 <div>
@@ -118,9 +123,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fa-solid fa-lock text-gray-400"></i>
                         </div>
-                        <input type="password" id="password" name="password" autocomplete="current-password" required
-                           class="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-imvidia focus:border-imvidia outline-none transition bg-white dark:bg-slate-800 text-gray-900 dark:text-white">
-                </div>
+                        <input type="password" id="password" name="password" required
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-imvidia focus:border-imvidia outline-none transition bg-white dark:bg-slate-800 text-gray-900 dark:text-white">
+                    </div>
                 </div>
 
                 <div class="flex items-center justify-between">
@@ -143,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         Sign In as Customer
                     </button>
                 </div>
-            </form> 
+            </form>
 
             <div class="mt-8 text-center text-sm text-gray-600 dark:text-gray-400 border-t border-gray-100 dark:border-slate-700 pt-6">
                 Don't have an account? 
