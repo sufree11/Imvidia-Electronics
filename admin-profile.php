@@ -1,6 +1,7 @@
 <?php
 require_once 'includes/auth.php';
 require_once 'includes/helpers.php';
+require_once 'includes/db-helpers.php';
 
 // Require admin login
 requireAdminLogin();
@@ -23,7 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = "New password must be at least 8 characters.";
             $msg_type = "error";
         } else {
-            $password_query_part = ", password_hash='$new_password'";
+            $hashed_password = hashPassword($new_password);
+            $password_query_part = ", password_hash='" . mysqli_real_escape_string($conn, $hashed_password) . "'";
         }
     }
 
@@ -87,116 +89,6 @@ $admin_data = [
 <body class="bg-fixed bg-gray-50 text-gray-800 flex h-screen overflow-hidden dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
 
     <?php include 'includes/navbar-admin.php'; ?>
-            --text-secondary: #475569;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-        }
-        .dark {
-            --bg: #020617;
-            --surface: #111827;
-            --text-primary: #f8fafc;
-            --text-secondary: #cbd5e1;
-            --text-muted: #94a3b8;
-            --border-color: #334155;
-        }
-        body {
-            background-color: var(--bg) !important;
-            color: var(--text-primary) !important;
-            -webkit-font-smoothing: antialiased;
-        }
-        .dark .bg-white { background-color: var(--surface) !important; }
-        .dark .bg-gray-50 { background-color: #020617 !important; }
-        .dark .bg-gray-100 { background-color: #17203a !important; }
-        .dark .bg-gray-900 { background-color: #020617 !important; }
-        .dark .bg-gray-800 { background-color: #1e293b !important; }
-        .dark .bg-gray-700 { background-color: #1f2937 !important; }
-        .dark .text-gray-900, .dark .text-gray-800, .dark .text-gray-700 { color: var(--text-primary) !important; }
-        .dark .text-gray-600, .dark .text-gray-500, .dark .text-gray-400 { color: var(--text-secondary) !important; }
-        .dark .border-gray-100, .dark .border-gray-200 { border-color: var(--border-color) !important; }
-        .dark .shadow-sm, .dark .shadow-md, .dark .shadow-xl {
-            box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.4), 0 4px 6px -4px rgba(15, 23, 42, 0.1) !important;
-        }
-        
-        .animate-fade-in-up {
-            animation: fadeInUp 0.4s ease-out forwards;
-        }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
-</head>
-
-<body class="bg-fixed bg-gray-50 text-gray-800 flex h-screen overflow-hidden dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
-
-    <aside class="w-64 bg-white dark:bg-slate-900 shadow-xl border-r border-gray-100 dark:border-slate-800 hidden md:flex flex-col z-20 transition-all duration-300 relative">
-        <div class="h-16 flex items-center px-6 border-b border-gray-100 dark:border-slate-800 w-full">
-            <a href="index.php" class="flex items-center cursor-pointer hover:scale-105 transition transform duration-300">
-                <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-8 w-auto mr-2">
-                <span class="font-bold text-xl tracking-tight text-gray-900 dark:text-white">Admin<span class="text-imvidia">Panel</span></span>
-            </a>
-        </div>
-
-        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            <a href="admin.php" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia rounded-lg transition">
-                <i class="fa-solid fa-chart-pie w-6"></i>
-                <span class="font-medium">Overview</span>
-            </a>
-            <a href="admin-products.php" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia rounded-lg transition">
-                <i class="fa-solid fa-box-open w-6"></i>
-                <span class="font-medium">Products</span>
-            </a>
-            <a href="#" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia rounded-lg transition">
-                <i class="fa-solid fa-cart-shopping w-6"></i>
-                <span class="font-medium">Orders</span>
-                <span id="order-count-badge" class="ml-auto bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-gray-400 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
-            </a>
-            <a href="#" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia rounded-lg transition">
-                <i class="fa-solid fa-users w-6"></i>
-                <span class="font-medium">Customers</span>
-            </a>
-        </nav>
-
-        <div class="p-4 border-t border-gray-100 dark:border-slate-800">
-            <a href="logout.php" class="flex items-center px-4 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition group">
-                <i class="fa-solid fa-arrow-right-from-bracket w-6 group-hover:-translate-x-1 transition"></i>
-                <span class="font-medium">Log Out</span>
-            </a>
-        </div>
-    </aside>
-
-    <div class="flex-1 flex flex-col h-screen overflow-hidden relative">
-        
-        <header class="h-16 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-sm border-b border-gray-100 dark:border-slate-800 flex items-center justify-between px-6 z-10">
-            <button class="md:hidden text-gray-600 dark:text-gray-300 hover:text-imvidia transition">
-                <i class="fa-solid fa-bars text-xl"></i>
-            </button>
-
-            <div class="hidden sm:flex items-center font-bold text-gray-800 dark:text-gray-200">
-                Profile
-            </div>
-
-            <div class="flex items-center space-x-4 ml-auto">
-                <button id="dark-mode-toggle" type="button" class="p-2 rounded-full text-gray-600 hover:text-imvidia transition dark:text-gray-300" aria-label="Toggle dark mode" onclick="toggleDarkMode()">
-                    <i id="dark-mode-icon" class="fa-solid fa-moon text-lg"></i>
-                </button>
-                
-                <div class="flex items-center space-x-3 border-l border-gray-200 dark:border-slate-700 pl-4 transition">
-                    <div class="text-right hidden sm:block">
-                        <p class="text-sm font-bold text-gray-900 dark:text-white leading-tight"><?php echo $user_name; ?></p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Administrator</p>
-                    </div>
-                    <a href="admin-profile.php" class="h-9 w-9 rounded-full bg-imvidia border-2 border-imvidia flex items-center justify-center overflow-hidden hover:scale-105 transition transform shadow-sm">
-                        <?php if ($avatar_url): ?>
-                            <img src="<?php echo $avatar_url; ?>" class="w-full h-full object-cover">
-                        <?php else: ?>
-                            <i class="fa-solid fa-user text-white text-sm"></i>
-                        <?php endif; ?>
-                    </a>
-                </div>
-            </div>
-        </header>
 
         <main class="flex-1 overflow-y-auto p-6 lg:p-8 animate-fade-in-up">
             <div class="max-w-6xl mx-auto relative">
@@ -242,7 +134,7 @@ $admin_data = [
                                     <input type="file" name="avatar" id="avatar-upload" accept="image/*" class="hidden" onchange="previewAvatar(event)">
                             </div>
 
-                            <h2 class="text-xl font-bold text-gray-900 dark:text-white"><?php echo $user_name; ?></h2>
+                            <h2 class="text-xl font-bold text-gray-900 dark:text-white"><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></h2>
                             <p class="text-sm text-gray-500 dark:text-gray-400 mb-4"><?php echo htmlspecialchars($user['email']); ?></p>
                         </div>
 
@@ -256,7 +148,7 @@ $admin_data = [
                     </div>
 
                     <div class="lg:col-span-8 xl:col-span-9 space-y-8">
-                        
+                        <form id="admin-profile-form" action="admin-profile.php" method="POST" enctype="multipart/form-data">
                             <section class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
                                 <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-5 border-b border-gray-100 dark:border-slate-800 pb-3">
                                     Personal Information
@@ -283,9 +175,9 @@ $admin_data = [
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 flex items-center justify-between">
-                                            Employee ID <i class="fa-solid fa-lock text-xs text-gray-400"></i>
+                                            User ID <i class="fa-solid fa-lock text-xs text-gray-400"></i>
                                         </label>
-                                        <input type="text" value="<?php echo htmlspecialchars($user['admin_id']); ?>" readonly class="w-full px-4 py-3 border border-gray-200 dark:border-slate-700/50 bg-gray-50 dark:bg-slate-800/50 rounded-xl text-gray-500 dark:text-gray-400 font-medium font-mono text-sm cursor-not-allowed focus:outline-none">
+                                        <input type="text" value="<?php echo htmlspecialchars($user['id']); ?>" readonly class="w-full px-4 py-3 border border-gray-200 dark:border-slate-700/50 bg-gray-50 dark:bg-slate-800/50 rounded-xl text-gray-500 dark:text-gray-400 font-medium font-mono text-sm cursor-not-allowed focus:outline-none">
                                     </div>
                                     
 
@@ -344,7 +236,7 @@ $admin_data = [
                                     Save Profile
                                 </button>
                             </div>
-
+                        </section>
                         </form>
                     </div>
                 </div>

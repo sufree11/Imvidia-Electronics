@@ -1,6 +1,7 @@
 <?php
 require_once 'includes/auth.php';
 require_once 'includes/helpers.php';
+require_once 'includes/db-helpers.php';
 
 // Require customer login
 requireCustomerLogin();
@@ -32,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pass_check_result = mysqli_query($conn, $pass_check_query);
         $user_data = mysqli_fetch_assoc($pass_check_result);
         
-        if ($current_password !== $user_data['password_hash']) {
+        if (!verifyPassword($current_password, $user_data['password_hash'])) {
             $message = "Current password is incorrect.";
             $msg_type = "error";
         } else if ($new_password !== $confirm_new_password) {
@@ -42,7 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = "New password must be at least 8 characters.";
             $msg_type = "error";
         } else {
-            $password_query_part = ", password_hash='$new_password'";
+            $hashed_password = hashPassword($new_password);
+            $password_query_part = ", password_hash='" . mysqli_real_escape_string($conn, $hashed_password) . "'";
         }
     }
     
