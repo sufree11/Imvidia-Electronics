@@ -1,5 +1,47 @@
 <?php
 require_once 'includes/auth.php';
+require_once 'includes/db-helpers.php';
+
+$error_message = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    global $conn; // Access the database connection
+    
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+    
+    if (!empty($email) && !empty($password)) {
+        $safe_email = mysqli_real_escape_string($conn, $email);
+        $query = "SELECT id, role, password_hash FROM users WHERE email = '$safe_email' LIMIT 1";
+        $result = mysqli_query($conn, $query);
+        
+        if ($result && mysqli_num_rows($result) > 0) {
+            $user_row = mysqli_fetch_assoc($result);
+            
+            // Verify the hashed password
+            if (password_verify($password, $user_row['password_hash'])) {
+                // Password is correct, set the session variables
+                $_SESSION['user_id'] = $user_row['id'];
+                $_SESSION['user_role'] = $user_row['role']; // 'admin' or 'customer'
+                
+                // Redirect based on their role
+                if ($user_row['role'] === 'admin') {
+                    header("Location: admin.php");
+                } else {
+                    header("Location: index.php");
+                }
+                exit();
+            } else {
+                $error_message = "Invalid email or password.";
+            }
+        } else {
+            $error_message = "Email is not registered.";
+        }
+    } else {
+        $error_message = "Please fill in all fields.";
+    }
+}
+?>
 ?>
 <!DOCTYPE html>
 <html lang="en">
