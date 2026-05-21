@@ -8,13 +8,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     global $conn;
     
     $role = $_POST['role'] ?? 'customer';
-    $identity = trim($_POST['identity'] ?? ''); // This will be either email OR admin_id
+    $identity = trim($_POST['identity'] ?? ''); 
     $password = $_POST['password'] ?? '';
     
     if (!empty($identity) && !empty($password)) {
         $safe_identity = mysqli_real_escape_string($conn, $identity);
         
-        // Dynamically choose which column to check based on the selected tab
         if ($role === 'admin') {
             $query = "SELECT id, role, password_hash FROM users WHERE admin_id = '$safe_identity' LIMIT 1";
         } else {

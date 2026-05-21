@@ -100,13 +100,6 @@ $states = [
 // Get avatar URL using helper
 $avatar_url = getAvatarUrl($user['first_name'], $user['last_name'], $user['profile_picture']);
 
-// Prepare user data for navbar
-$user_data = [
-    'is_logged_in' => true,
-    'first_name' => $user['first_name'],
-    'last_name' => $user['last_name'],
-    'profile_picture' => $user['profile_picture']
-];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -117,8 +110,6 @@ $user_data = [
 <body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
     
     <?php 
-    // Pass user data to navbar
-    $user = $user_data;
     include 'includes/navbar-customer.php'; 
     ?>
 

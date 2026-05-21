@@ -20,44 +20,7 @@ $admin_data = getAdminUserData();
 
     <?php include 'includes/navbar-admin.php'; ?>
             <!--mobile menu (bug) -->
-            <button class="md:hidden text-gray-600 dark:text-gray-300 hover:text-imvidia transition">
-                <i class="fa-solid fa-bars text-xl"></i>
-            </button>
-            <div class="hidden sm:flex items-center font-bold text-gray-800 me-5 dark:text-gray-200">
-                Dashboard
-            </div>
-            <!-- search (placeholder) -->
-            <div class="hidden sm:flex items-center bg-gray-100 dark:bg-slate-800 rounded-lg px-3 py-2 w-96 border border-transparent focus-within:border-imvidia focus-within:ring-1 focus-within:ring-imvidia transition">
-                <i class="fa-solid fa-magnifying-glass text-gray-400"></i>
-                <input type="text" placeholder="Search orders or products..." class="bg-transparent border-none outline-none w-full ml-2 text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400">
-            </div>
-
-            <!-- darkmode toggle -->
-            <div class="flex items-center space-x-4 ml-auto">
-                <button id="dark-mode-toggle" type="button" class="p-2 rounded-full text-gray-600 hover:text-imvidia transition dark:text-gray-300" aria-label="Toggle dark mode" onclick="toggleDarkMode()">
-                    <i id="dark-mode-icon" class="fa-solid fa-moon text-lg"></i>
-                </button>
-                
-                <div class="flex items-center space-x-3 border-l border-gray-200 dark:border-slate-700 pl-4 cursor-pointer hover:opacity-80 transition">
-                    <div class="text-right hidden sm:block">
-                        <p class="text-sm font-bold text-gray-900 dark:text-white leading-tight">
-                            <?php echo $full_name; ?>
-                        </p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Administrator</p>
-                    </div>
-
-                    <a href="admin-profile.php" class="hover:scale-110 transition transform duration-300">
-                        <div class="h-9 w-9 rounded-full bg-gray-200 dark:bg-slate-700 border-2 border-imvidia flex items-center justify-center overflow-hidden">
-                            <?php if ($profile_pic): ?>
-                                <img src="<?php echo $profile_pic; ?>" class="w-full h-full object-cover">
-                            <?php else: ?>
-                                <i class="fa-solid fa-user text-gray-400 dark:text-gray-500 text-sm"></i>
-                            <?php endif; ?>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </header>
+           
 
         <!-- dashboard -->
         <main class="flex-1 overflow-y-auto p-6 lg:p-8">
