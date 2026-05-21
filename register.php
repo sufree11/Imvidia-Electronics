@@ -1,5 +1,69 @@
 <?php
 require_once 'includes/auth.php';
+require_once 'includes/db-helpers.php';
+require_once 'includes/helpers.php';
+
+$error_message = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Get and sanitize form inputs
+    $fname = mysqli_real_escape_string($conn, trim($_POST['fname'] ?? ''));
+    $lname = mysqli_real_escape_string($conn, trim($_POST['lname'] ?? ''));
+    $email = mysqli_real_escape_string($conn, trim($_POST['email'] ?? ''));
+    $phone = mysqli_real_escape_string($conn, trim($_POST['phone'] ?? ''));
+    $address_street = mysqli_real_escape_string($conn, trim($_POST['address_street'] ?? ''));
+    $address_city = mysqli_real_escape_string($conn, trim($_POST['address_city'] ?? ''));
+    $address_state = mysqli_real_escape_string($conn, trim($_POST['address_state'] ?? ''));
+    $address_zip = mysqli_real_escape_string($conn, trim($_POST['address_zip'] ?? ''));
+    $password = $_POST['password'] ?? '';
+    $confirm_password = $_POST['confirm_password'] ?? '';
+    
+    // Validate required fields
+    if (empty($fname) || empty($lname) || empty($email) || empty($phone) || 
+        empty($address_street) || empty($address_city) || empty($address_state) || 
+        empty($address_zip) || empty($password)) {
+        $error_message = "All fields are required.";
+    }
+    // Validate email format
+    elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error_message = "Please enter a valid email address.";
+    }
+    // Validate password length
+    elseif (strlen($password) < 8) {
+        $error_message = "Password must be at least 8 characters long.";
+    }
+    // Validate passwords match
+    elseif ($password !== $confirm_password) {
+        $error_message = "Passwords do not match.";
+    }
+    // Check if email already exists
+    elseif (!empty($error_message) === false) {
+        $check_email = "SELECT id FROM users WHERE email = '$email' LIMIT 1";
+        $check_result = mysqli_query($conn, $check_email);
+        
+        if (mysqli_num_rows($check_result) > 0) {
+            $error_message = "This email address is already registered.";
+        } else {
+            // Insert user with plain text password
+            $password_escaped = mysqli_real_escape_string($conn, $password);
+            
+            $insert_query = "INSERT INTO users 
+                            (first_name, last_name, email, phone, password_hash, 
+                             address_street, address_city, address_state, address_zip, user_role) 
+                            VALUES 
+                            ('$fname', '$lname', '$email', '$phone', '$password_escaped', 
+                             '$address_street', '$address_city', '$address_state', '$address_zip', 'customer')";
+            
+            if (mysqli_query($conn, $insert_query)) {
+                // Registration successful, redirect to login
+                header("Location: login.php?registered=1");
+                exit();
+            } else {
+                $error_message = "Registration failed. Please try again.";
+            }
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">

@@ -113,46 +113,6 @@ $avatar_url = getAvatarUrl($user['first_name'], $user['last_name'], $user['profi
     include 'includes/navbar-customer.php'; 
     ?>
 
-<body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
-    
-    <nav class="bg-white shadow-md sticky top-0 z-50 dark:bg-slate-950 transition-colors duration-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-             <div class="flex justify-between h-16 items-center relative">
-                
-                <div class="flex items-center space-x-6">
-                    <a href="index.php" class="flex-shrink-0 flex items-center cursor-pointer hover:scale-105 transition transform duration-300">
-                        <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
-                        <span class="font-bold text-2xl tracking-tight text-gray-900 dark:text-white">ImVidia<span class="text-imvidia">.</span></span>
-                    </a>
-                    
-                    <button id="dark-mode-toggle" type="button" class="p-2 rounded-full text-gray-600 hover:text-imvidia transition dark:text-gray-300" aria-label="Toggle dark mode" onclick="toggleDarkMode()">
-                        <i id="dark-mode-icon" class="fa-solid fa-moon"></i>
-                    </button>
-                </div>
-
-                <div class="hidden md:flex space-x-8 items-center absolute left-1/2 transform -translate-x-1/2">
-                    <a href="index.php" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Home</a>
-                    <a href="index.php#catalog" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Catalog</a>
-                    <a href="#" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Support</a>
-                </div>
-                    
-                <div class="flex items-center space-x-4">
-                    <a href="profile.php" class="relative p-2 text-imvidia transition dark:text-imvidia" title="User Profile">
-                        <i class="fa-solid fa-user text-xl"></i>
-                    </a>
-
-                    <button class="relative p-2 text-gray-600 hover:text-imvidia transition dark:text-gray-300" onclick="viewCart()">
-                        <i class="fa-solid fa-cart-shopping text-xl"></i>
-                        <span id="cart-badge" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-imvidia rounded-full transition-transform duration-200">
-                            0
-                        </span>
-                    </button>
-                </div>
-
-             </div>
-        </div>
-    </nav>
-
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full relative z-10">
         
         <nav class="flex text-xs font-medium text-gray-400 dark:text-slate-500 mb-8 uppercase tracking-widest" aria-label="Breadcrumb">
