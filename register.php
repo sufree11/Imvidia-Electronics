@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if (mysqli_query($conn, $insert_query)) {
                 // Registration successful, redirect to login
-                header("Location: login.php?registered=1");
+                header("Location: login.php");
                 exit();
             } else {
                 $error_message = "Registration failed. Please try again.";
