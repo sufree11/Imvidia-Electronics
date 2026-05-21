@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $insert_query = "INSERT INTO users 
                             (first_name, last_name, email, phone, password_hash, 
-                             address_street, address_city, address_state, address_zip, user_role) 
+                             address_street, address_city, address_state, address_zip, role) 
                             VALUES 
                             ('$fname', '$lname', '$email', '$phone', '$password_escaped', 
                              '$address_street', '$address_city', '$address_state', '$address_zip', 'customer')";
