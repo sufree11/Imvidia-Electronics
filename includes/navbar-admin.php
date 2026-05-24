@@ -22,12 +22,14 @@ if (!isset($admin_data) || !is_array($admin_data)) {
 $full_name = htmlspecialchars(($admin_data['first_name'] ?? 'Admin') . ' ' . ($admin_data['last_name'] ?? 'User'));
 $profile_pic = !empty($admin_data['profile_picture']) ? htmlspecialchars($admin_data['profile_picture']) : '';
 $admin_avatar = !empty($profile_pic) ? $profile_pic : getAvatarUrl($admin_data['first_name'] ?? 'Admin', $admin_data['last_name'] ?? 'User', '', true);
+
+$current_page = basename($_SERVER['PHP_SELF']);
 ?>
 
 <!-- SIDEBAR -->
 <aside class="w-64 bg-white dark:bg-slate-900 shadow-xl border-r border-gray-100 dark:border-slate-800 hidden md:flex flex-col z-20 transition-all duration-300 relative">
     
-    <!-- Sidebar Header (Logo) -->
+    <!-- Sidebar Header -->
     <div class="h-16 flex items-center px-6 border-b border-gray-100 dark:border-slate-800 w-full">
         <a href="admin.php" class="flex items-center cursor-pointer hover:scale-105 transition transform duration-300">
             <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-8 w-auto mr-2">
@@ -37,20 +39,20 @@ $admin_avatar = !empty($profile_pic) ? $profile_pic : getAvatarUrl($admin_data['
 
     <!-- Sidebar Links -->
     <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-        <a href="admin.php" class="flex items-center px-4 py-3 bg-imvidia text-white rounded-lg shadow-sm transition transform hover:-translate-y-0.5">
+        <a href="admin.php" class="flex items-center px-4 py-3 rounded-lg shadow-sm transition transform hover:-translate-y-0.5 <?php echo $current_page === 'admin.php' ? 'bg-imvidia text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia'; ?>">
             <i class="fa-solid fa-chart-pie w-6"></i>
             <span class="font-medium">Overview</span>
         </a>
-        <a href="admin-products.php" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia rounded-lg transition">
+        <a href="admin-products.php" class="flex items-center px-4 py-3 rounded-lg transition <?php echo $current_page === 'admin-products.php' ? 'bg-imvidia text-white shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia'; ?>">
             <i class="fa-solid fa-box-open w-6"></i>
             <span class="font-medium">Products</span>
         </a>
-        <a href="#" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia rounded-lg transition">
+        <a href="#" class="flex items-center px-4 py-3 rounded-lg transition text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia">
             <i class="fa-solid fa-cart-shopping w-6"></i>
             <span class="font-medium">Orders</span>
             <span id="order-count-badge" class="ml-auto bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-gray-400 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
         </a>
-        <a href="#" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia rounded-lg transition">
+        <a href="#" class="flex items-center px-4 py-3 rounded-lg transition text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia">
             <i class="fa-solid fa-users w-6"></i>
             <span class="font-medium">Customers</span>
         </a>
