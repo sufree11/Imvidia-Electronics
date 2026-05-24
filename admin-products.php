@@ -11,38 +11,115 @@ $admin_data = getAdminUserData();
 $message = '';
 $msg_type = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    $name = mysqli_real_escape_string($conn, $_POST['product_name'] ?? '');
-    $price = floatval($_POST['product_price'] ?? 0);
-    $category = mysqli_real_escape_string($conn, $_POST['product_category'] ?? 'Uncategorized');
-    $stock = intval($_POST['product_stock'] ?? 0);
-    $desc = mysqli_real_escape_string($conn, $_POST['product_desc'] ?? '');
-    
-    $image_url = '';
-
-    if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
-        $upload_result = uploadToS3($_FILES['product_image'], 'products/prod_', time() . '_' . rand(100,999));
-        
-        if ($upload_result['success']) {
-            $image_url = $upload_result['url'];
-        } else {
-            $message = $upload_result['error'];
-            $msg_type = "error";
-        }
+// Check if we're in edit mode
+$edit_mode = false;
+$product_to_edit = null;
+if (isset($_GET['edit'])) {
+    $product_id = intval($_GET['edit']);
+    $edit_query = "SELECT * FROM product WHERE product_id = $product_id";
+    $edit_result = mysqli_query($conn, $edit_query);
+    if ($edit_result && mysqli_num_rows($edit_result) > 0) {
+        $product_to_edit = mysqli_fetch_assoc($edit_result);
+        $edit_mode = true;
     }
+}
 
-    if ($msg_type !== "error") {
-        $insert_query = "INSERT INTO product (name, description, price, category, stock_quantity, image_url, admin_id, created_at) 
-                         VALUES ('$name', '$desc', '$price', '$category', '$stock', '" . mysqli_real_escape_string($conn, $image_url) . "', " . $_SESSION['user_id'] . ", NOW())";
+// Handle POST requests
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Check if this is a delete request
+    if (isset($_POST['action']) && $_POST['action'] === 'delete' && isset($_POST['product_id'])) {
+        $product_id = intval($_POST['product_id']);
+        $delete_query = "DELETE FROM product WHERE product_id = $product_id";
         
-        if (mysqli_query($conn, $insert_query)) {
-            $message = "Product added successfully!";
+        if (mysqli_query($conn, $delete_query)) {
+            $message = "Product deleted successfully!";
             $msg_type = "success";
         } else {
-            $message = "Database error: " . mysqli_error($conn);
+            $message = "Error deleting product: " . mysqli_error($conn);
             $msg_type = "error";
         }
+    } else {
+        // Add or update product
+        $name = mysqli_real_escape_string($conn, $_POST['product_name'] ?? '');
+        $price = floatval($_POST['product_price'] ?? 0);
+        $category = mysqli_real_escape_string($conn, $_POST['product_category'] ?? 'Uncategorized');
+        $stock = intval($_POST['product_stock'] ?? 0);
+        $desc = mysqli_real_escape_string($conn, $_POST['product_desc'] ?? '');
+        
+        $image_url = '';
+        $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
+
+        // Handle image upload
+        if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
+            $upload_result = uploadToS3($_FILES['product_image'], 'products/prod_', time() . '_' . rand(100,999));
+            
+            if ($upload_result['success']) {
+                $image_url = $upload_result['url'];
+            } else {
+                $message = $upload_result['error'];
+                $msg_type = "error";
+            }
+        }
+
+        if ($msg_type !== "error") {
+            if ($product_id > 0) {
+                // Update existing product
+                if (!empty($image_url)) {
+                    $update_query = "UPDATE product SET name='$name', description='$desc', price=$price, category='$category', stock_quantity=$stock, image_url='" . mysqli_real_escape_string($conn, $image_url) . "' WHERE product_id=$product_id";
+                } else {
+                    $update_query = "UPDATE product SET name='$name', description='$desc', price=$price, category='$category', stock_quantity=$stock WHERE product_id=$product_id";
+                }
+                
+                if (mysqli_query($conn, $update_query)) {
+                    $message = "Product updated successfully!";
+                    $msg_type = "success";
+                    $edit_mode = false;
+                } else {
+                    $message = "Database error: " . mysqli_error($conn);
+                    $msg_type = "error";
+                }
+            } else {
+                // Insert new product
+                $insert_query = "INSERT INTO product (name, description, price, category, stock_quantity, image_url, admin_id, created_at) 
+                                 VALUES ('$name', '$desc', '$price', '$category', '$stock', '" . mysqli_real_escape_string($conn, $image_url) . "', " . $_SESSION['user_id'] . ", NOW())";
+                
+                if (mysqli_query($conn, $insert_query)) {
+                    $message = "Product added successfully!";
+                    $msg_type = "success";
+                } else {
+                    $message = "Database error: " . mysqli_error($conn);
+                    $msg_type = "error";
+                }
+            }
+        }
+    }
+}
+
+// Fetch all products
+$sort = $_GET['sort'] ?? 'newest';
+$products = [];
+
+switch ($sort) {
+    case 'price_low':
+        $products_query = "SELECT * FROM product ORDER BY price ASC";
+        break;
+    case 'price_high':
+        $products_query = "SELECT * FROM product ORDER BY price DESC";
+        break;
+    case 'name_asc':
+        $products_query = "SELECT * FROM product ORDER BY name ASC";
+        break;
+    case 'name_desc':
+        $products_query = "SELECT * FROM product ORDER BY name DESC";
+        break;
+    default: // 'newest'
+        $products_query = "SELECT * FROM product ORDER BY created_at DESC";
+}
+
+$products_result = mysqli_query($conn, $products_query);
+if ($products_result && mysqli_num_rows($products_result) > 0) {
+    while ($product = mysqli_fetch_assoc($products_result)) {
+        $products[] = $product;
     }
 }
 ?>
@@ -73,41 +150,119 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </button>
                     </div>
 
-                    <div class="flex flex-col items-center justify-center py-24 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-dashed border-gray-300 dark:border-slate-700">
-                        <a href="https://www.google.com/logos/2010/pacman10-i.html" target="_blank" rel="noopener noreferrer" title="A blue ghost...">
-                            <i class="fa-solid fa-ghost text-6xl text-gray-300 dark:text-slate-600 mb-4 hover:text-imvidia duration-300 hover:scale-110 transition transform"></i>
-                        </a>
-                        <h3 class="text-2xl font-bold text-gray-500 dark:text-gray-400">Nothing here just yet...</h3>
-                        <p class="text-gray-400 dark:text-gray-500 mt-2 text-sm">Products will appear here once added to the database.</p>
+                    <?php if (!empty($message)): ?>
+                        <div class="mb-6 px-4 py-3 rounded-lg text-sm font-medium text-center <?php echo $msg_type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'; ?>">
+                            <?php echo $message; ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Sorting Controls -->
+                    <div class="mb-6 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Sort by:</span>
+                            <select id="sortSelect" onchange="updateSort()" class="px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition cursor-pointer bg-white dark:bg-slate-800">
+                                <option value="newest" <?php echo ($sort === 'newest') ? 'selected' : ''; ?>>Newest First</option>
+                                <option value="name_asc" <?php echo ($sort === 'name_asc') ? 'selected' : ''; ?>>Name (A-Z)</option>
+                                <option value="name_desc" <?php echo ($sort === 'name_desc') ? 'selected' : ''; ?>>Name (Z-A)</option>
+                                <option value="price_low" <?php echo ($sort === 'price_low') ? 'selected' : ''; ?>>Price (Low to High)</option>
+                                <option value="price_high" <?php echo ($sort === 'price_high') ? 'selected' : ''; ?>>Price (High to Low)</option>
+                            </select>
+                        </div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                            <?php echo count($products); ?> product<?php echo count($products) !== 1 ? 's' : ''; ?>
+                        </div>
                     </div>
+
+                    <?php if (empty($products)): ?>
+                        <!-- Empty State -->
+                        <div class="flex flex-col items-center justify-center py-24 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-dashed border-gray-300 dark:border-slate-700">
+                            <a href="https://www.google.com/logos/2010/pacman10-i.html" target="_blank" rel="noopener noreferrer" title="A blue ghost...">
+                                <i class="fa-solid fa-ghost text-6xl text-gray-300 dark:text-slate-600 mb-4 hover:text-imvidia duration-300 hover:scale-110 transition transform"></i>
+                            </a>
+                            <h3 class="text-2xl font-bold text-gray-500 dark:text-gray-400">Nothing here just yet...</h3>
+                            <p class="text-gray-400 dark:text-gray-500 mt-2 text-sm">Products will appear here once added to the database.</p>
+                        </div>
+                    <?php else: ?>
+                        <!-- Products Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <?php foreach ($products as $product): ?>
+                                <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden hover:shadow-md transition">
+                                    <!-- Product Image -->
+                                    <div class="relative h-48 bg-gray-100 dark:bg-slate-800 overflow-hidden group">
+                                        <?php if (!empty($product['image_url'])): ?>
+                                            <img src="<?php echo htmlspecialchars($product['image_url']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                                        <?php else: ?>
+                                            <div class="flex items-center justify-center h-full">
+                                                <i class="fa-solid fa-image text-gray-300 dark:text-slate-700 text-4xl"></i>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <!-- Product Info -->
+                                    <div class="p-4 space-y-3">
+                                        <div>
+                                            <h3 class="font-bold text-gray-900 dark:text-white text-lg truncate"><?php echo htmlspecialchars($product['name']); ?></h3>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 capitalize"><?php echo htmlspecialchars($product['category']); ?></p>
+                                        </div>
+
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <p class="text-sm text-gray-600 dark:text-gray-400">Price</p>
+                                                <p class="text-lg font-bold text-imvidia">RM <?php echo number_format($product['price'], 2); ?></p>
+                                            </div>
+                                            <div>
+                                                <p class="text-sm text-gray-600 dark:text-gray-400">Stock</p>
+                                                <p class="text-lg font-bold text-gray-900 dark:text-white"><?php echo $product['stock_quantity']; ?></p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Action Buttons -->
+                                        <div class="flex gap-3 pt-2 border-t border-gray-100 dark:border-slate-700">
+                                            <button onclick="editProduct(<?php echo $product['product_id']; ?>)" class="flex-1 py-2 px-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition text-sm font-medium flex items-center justify-center">
+                                                <i class="fa-solid fa-pencil mr-1.5"></i> Edit
+                                            </button>
+                                            <button onclick="deleteProduct(<?php echo $product['product_id']; ?>, '<?php echo htmlspecialchars($product['name']); ?>')" class="flex-1 py-2 px-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition text-sm font-medium flex items-center justify-center">
+                                                <i class="fa-solid fa-trash mr-1.5"></i> Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <div id="addProductView" class="hidden animate-fade-in-up">
                     <div class="flex items-center justify-between mb-8">
-    <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Add New Product</h1>
-        <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Create a new product listing for the catalog.</p>
-    </div>
-    <button type="button" onclick="showProductList()" class="px-4 py-2 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-slate-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 shadow-sm transition flex items-center text-sm font-medium">
-        <i class="fa-solid fa-arrow-left mr-2"></i> Cancel
-    </button>
-</div>
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white"><?php echo $edit_mode ? 'Edit Product' : 'Add New Product'; ?></h1>
+                            <p class="text-gray-500 dark:text-gray-400 text-sm mt-1"><?php echo $edit_mode ? 'Update product information.' : 'Create a new product listing for the catalog.'; ?></p>
+                        </div>
+                        <button type="button" onclick="showProductList()" class="px-4 py-2 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-slate-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 shadow-sm transition flex items-center text-sm font-medium">
+                            <i class="fa-solid fa-arrow-left mr-2"></i> Cancel
+                        </button>
+                    </div>
 
-<?php if (!empty($message)): ?>
-    <div class="mb-6 px-4 py-3 rounded-lg text-sm font-medium text-center <?php echo $msg_type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'; ?>">
-        <?php echo $message; ?>
-    </div>
-    <?php if ($msg_type === 'success'): ?>
-        <script>
-            // Automatically switch back to the product list view on success
-            document.addEventListener('DOMContentLoaded', function() {
-                showProductList();
-            });
-        </script>
-    <?php endif; ?>
-<?php endif; ?>
+                    <?php if (!empty($message)): ?>
+                        <div class="mb-6 px-4 py-3 rounded-lg text-sm font-medium text-center <?php echo $msg_type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'; ?>">
+                            <?php echo $message; ?>
+                        </div>
+                        <?php if ($msg_type === 'success'): ?>
+                            <script>
+                                
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    setTimeout(function() {
+                                        showProductList();
+                                    }, 1500);
+                                });
+                            </script>
+                        <?php endif; ?>
+                    <?php endif; ?>
 
                     <form id="addProductForm" method="POST" enctype="multipart/form-data" onsubmit="handleFormSubmit(event)" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <?php if ($edit_mode && $product_to_edit): ?>
+                            <input type="hidden" name="product_id" value="<?php echo $product_to_edit['product_id']; ?>">
+                        <?php endif; ?>
                         
                         <div class="lg:col-span-2 space-y-6">
                             
@@ -117,19 +272,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="space-y-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product Name <span class="text-red-500">*</span></label>
-                                        <input type="text" name="product_name" required class="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition" placeholder="e.g. ImVidia Pro Hairdryer">
+                                        <input type="text" name="product_name" value="<?php echo $edit_mode && $product_to_edit ? htmlspecialchars($product_to_edit['name']) : ''; ?>" required class="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition" placeholder="e.g. ImVidia Pro Hairdryer">
                                     </div>
 
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category <span class="text-red-500">*</span></label>
                                             <select name="product_category" required class="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition cursor-pointer">
-                                                <option value="" disabled selected>Select a category...</option>
-                                                <option value="kitchen">Kitchen Appliances</option>
-                                                <option value="audio">Audio Visual</option>
-                                                <option value="portable">Portable Devices</option>
-                                                <option value="personal">Personal Care</option>
-                                                <option value="home">Home Appliances</option>
+                                                <option value="" disabled <?php echo !($edit_mode && $product_to_edit) ? 'selected' : ''; ?>>Select a category...</option>
+                                                <option value="kitchen" <?php echo ($edit_mode && $product_to_edit && $product_to_edit['category'] === 'kitchen') ? 'selected' : ''; ?>>Kitchen Appliances</option>
+                                                <option value="audio" <?php echo ($edit_mode && $product_to_edit && $product_to_edit['category'] === 'audio') ? 'selected' : ''; ?>>Audio Visual</option>
+                                                <option value="portable" <?php echo ($edit_mode && $product_to_edit && $product_to_edit['category'] === 'portable') ? 'selected' : ''; ?>>Portable Devices</option>
+                                                <option value="personal" <?php echo ($edit_mode && $product_to_edit && $product_to_edit['category'] === 'personal') ? 'selected' : ''; ?>>Personal Care</option>
+                                                <option value="home" <?php echo ($edit_mode && $product_to_edit && $product_to_edit['category'] === 'home') ? 'selected' : ''; ?>>Home Appliances</option>
                                             </select>
                                         </div>
                                         <div>
@@ -144,8 +299,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b border-gray-100 dark:border-slate-800 pb-3">Product Description</h3>
                                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Describe the product, add tables, insert inline images, and customise the description fully.</p>
                                 
-                                <textarea id="product-editor" name="product_desc" placeholder="Enter product description...">
-                                </textarea>
+                                <textarea id="product-editor" name="product_desc" placeholder="Enter product description..."><?php echo $edit_mode && $product_to_edit ? htmlspecialchars($product_to_edit['description']) : ''; ?></textarea>
                             </div>
                         </div>
 
@@ -161,7 +315,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                                 <span class="text-gray-500 sm:text-sm">RM</span>
                                             </div>
-                                            <input name="product_price" type="number" id="selling-price" step="any" onblur="if(this.value) this.value = parseFloat(this.value).toFixed(2)" onkeydown="if(event.key==='ArrowUp'){this.value=(parseFloat(this.value||0)+1).toFixed(2);event.preventDefault();} if(event.key==='ArrowDown'){this.value=Math.max(0, parseFloat(this.value||0)-1).toFixed(2);event.preventDefault();}" required class="hide-spinner w-full pl-10 pr-20 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition" placeholder="0.00">
+                                            <input name="product_price" type="number" id="selling-price" step="any" value="<?php echo $edit_mode && $product_to_edit ? $product_to_edit['price'] : ''; ?>" onblur="if(this.value) this.value = parseFloat(this.value).toFixed(2)" onkeydown="if(event.key==='ArrowUp'){this.value=(parseFloat(this.value||0)+1).toFixed(2);event.preventDefault();} if(event.key==='ArrowDown'){this.value=Math.max(0, parseFloat(this.value||0)-1).toFixed(2);event.preventDefault();}" required class="hide-spinner w-full pl-10 pr-20 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition" placeholder="0.00">
                                             <div class="absolute inset-y-0 right-1.5 flex items-center space-x-1">
                                                 <button type="button" onclick="let el=document.getElementById('selling-price'); el.value=Math.max(0, parseFloat(el.value || 0) - 1).toFixed(2);" class="w-7 h-7 flex items-center justify-center bg-gray-100 dark:bg-slate-700 rounded hover:text-imvidia transition cursor-pointer text-gray-500 dark:text-gray-400">
                                                     <i class="fa-solid fa-minus text-xs"></i>
@@ -176,7 +330,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stock Quantity</label>
                                         <div class="relative flex items-center">
-                                            <input name="product_stock" type="number" id="stock-qty" value="10" min="0" onkeydown="if(event.key==='ArrowUp'){this.value=parseInt(this.value||0)+1;event.preventDefault();} if(event.key==='ArrowDown'){this.value=Math.max(0, parseInt(this.value||0)-1);event.preventDefault();}" class="hide-spinner w-full px-4 pr-20 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition">
+                                            <input name="product_stock" type="number" id="stock-qty" value="<?php echo $edit_mode && $product_to_edit ? $product_to_edit['stock_quantity'] : '10'; ?>" min="0" onkeydown="if(event.key==='ArrowUp'){this.value=parseInt(this.value||0)+1;event.preventDefault();} if(event.key==='ArrowDown'){this.value=Math.max(0, parseInt(this.value||0)-1);event.preventDefault();}" class="hide-spinner w-full px-4 pr-20 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition">
                                             <div class="absolute inset-y-0 right-1.5 flex items-center space-x-1">
                                                 <button type="button" onclick="let el=document.getElementById('stock-qty'); el.value=Math.max(0, parseInt(el.value || 0) - 1);" class="w-7 h-7 flex items-center justify-center bg-gray-100 dark:bg-slate-700 rounded hover:text-imvidia transition cursor-pointer text-gray-500 dark:text-gray-400">
                                                     <i class="fa-solid fa-minus text-xs"></i>
@@ -203,19 +357,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800">
                                 <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b border-gray-100 dark:border-slate-800 pb-3">Gallery Images</h3>
                                 
+                                <?php if ($edit_mode && $product_to_edit && !empty($product_to_edit['image_url'])): ?>
+                                    <div class="mb-4 p-4 bg-gray-50 dark:bg-slate-800/50 rounded-lg">
+                                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Current Image</p>
+                                        <img src="<?php echo htmlspecialchars($product_to_edit['image_url']); ?>" alt="Current Product Image" class="w-32 h-32 object-cover rounded-lg border border-gray-200 dark:border-slate-700">
+                                    </div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Upload a new image to replace the current one.</p>
+                                <?php endif; ?>
+                                
                                 <div id="image-dropzone" class="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:border-imvidia dark:hover:border-imvidia bg-gray-50 dark:bg-slate-800/50 transition-colors group">
                                     <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 dark:text-gray-500 group-hover:text-imvidia mb-3 transition-colors"></i>
                                     <span class="text-sm font-medium text-gray-900 dark:text-white">Click to upload or drag and drop</span>
                                     <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">SVG, PNG, JPG or GIF (max. 5MB)</span>
                                 </div>
                                 
-                                <input name="product_image" type="file" id="gallery-upload" multiple accept="image/*" class="hidden">
+                                <input name="product_image" type="file" id="gallery-upload" accept="image/*" class="hidden">
                                 
                                 <div id="image-preview-container" class="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-4 empty:hidden"></div>
                             </div>
 
                             <button type="submit" class="w-full py-3 px-4 bg-imvidia hover:bg-imvidia-dark text-white rounded-lg shadow-md font-bold text-sm transition transform hover:-translate-y-0.5 flex items-center justify-center">
-                                <i class="fa-solid fa-floppy-disk mr-2"></i> Publish Product
+                                <i class="fa-solid fa-floppy-disk mr-2"></i> <?php echo $edit_mode ? 'Save Changes' : 'Publish Product'; ?>
                             </button>
                         </div>
                     </form>
@@ -382,6 +544,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </script>
 
+    <!-- Product Management Scripts -->
+    <script>
+        function updateSort() {
+            const sortValue = document.getElementById('sortSelect').value;
+            window.location.href = `?sort=${sortValue}`;
+        }
+
+        function deleteProduct(productId, productName) {
+            showDeleteModal(productId, productName);
+        }
+
+        function editProduct(productId) {
+            window.location.href = `?edit=${productId}`;
+        }
+
+        function showDeleteModal(productId, productName) {
+            const modal = document.createElement('div');
+            modal.id = 'deleteModal';
+            modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-gray-100 dark:border-slate-800 max-w-sm mx-4 animate-slide-up">
+                    <div class="p-6 border-b border-gray-100 dark:border-slate-800">
+                        <div class="flex items-center justify-center w-12 h-12 rounded-full bg-red-50 dark:bg-red-900/20 mx-auto mb-4">
+                            <i class="fa-solid fa-trash text-red-600 dark:text-red-400 text-lg"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white text-center">Delete Product</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 text-center mt-2">Are you sure you want to delete "${productName}"?</p>
+                    </div>
+                    
+                    <div class="p-6 space-y-3">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 text-center">This action cannot be undone. The product will be permanently removed from your catalog.</p>
+                    </div>
+
+                    <div class="p-6 border-t border-gray-100 dark:border-slate-800 flex gap-3">
+                        <button onclick="closeDeleteModal()" class="flex-1 py-2.5 px-4 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 transition font-medium text-sm">
+                            Cancel
+                        </button>
+                        <button onclick="confirmDelete(${productId})" class="flex-1 py-2.5 px-4 bg-red-500 hover:bg-red-600 text-white rounded-lg transition font-medium text-sm flex items-center justify-center">
+                            <i class="fa-solid fa-trash mr-2"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // Close modal when clicking outside
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeDeleteModal();
+                }
+            });
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('deleteModal');
+            if (modal) {
+                modal.classList.add('animate-fade-out');
+                setTimeout(() => modal.remove(), 200);
+            }
+        }
+
+        function confirmDelete(productId) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.innerHTML = `
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="product_id" value="${productId}">
+            `;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+
     <script>
         function updateLogoForMode() {
             const logo = document.getElementById('navbarLogo');
@@ -416,8 +651,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             updateLogoForMode();
             updateDarkToggleIcon();
+            
+            // Auto-open edit form if in edit mode
+            <?php if ($edit_mode): ?>
+                showAddProductForm();
+            <?php endif; ?>
         });
     </script>
+
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        .animate-fade-out {
+            animation: fadeOut 0.2s ease-in-out;
+        }
+
+        .animate-slide-up {
+            animation: slideUp 0.3s ease-out;
+        }
+    </style>
 
 </body>
 </html>
