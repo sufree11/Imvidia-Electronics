@@ -242,10 +242,10 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
                         <!-- Empty State -->
                         <div class="flex flex-col items-center justify-center py-24 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-dashed border-gray-300 dark:border-slate-700">
                             <a href="https://www.google.com/logos/2010/pacman10-i.html" target="_blank" rel="noopener noreferrer" title="A blue ghost...">
-                                <i class="fa-solid fa-ghost text-6xl text-gray-300 dark:text-slate-600 mb-4 hover:text-imvidia duration-300 hover:scale-110 transition transform"></i>
+                                <i class="fa-solid fa-ghost text-6xl text-gray-300 dark:text-slate-600 mb-4 hover:text-imvidia duration-300 hover:scale-110 text-imvidia transition transform"></i>
                             </a>
                             <h3 class="text-2xl font-bold text-gray-500 dark:text-gray-400">Nothing here just yet...</h3>
-                            <p class="text-gray-400 dark:text-gray-500 mt-2 text-sm">Products will appear here once added to the database.</p>
+                            <p class="text-gray-400 dark:text-gray-500 mt-2 text-sm">Products will appear here once you add them.</p>
                         </div>
                     <?php else: ?>
                         <!-- Products Grid -->
@@ -255,7 +255,7 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
                                     <!-- Product Image -->
                                     <div class="relative h-48 bg-gray-100 dark:bg-slate-800 overflow-hidden group">
                                         <?php if (!empty($product['image_url'])): ?>
-                                            <img src="<?php echo htmlspecialchars($product['image_url']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                                            <img src="<?php echo htmlspecialchars($product['image_url']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="w-full h-full object-contain group-hover:scale-105 transition duration-300">
                                         <?php else: ?>
                                             <div class="flex items-center justify-center h-full">
                                                 <i class="fa-solid fa-image text-gray-300 dark:text-slate-700 text-4xl"></i>
@@ -434,7 +434,7 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
                                 
                                 <!-- Thumbnail Display (shown when image exists) -->
                                 <div id="image-preview-container" class="hidden relative w-full aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700 shadow-sm group bg-gray-100 dark:bg-slate-800">
-                                    <img id="thumbnail-img" src="" alt="Product Thumbnail" class="w-full h-full object-cover">
+                                    <img id="thumbnail-img" src="" alt="Product Thumbnail" class="w-full h-full object-contain">
                                     <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                                         <button type="button" id="delete-thumbnail-btn" class="w-10 h-10 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition transform hover:scale-110 shadow-lg" title="Delete Thumbnail">
                                             <i class="fa-solid fa-trash-can"></i>
@@ -458,8 +458,6 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
                                 
                                 <!-- Existing gallery images (edit mode) -->
                                 <?php if ($edit_mode && !empty($existing_gallery_images)): ?>
-                                    <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800/50">
-                                        <p class="text-sm font-medium text-blue-900 dark:text-blue-300 mb-3">Existing Gallery Images</p>
                                         <div id="existing-gallery-container" class="grid grid-cols-3 sm:grid-cols-4 gap-3">
                                             <?php foreach ($existing_gallery_images as $idx => $gal_img): ?>
                                                 <div class="relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700 shadow-sm group bg-gray-100 dark:bg-slate-800" data-gallery-id="<?php echo $gal_img['id']; ?>">

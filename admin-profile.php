@@ -175,9 +175,9 @@ $admin_data = [
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 flex items-center justify-between">
-                                            User ID <i class="fa-solid fa-lock text-xs text-gray-400"></i>
+                                            Admin ID <i class="fa-solid fa-lock text-xs text-gray-400"></i>
                                         </label>
-                                        <input type="text" value="<?php echo htmlspecialchars($user['id']); ?>" readonly class="w-full px-4 py-3 border border-gray-200 dark:border-slate-700/50 bg-gray-50 dark:bg-slate-800/50 rounded-xl text-gray-500 dark:text-gray-400 font-medium font-mono text-sm cursor-not-allowed focus:outline-none">
+                                        <input type="text" value="<?php echo htmlspecialchars($user['admin_id']); ?>" readonly class="w-full px-4 py-3 border border-gray-200 dark:border-slate-700/50 bg-gray-50 dark:bg-slate-800/50 rounded-xl text-gray-500 dark:text-gray-400 font-medium font-mono text-sm cursor-not-allowed focus:outline-none">
                                     </div>
                                     
 
