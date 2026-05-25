@@ -484,7 +484,7 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
                                 <!-- New uploaded gallery images preview -->
                                 <div id="gallery-preview-container" class="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-4"></div>
                                 
-                                <input name="gallery_images" type="file" id="gallery-upload" accept="image/*" multiple class="hidden">
+                                <input name="gallery_images[]" type="file" id="gallery-upload" accept="image/*" multiple class="hidden">
                                 <input type="hidden" id="deleted-gallery-ids" name="deleted_gallery_ids" value="">
                             </div>
 
@@ -788,31 +788,30 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
             galleryFileInput.value = '';
         }
         
-        function renderGalleryPreviews() {
-            galleryPreviewContainer.innerHTML = '';
-            const existingCount = existingGalleryContainer ? existingGalleryContainer.querySelectorAll('[data-gallery-id]:not(.deleted)').length : 0;
-            
-            galleryFiles.forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const previewDiv = document.createElement('div');
-                    previewDiv.className = "relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700 shadow-sm group bg-gray-100 dark:bg-slate-800";
-                    previewDiv.innerHTML = `
-                        <img src="${e.target.result}" class="w-full h-full object-cover">
-                        <div class="absolute top-1 right-1 bg-gray-800 text-white text-xs px-2 py-1 rounded">${existingCount + index + 1}/5</div>
-                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                            <button type="button" onclick="removeGalleryImage(${index})" class="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition transform hover:scale-110 shadow-lg" title="Remove Image">
-                                <i class="fa-solid fa-trash-can text-sm"></i>
-                            </button>
-                        </div>
-                    `;
-                    galleryPreviewContainer.appendChild(previewDiv);
-                };
-                reader.readAsDataURL(file);
-            });
-            
-            updateGalleryCounter();
-        }
+function renderGalleryPreviews() {
+    galleryPreviewContainer.innerHTML = '';
+    const existingCount = existingGalleryContainer ? existingGalleryContainer.querySelectorAll('[data-gallery-id]:not(.deleted)').length : 0;
+    
+    galleryFiles.forEach((file, index) => {
+        // Generate a synchronous, temporary URL for the image
+        const imgUrl = URL.createObjectURL(file);
+        
+        const previewDiv = document.createElement('div');
+        previewDiv.className = "relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700 shadow-sm group bg-gray-100 dark:bg-slate-800";
+        previewDiv.innerHTML = `
+            <img src="${imgUrl}" class="w-full h-full object-cover">
+            <div class="absolute top-1 right-1 bg-gray-800 text-white text-xs px-2 py-1 rounded">${existingCount + index + 1}/5</div>
+            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                <button type="button" onclick="removeGalleryImage(${index})" class="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition transform hover:scale-110 shadow-lg" title="Remove Image">
+                    <i class="fa-solid fa-trash-can text-sm"></i>
+                </button>
+            </div>
+        `;
+        galleryPreviewContainer.appendChild(previewDiv);
+    });
+    
+    updateGalleryCounter();
+}
         
         function removeGalleryImage(index) {
             galleryFiles.splice(index, 1);
