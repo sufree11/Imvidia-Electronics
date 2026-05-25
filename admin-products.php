@@ -14,6 +14,7 @@ $msg_type = '';
 // Check if we're in edit mode
 $edit_mode = false;
 $product_to_edit = null;
+$existing_gallery_images = [];
 if (isset($_GET['edit'])) {
     $product_id = intval($_GET['edit']);
     $edit_query = "SELECT * FROM product WHERE product_id = $product_id";
@@ -21,6 +22,15 @@ if (isset($_GET['edit'])) {
     if ($edit_result && mysqli_num_rows($edit_result) > 0) {
         $product_to_edit = mysqli_fetch_assoc($edit_result);
         $edit_mode = true;
+        
+        // Fetch existing gallery images
+        $gallery_query = "SELECT * FROM product_gallery WHERE product_id = $product_id ORDER BY id ASC";
+        $gallery_result = mysqli_query($conn, $gallery_query);
+        if ($gallery_result && mysqli_num_rows($gallery_result) > 0) {
+            while ($gallery = mysqli_fetch_assoc($gallery_result)) {
+                $existing_gallery_images[] = $gallery;
+            }
+        }
     }
 }
 
@@ -71,6 +81,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 
                 if (mysqli_query($conn, $update_query)) {
+                    // Handle gallery images on update
+                    if (isset($_POST['deleted_gallery_ids']) && !empty($_POST['deleted_gallery_ids'])) {
+                        $deleted_ids = explode(',', $_POST['deleted_gallery_ids']);
+                        foreach ($deleted_ids as $del_id) {
+                            $del_id = intval($del_id);
+                            mysqli_query($conn, "DELETE FROM product_gallery WHERE id = $del_id AND product_id = $product_id");
+                        }
+                    }
+                    
+                    // Upload new gallery images if any
+                    if (isset($_FILES['gallery_images']) && is_array($_FILES['gallery_images']['name'])) {
+                        $file_count = count($_FILES['gallery_images']['name']);
+                        for ($i = 0; $i < $file_count; $i++) {
+                            if ($_FILES['gallery_images']['error'][$i] === UPLOAD_ERR_OK) {
+                                $file = [
+                                    'name' => $_FILES['gallery_images']['name'][$i],
+                                    'type' => $_FILES['gallery_images']['type'][$i],
+                                    'tmp_name' => $_FILES['gallery_images']['tmp_name'][$i],
+                                    'error' => $_FILES['gallery_images']['error'][$i],
+                                    'size' => $_FILES['gallery_images']['size'][$i]
+                                ];
+                                
+                                $upload_result = uploadToS3($file, 'products/gallery_', time() . '_' . rand(1000, 9999) . '_' . $i);
+                                if ($upload_result['success']) {
+                                    $gallery_image_url = mysqli_real_escape_string($conn, $upload_result['url']);
+                                    mysqli_query($conn, "INSERT INTO product_gallery (product_id, image_url, created_at) VALUES ($product_id, '$gallery_image_url', NOW())");
+                                }
+                            }
+                        }
+                    }
+                    
                     $message = "Product updated successfully!";
                     $msg_type = "success";
                     $edit_mode = false;
@@ -84,6 +125,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                  VALUES ('$name', '$desc', '$price', '$category', '$stock', '" . mysqli_real_escape_string($conn, $image_url) . "', " . $_SESSION['user_id'] . ", NOW())";
                 
                 if (mysqli_query($conn, $insert_query)) {
+                    $new_product_id = mysqli_insert_id($conn);
+                    
+                    // Upload gallery images for new product
+                    if (isset($_FILES['gallery_images']) && is_array($_FILES['gallery_images']['name'])) {
+                        $file_count = count($_FILES['gallery_images']['name']);
+                        for ($i = 0; $i < $file_count; $i++) {
+                            if ($_FILES['gallery_images']['error'][$i] === UPLOAD_ERR_OK) {
+                                $file = [
+                                    'name' => $_FILES['gallery_images']['name'][$i],
+                                    'type' => $_FILES['gallery_images']['type'][$i],
+                                    'tmp_name' => $_FILES['gallery_images']['tmp_name'][$i],
+                                    'error' => $_FILES['gallery_images']['error'][$i],
+                                    'size' => $_FILES['gallery_images']['size'][$i]
+                                ];
+                                
+                                $upload_result = uploadToS3($file, 'products/gallery_', time() . '_' . rand(1000, 9999) . '_' . $i);
+                                if ($upload_result['success']) {
+                                    $gallery_image_url = mysqli_real_escape_string($conn, $upload_result['url']);
+                                    mysqli_query($conn, "INSERT INTO product_gallery (product_id, image_url, created_at) VALUES ($new_product_id, '$gallery_image_url', NOW())");
+                                }
+                            }
+                        }
+                    }
+                    
                     $message = "Product added successfully!";
                     $msg_type = "success";
                 } else {
@@ -377,7 +442,50 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
                                     </div>
                                 </div>
                                 
-                                <input name="product_image" type="file" id="gallery-upload" accept="image/*" class="hidden">
+                                <input name="product_image" type="file" id="thumbnail-upload" accept="image/*" class="hidden">
+                            </div>
+
+                            <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800">
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2 border-b border-gray-100 dark:border-slate-800 pb-3">Gallery Images</h3>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Add up to 5 additional product images. Upload order will be maintained.</p>
+                                
+                                <!-- Gallery counter -->
+                                <div class="mb-4 p-3 bg-gray-50 dark:bg-slate-800/50 rounded-lg border border-gray-200 dark:border-slate-700">
+                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300" id="gallery-counter">0 of 5 images</span>
+                                </div>
+                                
+                                <!-- Upload Badge for Gallery -->
+                                <div id="gallery-dropzone" class="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:border-imvidia dark:hover:border-imvidia bg-gray-50 dark:bg-slate-800/50 transition-colors group">
+                                    <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 dark:text-gray-500 group-hover:text-imvidia mb-3 transition-colors"></i>
+                                    <span class="text-sm font-medium text-gray-900 dark:text-white">Click to upload or drag and drop</span>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">PNG, JPG, GIF, or WebP (max. 5MB each)</span>
+                                </div>
+                                
+                                <!-- Existing gallery images (edit mode) -->
+                                <?php if ($edit_mode && !empty($existing_gallery_images)): ?>
+                                    <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800/50">
+                                        <p class="text-sm font-medium text-blue-900 dark:text-blue-300 mb-3">Existing Gallery Images</p>
+                                        <div id="existing-gallery-container" class="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                                            <?php foreach ($existing_gallery_images as $idx => $gal_img): ?>
+                                                <div class="relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700 shadow-sm group bg-gray-100 dark:bg-slate-800" data-gallery-id="<?php echo $gal_img['id']; ?>">
+                                                    <img src="<?php echo htmlspecialchars($gal_img['image_url']); ?>" alt="Gallery Image <?php echo $idx + 1; ?>" class="w-full h-full object-cover">
+                                                    <div class="absolute top-1 right-1 bg-gray-800 text-white text-xs px-2 py-1 rounded"><?php echo $idx + 1; ?>/5</div>
+                                                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                                                        <button type="button" class="delete-gallery-btn w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition transform hover:scale-110 shadow-lg" data-gallery-id="<?php echo $gal_img['id']; ?>" title="Delete Image">
+                                                            <i class="fa-solid fa-trash-can text-sm"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <!-- New uploaded gallery images preview -->
+                                <div id="gallery-preview-container" class="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-4"></div>
+                                
+                                <input name="gallery_images" type="file" id="gallery-upload" accept="image/*" multiple class="hidden">
+                                <input type="hidden" id="deleted-gallery-ids" name="deleted_gallery_ids" value="">
                             </div>
 
                             <button type="submit" class="w-full py-3 px-4 bg-imvidia hover:bg-imvidia-dark text-white rounded-lg shadow-md font-bold text-sm transition transform hover:-translate-y-0.5 flex items-center justify-center">
@@ -478,10 +586,19 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
             if (currentThumbnailFile && !currentThumbnailFile.isExisting) {
                 const dataTransfer = new DataTransfer();
                 dataTransfer.items.add(currentThumbnailFile);
-                document.getElementById('gallery-upload').files = dataTransfer.files;
+                document.getElementById('thumbnail-upload').files = dataTransfer.files;
             } else {
                 // Clear the file input if using existing image
-                document.getElementById('gallery-upload').value = '';
+                document.getElementById('thumbnail-upload').value = '';
+            }
+            
+            // Add gallery images to the form
+            if (galleryFiles.length > 0) {
+                const galleryDataTransfer = new DataTransfer();
+                galleryFiles.forEach(file => {
+                    galleryDataTransfer.items.add(file);
+                });
+                document.getElementById('gallery-upload').files = galleryDataTransfer.files;
             }
         }
     </script>
@@ -489,7 +606,7 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
     <script>
         let currentThumbnailFile = null;
         const dropzone = document.getElementById('image-dropzone');
-        const fileInput = document.getElementById('gallery-upload');
+        const fileInput = document.getElementById('thumbnail-upload');
         const previewContainer = document.getElementById('image-preview-container');
         const thumbnailImg = document.getElementById('thumbnail-img');
         const deleteBtn = document.getElementById('delete-thumbnail-btn');
@@ -576,6 +693,159 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
 
         // Call on page load if in edit mode
         document.addEventListener('DOMContentLoaded', initializeEditModePreview);
+    </script>
+
+    <script>
+        let galleryFiles = [];
+        let deletedGalleryIds = [];
+        const MAX_GALLERY_IMAGES = 5;
+        
+        const galleryDropzone = document.getElementById('gallery-dropzone');
+        const galleryFileInput = document.getElementById('gallery-upload');
+        const galleryPreviewContainer = document.getElementById('gallery-preview-container');
+        const galleryCounter = document.getElementById('gallery-counter');
+        const deletedIdsInput = document.getElementById('deleted-gallery-ids');
+        const existingGalleryContainer = document.getElementById('existing-gallery-container');
+        
+        // Get current count of existing gallery images
+        function getCurrentGalleryCount() {
+            const existingCount = existingGalleryContainer ? existingGalleryContainer.querySelectorAll('[data-gallery-id]:not(.deleted)').length : 0;
+            return existingCount + galleryFiles.length;
+        }
+        
+        function updateGalleryCounter() {
+            const count = getCurrentGalleryCount();
+            galleryCounter.textContent = `${count} of ${MAX_GALLERY_IMAGES} images`;
+            
+            // Disable dropzone if max reached
+            if (count >= MAX_GALLERY_IMAGES) {
+                galleryDropzone.classList.add('opacity-50', 'pointer-events-none');
+            } else {
+                galleryDropzone.classList.remove('opacity-50', 'pointer-events-none');
+            }
+        }
+        
+        galleryDropzone.addEventListener('click', () => {
+            if (getCurrentGalleryCount() < MAX_GALLERY_IMAGES) {
+                galleryFileInput.click();
+            } else {
+                alert('Maximum 5 gallery images allowed.');
+            }
+        });
+        
+        galleryFileInput.addEventListener('change', (e) => handleGalleryFiles(e.target.files));
+        
+        galleryDropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            galleryDropzone.classList.remove('bg-gray-50', 'dark:bg-slate-800/50', 'border-gray-300', 'dark:border-slate-600');
+            galleryDropzone.classList.add('bg-imvidia/10', 'border-imvidia');
+        });
+        
+        galleryDropzone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            galleryDropzone.classList.add('bg-gray-50', 'dark:bg-slate-800/50', 'border-gray-300', 'dark:border-slate-600');
+            galleryDropzone.classList.remove('bg-imvidia/10', 'border-imvidia');
+        });
+        
+        galleryDropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            galleryDropzone.classList.add('bg-gray-50', 'dark:bg-slate-800/50', 'border-gray-300', 'dark:border-slate-600');
+            galleryDropzone.classList.remove('bg-imvidia/10', 'border-imvidia');
+            
+            if (e.dataTransfer.files.length) {
+                handleGalleryFiles(e.dataTransfer.files);
+            }
+        });
+        
+        function handleGalleryFiles(files) {
+            const currentCount = getCurrentGalleryCount();
+            const slotsAvailable = MAX_GALLERY_IMAGES - currentCount;
+            
+            if (slotsAvailable <= 0) {
+                alert('Maximum 5 gallery images reached.');
+                return;
+            }
+            
+            let filesAdded = 0;
+            Array.from(files).forEach(file => {
+                if (filesAdded >= slotsAvailable) return;
+                
+                if (file.size > 5 * 1024 * 1024) {
+                    alert(`File "${file.name}" is too large. Maximum size is 5MB.`);
+                    return;
+                }
+                
+                if (!file.type.startsWith('image/')) {
+                    alert(`File "${file.name}" is not a valid image format.`);
+                    return;
+                }
+                
+                galleryFiles.push(file);
+                filesAdded++;
+            });
+            
+            renderGalleryPreviews();
+            galleryFileInput.value = '';
+        }
+        
+        function renderGalleryPreviews() {
+            galleryPreviewContainer.innerHTML = '';
+            const existingCount = existingGalleryContainer ? existingGalleryContainer.querySelectorAll('[data-gallery-id]:not(.deleted)').length : 0;
+            
+            galleryFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const previewDiv = document.createElement('div');
+                    previewDiv.className = "relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700 shadow-sm group bg-gray-100 dark:bg-slate-800";
+                    previewDiv.innerHTML = `
+                        <img src="${e.target.result}" class="w-full h-full object-cover">
+                        <div class="absolute top-1 right-1 bg-gray-800 text-white text-xs px-2 py-1 rounded">${existingCount + index + 1}/5</div>
+                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                            <button type="button" onclick="removeGalleryImage(${index})" class="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition transform hover:scale-110 shadow-lg" title="Remove Image">
+                                <i class="fa-solid fa-trash-can text-sm"></i>
+                            </button>
+                        </div>
+                    `;
+                    galleryPreviewContainer.appendChild(previewDiv);
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            updateGalleryCounter();
+        }
+        
+        function removeGalleryImage(index) {
+            galleryFiles.splice(index, 1);
+            renderGalleryPreviews();
+        }
+        
+        // Handle delete button for existing gallery images
+        document.querySelectorAll('.delete-gallery-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const galleryId = btn.getAttribute('data-gallery-id');
+                const tile = btn.closest('[data-gallery-id]');
+                
+                // Add to deleted list
+                if (!deletedGalleryIds.includes(galleryId)) {
+                    deletedGalleryIds.push(galleryId);
+                }
+                
+                // Mark as deleted visually
+                tile.classList.add('deleted', 'opacity-50');
+                btn.disabled = true;
+                
+                // Update hidden input
+                deletedIdsInput.value = deletedGalleryIds.join(',');
+                
+                updateGalleryCounter();
+            });
+        });
+        
+        // Initialize counter on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateGalleryCounter();
+        });
     </script>
 
     <!-- Product Management Scripts -->
