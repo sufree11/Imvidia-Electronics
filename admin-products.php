@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     'size' => $_FILES['gallery_images']['size'][$i]
                                 ];
                                 
-                                $upload_result = uploadToS3($file, 'products/gallery/gallery_' . time() . '_' . rand(1000, 9999) . '_' . $i);
+                                $upload_result = uploadToS3($file, 'products/gallery/gallery_', time() . '_' . rand(1000, 9999) . '_' . $i);
                                 if ($upload_result['success']) {
                                     $gallery_image_url = mysqli_real_escape_string($conn, $upload_result['url']);
                                     mysqli_query($conn, "INSERT INTO product_gallery (product_id, image_url, created_at) VALUES ($product_id, '$gallery_image_url', NOW())");
@@ -140,7 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     'size' => $_FILES['gallery_images']['size'][$i]
                                 ];
                                 
-                                $upload_result = uploadToS3($file, 'products/gallery_', time() . '_' . rand(1000, 9999) . '_' . $i);
+                                $upload_result = uploadToS3($file, 'products/gallery/gallery_', time() . '_' . rand(1000, 9999) . '_' . $i);
                                 if ($upload_result['success']) {
                                     $gallery_image_url = mysqli_real_escape_string($conn, $upload_result['url']);
                                     mysqli_query($conn, "INSERT INTO product_gallery (product_id, image_url, created_at) VALUES ($new_product_id, '$gallery_image_url', NOW())");
