@@ -262,6 +262,9 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
                     <form id="addProductForm" method="POST" enctype="multipart/form-data" onsubmit="handleFormSubmit(event)" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <?php if ($edit_mode && $product_to_edit): ?>
                             <input type="hidden" name="product_id" value="<?php echo $product_to_edit['product_id']; ?>">
+                            <input type="hidden" id="existing-image-url" value="<?php echo !empty($product_to_edit['image_url']) ? htmlspecialchars($product_to_edit['image_url']) : ''; ?>">
+                        <?php else: ?>
+                            <input type="hidden" id="existing-image-url" value="">
                         <?php endif; ?>
                         
                         <div class="lg:col-span-2 space-y-6">
@@ -355,25 +358,26 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
                             </div>
 
                             <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800">
-                                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b border-gray-100 dark:border-slate-800 pb-3">Gallery Images</h3>
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b border-gray-100 dark:border-slate-800 pb-3">Product Thumbnail <span class="text-red-500">*</span></h3>
                                 
-                                <?php if ($edit_mode && $product_to_edit && !empty($product_to_edit['image_url'])): ?>
-                                    <div class="mb-4 p-4 bg-gray-50 dark:bg-slate-800/50 rounded-lg">
-                                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Current Image</p>
-                                        <img src="<?php echo htmlspecialchars($product_to_edit['image_url']); ?>" alt="Current Product Image" class="w-32 h-32 object-cover rounded-lg border border-gray-200 dark:border-slate-700">
-                                    </div>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Upload a new image to replace the current one.</p>
-                                <?php endif; ?>
-                                
-                                <div id="image-dropzone" class="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:border-imvidia dark:hover:border-imvidia bg-gray-50 dark:bg-slate-800/50 transition-colors group">
+                                <!-- Upload Badge (shown when no thumbnail) -->
+                                <div id="image-dropzone" class="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-lg p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:border-imvidia dark:hover:border-imvidia bg-gray-50 dark:bg-slate-800/50 transition-colors group">
                                     <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 dark:text-gray-500 group-hover:text-imvidia mb-3 transition-colors"></i>
                                     <span class="text-sm font-medium text-gray-900 dark:text-white">Click to upload or drag and drop</span>
-                                    <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">SVG, PNG, JPG or GIF (max. 5MB)</span>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">PNG, JPG, GIF, or WebP (max. 5MB)</span>
+                                </div>
+                                
+                                <!-- Thumbnail Display (shown when image exists) -->
+                                <div id="image-preview-container" class="hidden relative w-full aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700 shadow-sm group bg-gray-100 dark:bg-slate-800">
+                                    <img id="thumbnail-img" src="" alt="Product Thumbnail" class="w-full h-full object-cover">
+                                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                                        <button type="button" id="delete-thumbnail-btn" class="w-10 h-10 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition transform hover:scale-110 shadow-lg" title="Delete Thumbnail">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </div>
                                 </div>
                                 
                                 <input name="product_image" type="file" id="gallery-upload" accept="image/*" class="hidden">
-                                
-                                <div id="image-preview-container" class="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-4 empty:hidden"></div>
                             </div>
 
                             <button type="submit" class="w-full py-3 px-4 bg-imvidia hover:bg-imvidia-dark text-white rounded-lg shadow-md font-bold text-sm transition transform hover:-translate-y-0.5 flex items-center justify-center">
@@ -461,20 +465,34 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
         }
 
         function handleFormSubmit(event) {
-            tinymce.triggerSave(); 
-            if (galleryFiles.length > 0) {
+            tinymce.triggerSave();
+            
+            // Validate that at least one thumbnail exists
+            if (!currentThumbnailFile) {
+                event.preventDefault();
+                alert('Please upload a product thumbnail before submitting.');
+                return;
+            }
+            
+            // Only add file to input if it's a new upload (not an existing image from DB)
+            if (currentThumbnailFile && !currentThumbnailFile.isExisting) {
                 const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(galleryFiles[0]); 
+                dataTransfer.items.add(currentThumbnailFile);
                 document.getElementById('gallery-upload').files = dataTransfer.files;
+            } else {
+                // Clear the file input if using existing image
+                document.getElementById('gallery-upload').value = '';
             }
         }
     </script>
 
     <script>
-        let galleryFiles = [];
+        let currentThumbnailFile = null;
         const dropzone = document.getElementById('image-dropzone');
         const fileInput = document.getElementById('gallery-upload');
         const previewContainer = document.getElementById('image-preview-container');
+        const thumbnailImg = document.getElementById('thumbnail-img');
+        const deleteBtn = document.getElementById('delete-thumbnail-btn');
 
         dropzone.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
@@ -502,46 +520,62 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
         });
 
         function handleFiles(files) {
-            Array.from(files).forEach(file => {
-                if (file.size > 5 * 1024 * 1024) {
-                    alert(`File "${file.name}" is too large. Maximum size is 5MB.`);
-                    return;
-                }
-                if (!file.type.startsWith('image/')) {
-                    alert(`File "${file.name}" is not a valid image format.`);
-                    return;
-                }
-                galleryFiles.push(file);
-                renderPreviews();
-            });
+            // Only accept one file at a time
+            const file = files[0];
+            
+            if (!file) return;
+            
+            if (file.size > 5 * 1024 * 1024) {
+                alert(`File "${file.name}" is too large. Maximum size is 5MB.`);
+                return;
+            }
+            
+            if (!file.type.startsWith('image/')) {
+                alert(`File "${file.name}" is not a valid image format.`);
+                return;
+            }
+            
+            currentThumbnailFile = file;
+            displayThumbnail();
             fileInput.value = '';
         }
 
-        function removeGalleryImage(index) {
-            galleryFiles.splice(index, 1);
-            renderPreviews();
+        function displayThumbnail() {
+            if (!currentThumbnailFile) {
+                previewContainer.classList.add('hidden');
+                dropzone.classList.remove('hidden');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                thumbnailImg.src = e.target.result;
+                previewContainer.classList.remove('hidden');
+                dropzone.classList.add('hidden');
+            };
+            reader.readAsDataURL(currentThumbnailFile);
         }
 
-        function renderPreviews() {
-            previewContainer.innerHTML = '';
-            galleryFiles.forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const previewDiv = document.createElement('div');
-                    previewDiv.className = "relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700 shadow-sm group";
-                    previewDiv.innerHTML = `
-                        <img src="${e.target.result}" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                            <button type="button" onclick="removeGalleryImage(${index})" class="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition transform hover:scale-110 shadow-lg" title="Remove Image">
-                                <i class="fa-solid fa-trash-can text-sm"></i>
-                            </button>
-                        </div>
-                    `;
-                    previewContainer.appendChild(previewDiv);
-                };
-                reader.readAsDataURL(file);
-            });
+        deleteBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            currentThumbnailFile = null;
+            displayThumbnail();
+        });
+
+        // Initialize with existing image if in edit mode
+        function initializeEditModePreview() {
+            const existingImageUrl = document.getElementById('existing-image-url');
+            if (existingImageUrl && existingImageUrl.value) {
+                thumbnailImg.src = existingImageUrl.value;
+                previewContainer.classList.remove('hidden');
+                dropzone.classList.add('hidden');
+                // Mark that we have an existing image (no file object, but image exists)
+                currentThumbnailFile = { isExisting: true };
+            }
         }
+
+        // Call on page load if in edit mode
+        document.addEventListener('DOMContentLoaded', initializeEditModePreview);
     </script>
 
     <!-- Product Management Scripts -->
