@@ -447,12 +447,7 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
 
                             <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800">
                                 <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2 border-b border-gray-100 dark:border-slate-800 pb-3">Gallery Images</h3>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Add up to 5 additional product images. Upload order will be maintained.</p>
-                                
-                                <!-- Gallery counter -->
-                                <div class="mb-4 p-3 bg-gray-50 dark:bg-slate-800/50 rounded-lg border border-gray-200 dark:border-slate-700">
-                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300" id="gallery-counter">0 of 5 images</span>
-                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Add up to 5 gallery images.</p>
                                 
                                 <!-- Upload Badge for Gallery -->
                                 <div id="gallery-dropzone" class="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:border-imvidia dark:hover:border-imvidia bg-gray-50 dark:bg-slate-800/50 transition-colors group">
