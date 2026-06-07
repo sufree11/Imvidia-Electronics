@@ -1,11 +1,20 @@
 <?php
+$envPath = __DIR__ . '/../.env';
+if (file_exists($envPath)) {
+    $env = parse_ini_file($envPath);
+    $host = $env['DB_HOST'];
+    $username = $env['DB_USER'];
+    $password = $env['DB_PASSWORD'];
+    $dbname = $env['DB_NAME'];
+    $port = $env['DB_PORT'];
+} else {
 $host = getenv('DB_HOST') ?: 'db-imvidia-do-user-36450203-0.f.db.ondigitalocean.com';
 $port = getenv('DB_PORT') ?: 25060;
 $dbname = getenv('DB_NAME') ?: 'db';
 $username = getenv('DB_USER') ?: 'db';
 $password = getenv('DB_PASSWORD') ?: '';
-
-$conn = mysqli_init();
+}
+$conn = mysqli_connect($host, $username, $password, $dbname, $port);
 
 $connected = mysqli_real_connect(
     $conn, 
