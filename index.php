@@ -197,7 +197,7 @@ $user = checkCustomerOrGuest();
                         img.classList.add('z-50', 'w-[70%]', 'left-[85%]', '-translate-x-1/2', '-translate-y-[55%]', 'scale-100', 'brightness-100', 'opacity-100', 'rotate-12');
                     } else if (index === currentindex) {
                         img.classList.add('z-40', 'w-[75%]', 'left-1/2', '-translate-x-1/2', '-translate-y-[60%]', 'scale-100', 'brightness-100', 'opacity-100', 'rotate-0');
-                    } else if (index === (currentindex + 1) % 3) {
+                    } else if (index === (currentindex + 1) % images.length) {
                         img.classList.add('z-10', 'w-[60%]', 'left-[80%]', '-translate-x-1/2', '-translate-y-[40%]', 'scale-90', 'brightness-50', 'opacity-70', 'rotate-3');
                     } else {
                         img.classList.add('z-20', 'w-[60%]', 'left-[20%]', '-translate-x-1/2', '-translate-y-[40%]', 'scale-90', 'brightness-50', 'opacity-70', '-rotate-3');

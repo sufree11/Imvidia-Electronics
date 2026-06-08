@@ -7,14 +7,16 @@ if (file_exists($envPath)) {
     $password = $env['DB_PASSWORD'];
     $dbname = $env['DB_NAME'];
     $port = $env['DB_PORT'];
+    $flags = 0;
 } else {
 $host = getenv('DB_HOST') ?: 'db-imvidia-do-user-36450203-0.f.db.ondigitalocean.com';
 $port = getenv('DB_PORT') ?: 25060;
 $dbname = getenv('DB_NAME') ?: 'db';
 $username = getenv('DB_USER') ?: 'db';
 $password = getenv('DB_PASSWORD') ?: '';
+$flags = MYSQLI_CLIENT_SSL;
 }
-$conn = mysqli_connect($host, $username, $password, $dbname, $port);
+$conn = mysqli_init();
 
 $connected = mysqli_real_connect(
     $conn, 
@@ -24,7 +26,7 @@ $connected = mysqli_real_connect(
     $dbname, 
     $port, 
     NULL, 
-    MYSQLI_CLIENT_SSL
+    $flags
 );
 
 if (!$connected) {
