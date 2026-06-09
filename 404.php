@@ -89,20 +89,16 @@ if (http_response_code() !== 404) {
         </h1>
 
         <h2 class="text-3xl md:text-4xl font-bold text-gray-700 dark:text-gray-200 mb-6">
-            Product Not Found
+            Page Not Found
         </h2>
 
         <p class="text-lg text-gray-500 dark:text-gray-400 mb-10 max-w-2xl">
-            Sorry, the product you're looking for doesn't exist or has been removed. Please check the product ID and try again, or return to our catalog to browse other products.
+            Sorry, the page you're looking for doesn't exist or has been removed.
         </p>
 
         <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
             <a href="index.php" class="bg-imvidia hover:bg-imvidia-dark text-white font-bold py-3 px-8 rounded-full transition-all duration-300 inline-block">
                 <i class="fa-solid fa-home mr-2"></i> Back to Home
-            </a>
-
-            <a href="index.php#catalog" class="bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-bold py-3 px-8 rounded-full transition-all duration-300 inline-block">
-                <i class="fa-solid fa-th mr-2"></i> Browse Catalog
             </a>
         </div>
 
