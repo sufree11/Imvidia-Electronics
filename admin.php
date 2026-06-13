@@ -12,6 +12,7 @@ $admin_data = getAdminUserData();
 <!DOCTYPE html>
 <html>
 <head>
+    @
     <title>Admin Dashboard - ImVidia</title>
     <?php include 'includes/head.php'; ?>
 </head>
