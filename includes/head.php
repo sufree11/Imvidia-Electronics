@@ -23,6 +23,9 @@
     <!-- Iconify Icon Library -->
     <script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js"></script>
 
+    <!-- ImVidia Global Stylesheet -->
+    <link rel="stylesheet" href="includes/styles.css">
+
     <!-- Tailwind Configuration -->
     <script>
         tailwind.config = {
@@ -41,76 +44,6 @@
             }
         }
     </script>
-
-    <!-- Dark Mode & Theme CSS Variables -->
-    <style>
-        :root {
-            --bg: #f8fafc;
-            --surface: #ffffff;
-            --text-primary: #111827;
-            --text-secondary: #475569;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-        }
-        
-        .dark {
-            --bg: #020617;
-            --surface: #111827;
-            --text-primary: #f8fafc;
-            --text-secondary: #cbd5e1;
-            --text-muted: #94a3b8;
-            --border-color: #334155;
-        }
-        
-        body {
-            background-color: var(--bg) !important;
-            color: var(--text-primary) !important;
-        }
-        
-        .dark .bg-white { background-color: var(--surface) !important; }
-        .dark .bg-gray-50 { background-color: #020617 !important; }
-        .dark .bg-gray-100 { background-color: #17203a !important; }
-        .dark .bg-gray-900 { background-color: #020617 !important; }
-        .dark .bg-gray-700 { background-color: #1f2937 !important; }
-        
-        .dark .text-gray-900,
-        .dark .text-gray-800,
-        .dark .text-gray-700 { color: var(--text-primary) !important; }
-        
-        .dark .text-gray-600,
-        .dark .text-gray-500,
-        .dark .text-gray-400 { color: var(--text-secondary) !important; }
-        
-        .dark .border-gray-100,
-        .dark .border-gray-200 { border-color: var(--border-color) !important; }
-        
-        .dark .shadow-sm,
-        .dark .shadow-md,
-        .dark .shadow-xl { box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.4), 0 4px 6px -4px rgba(15, 23, 42, 0.1) !important; }
-
-        /* Dropdown animation for product containers */
-        .dropdown-wrapper {
-            display: grid;
-            grid-template-rows: 0fr;
-            transition: grid-template-rows 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .dropdown-wrapper.open {
-            grid-template-rows: 1fr;
-        }
-        
-        .dropdown-inner {
-            overflow: hidden;
-            opacity: 0;
-            transform: translateY(-10px); 
-            transition: opacity 0.4s ease-out, transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .dropdown-wrapper.open .dropdown-inner {
-            opacity: 1;
-            transform: translateY(0); 
-        }
-    </style>
 
     <!-- Dark Mode Script -->
     <script>

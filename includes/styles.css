@@ -1,0 +1,376 @@
+
+/*
+   1. CSS VARIABLES & THEME
+ */
+
+:root {
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --text-primary: #111827;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --imvidia-light: #8DFFFF;
+    --imvidia-primary: #49C2FA;
+    --imvidia-dark: #1F2468;
+}
+
+.dark {
+    --bg: #020617;
+    --surface: #111827;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+}
+
+/* 
+   2. DARK MODE COLOR OVERRIDES
+ */
+
+body {
+    background-color: var(--bg) !important;
+    color: var(--text-primary) !important;
+}
+
+.dark .bg-white { 
+    background-color: var(--surface) !important; 
+}
+
+.dark .bg-gray-50 { 
+    background-color: #020617 !important; 
+}
+
+.dark .bg-gray-100 { 
+    background-color: #17203a !important; 
+}
+
+.dark .bg-gray-900 { 
+    background-color: #020617 !important; 
+}
+
+.dark .bg-gray-700 { 
+    background-color: #1f2937 !important; 
+}
+
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-gray-700 { 
+    color: var(--text-primary) !important; 
+}
+
+.dark .text-gray-600,
+.dark .text-gray-500,
+.dark .text-gray-400 { 
+    color: var(--text-secondary) !important; 
+}
+
+.dark .border-gray-100,
+.dark .border-gray-200 { 
+    border-color: var(--border-color) !important; 
+}
+
+.dark .shadow-sm,
+.dark .shadow-md,
+.dark .shadow-xl { 
+    box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.4), 0 4px 6px -4px rgba(15, 23, 42, 0.1) !important; 
+}
+
+/* 
+   3. COMPONENT STYLES
+ */
+
+/* Dashboard Widget Cards */
+.widget-card {
+    background-color: var(--surface);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.widget-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Sidebar Navigation */
+.sidebar {
+    background-color: var(--surface);
+    border-right: 1px solid var(--border-color);
+    transition: background-color 0.3s ease;
+}
+
+.sidebar nav a {
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sidebar nav a:hover {
+    background-color: rgba(73, 194, 250, 0.1);
+    color: var(--imvidia-primary);
+}
+
+.sidebar nav a.active {
+    background-color: var(--imvidia-primary);
+    color: white;
+    box-shadow: 0 2px 8px rgba(73, 194, 250, 0.3);
+}
+
+/* Tables */
+.table-container {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background-color: var(--surface);
+    border: 1px solid var(--border-color);
+}
+
+.table-header {
+    background-color: #f9fafb;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+}
+
+.dark .table-header {
+    background-color: rgba(15, 23, 42, 0.4);
+}
+
+.table-row {
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s ease;
+}
+
+.table-row:hover {
+    background-color: rgba(73, 194, 250, 0.05);
+}
+
+.dark .table-row:hover {
+    background-color: rgba(73, 194, 250, 0.1);
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--imvidia-primary);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--imvidia-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(73, 194, 250, 0.3);
+}
+
+.btn-secondary {
+    background-color: var(--border-color);
+    color: var(--text-primary);
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background-color: #cbd5e1;
+    transform: translateY(-2px);
+}
+
+/* Icon Containers */
+.icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background-color: #f3f4f6;
+    color: var(--text-muted);
+}
+
+.dark .icon-box {
+    background-color: rgba(15, 23, 42, 0.5);
+}
+
+/* 
+   4. ANIMATIONS & TRANSITIONS
+ */
+
+/* Dropdown Menu Animation */
+.dropdown-wrapper {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dropdown-wrapper.open {
+    grid-template-rows: 1fr;
+}
+
+.dropdown-inner {
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-10px); 
+    transition: opacity 0.4s ease-out, transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dropdown-wrapper.open .dropdown-inner {
+    opacity: 1;
+    transform: translateY(0); 
+}
+
+/* Smooth Fade In */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+/* Slide Down */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slide-down {
+    animation: slideDown 0.3s ease-out;
+}
+
+/* 
+   5. UTILITY CLASSES
+ */
+
+/* Shadows */
+.shadow-imvidia {
+    box-shadow: 0 4px 15px rgba(73, 194, 250, 0.2);
+}
+
+/* Text Utilities */
+.text-imvidia {
+    color: var(--imvidia-primary);
+}
+
+.text-imvidia-light {
+    color: var(--imvidia-light);
+}
+
+/* Transitions */
+.transition-all {
+    transition: all 0.3s ease;
+}
+
+.transition-colors {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.transition-transform {
+    transition: transform 0.3s ease;
+}
+
+/* Responsive Typography */
+.text-sm { font-size: 0.875rem; }
+.text-base { font-size: 1rem; }
+.text-lg { font-size: 1.125rem; }
+.text-xl { font-size: 1.25rem; }
+.text-2xl { font-size: 1.5rem; }
+
+/* Spacing Utilities */
+.gap-sm { gap: 0.5rem; }
+.gap-md { gap: 1rem; }
+.gap-lg { gap: 1.5rem; }
+.gap-xl { gap: 2rem; }
+
+/* Flex Utilities */
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.flex-col-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Container Utilities */
+.container-max {
+    max-width: 80rem;
+    margin: 0 auto;
+}
+
+.container-md {
+    max-width: 56rem;
+    margin: 0 auto;
+}
+
+/* Overflow Utilities */
+.overflow-hidden-y {
+    overflow-y: hidden;
+}
+
+.overflow-auto-y {
+    overflow-y: auto;
+}
+
+/* 
+   6. RESPONSIVE HELPERS
+ */
+
+@media (max-width: 768px) {
+    .sidebar {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        z-index: 40;
+    }
+    
+    .widget-card {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .widget-card {
+        min-height: auto;
+    }
+    
+    .table-container {
+        font-size: 0.875rem;
+    }
+}
