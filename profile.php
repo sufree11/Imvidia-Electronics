@@ -4,8 +4,10 @@ require_once 'includes/helpers.php';
 require_once 'includes/db-helpers.php';
 
 // Require customer login
+
 requireCustomerLogin();
 
+$user = checkCustomerOrGuest();
 $user_id = $_SESSION['user_id'];
 $message = '';
 $msg_type = '';
