@@ -9,7 +9,7 @@ $user = checkCustomerOrGuest();
 // 1. Get product ID from URL parameter safely
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     http_response_code(404);
-    include '404.php';
+    include 'error.php';
     exit();
 }
 
@@ -22,7 +22,7 @@ $product_result = mysqli_query($conn, $product_query);
 // 3. If product not found in database, trigger 404
 if (!$product_result || mysqli_num_rows($product_result) === 0) {
     http_response_code(404);
-    include '404.php';
+    include 'error.php';
     exit();
 }
 
@@ -46,55 +46,6 @@ if ($gal_result && mysqli_num_rows($gal_result) > 0) {
 <head>
     <title><?php echo htmlspecialchars($product['name']); ?> - ImVidia</title>
     <?php include 'includes/head.php'; ?>
-    <style>
-        /* Prose styles for the TinyMCE injected HTML */
-        .prose p { margin-bottom: 1.2em; line-height: 1.7; }
-        .prose ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1.2em; }
-        .prose ol { list-style-type: decimal; padding-left: 1.5em; margin-bottom: 1.2em; }
-        .prose strong, .prose b { font-weight: 700; color: inherit; }
-        
-        /* Restoring Header Styles */
-        .prose h1 { font-size: 2.25em; font-weight: 800; margin-top: 1.5em; margin-bottom: 0.5em; line-height: 1.2; color: #111827; }
-        .dark .prose h1 { color: #f9fafb; }
-        .prose h2 { font-size: 1.75em; font-weight: 700; margin-top: 1.5em; margin-bottom: 0.5em; line-height: 1.3; color: #1f2937; }
-        .dark .prose h2 { color: #f3f4f6; }
-        .prose h3 { font-size: 1.25em; font-weight: 600; margin-top: 1.5em; margin-bottom: 0.5em; line-height: 1.4; color: #374151; }
-        .dark .prose h3 { color: #e5e7eb; }
-        
-        /* Restoring Table Styles */
-        .prose table { width: 100%; border-collapse: collapse; margin-top: 1.5em; margin-bottom: 1.5em; font-size: 0.95em; }
-        .prose th, .prose td { border: 1px solid #e2e8f0; padding: 0.75rem 1rem; text-align: left; }
-        .dark .prose th, .dark .prose td { border-color: #334155; }
-        .prose th { background-color: #f8fafc; font-weight: 600; color: #111827; }
-        .dark .prose th { background-color: #0f172a; color: #f9fafb; }
-        
-        /* Miscellaneous Styles */
-        .prose a { color: #49C2FA; text-decoration: none; font-weight: 500; }
-        .prose a:hover { text-decoration: underline; }
-        .prose blockquote { border-left: 4px solid #cbd5e1; padding-left: 1rem; font-style: italic; color: #64748b; margin-top: 1.5em; margin-bottom: 1.5em; }
-        .dark .prose blockquote { border-left-color: #475569; color: #94a3b8; }
-
-        /* Custom Scrollbar for Description Container */
-        .desc-scroll-container {
-            max-height: 250px;
-            overflow-y: auto;
-            padding-right: 1.5rem;
-            max-width: 300px;
-        }
-        .desc-scroll-container::-webkit-scrollbar {
-            width: 6px;
-        }
-        .desc-scroll-container::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .desc-scroll-container::-webkit-scrollbar-thumb {
-            background-color: #cbd5e1;
-            border-radius: 10px;
-        }
-        .dark .desc-scroll-container::-webkit-scrollbar-thumb {
-            background-color: #475569;
-        }
-    </style>
 </head>
 
 <body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
@@ -162,7 +113,7 @@ if ($gal_result && mysqli_num_rows($gal_result) > 0) {
                 </p>
 
                 <!-- Render TinyMCE HTML Safely with Scrollable Container -->
-                <div class="prose dark:prose-invert text-gray-600 dark:text-gray-300 text-base mb-10 max-w-none desc-scroll-container">
+                <div class="prose dark:prose-invert mb-10 max-w-none desc-scroll-container">
                     <?php 
                     // No htmlspecialchars here, we WANT the HTML tags from TinyMCE to render!
                     echo $product['description']; 

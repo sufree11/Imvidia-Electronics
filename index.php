@@ -34,7 +34,7 @@ $user = checkCustomerOrGuest();
                             window.scrollTo({ top: document.getElementById('catalog').offsetTop - 80, behavior: 'smooth' });
                         });
                     </script>
-                    <a href="404.php">
+                    <a href="about.php">
                         <button class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:-translate-y-1">Learn More</button>
                     </a>
                 </div>

@@ -955,48 +955,7 @@ function renderGalleryPreviews() {
         });
     </script>
 
-    <style>
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
 
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
-            }
-            to {
-                opacity: 0;
-            }
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .animate-fade-in {
-            animation: fadeIn 0.2s ease-in-out;
-        }
-
-        .animate-fade-out {
-            animation: fadeOut 0.2s ease-in-out;
-        }
-
-        .animate-slide-up {
-            animation: slideUp 0.3s ease-out;
-        }
-    </style>
 
 </body>
 </html>

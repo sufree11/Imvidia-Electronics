@@ -29,58 +29,7 @@
         }
     </script>
 
-    <style>
-        :root {
-            --bg: #f8fafc;
-            --surface: #ffffff;
-            --text-primary: #111827;
-            --text-secondary: #475569;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-        }
-        .dark {
-            --bg: #020617;
-            --surface: #111827;
-            --text-primary: #f8fafc;
-            --text-secondary: #cbd5e1;
-            --text-muted: #94a3b8;
-            --border-color: #334155;
-        }
-        body {
-            background-color: var(--bg) !important;
-            color: var(--text-primary) !important;
-            -webkit-font-smoothing: antialiased;
-        }
-        .dark .bg-white { background-color: var(--surface) !important; }
-        .dark .bg-gray-50 { background-color: #020617 !important; }
-        .dark .bg-gray-100 { background-color: #0f172a !important; } 
-        .dark .bg-gray-900 { background-color: #020617 !important; }
-        .dark .bg-gray-700 { background-color: #1f2937 !important; }
-        .dark .text-gray-900,
-        .dark .text-gray-800,
-        .dark .text-gray-700 { color: var(--text-primary) !important; }
-        .dark .text-gray-600,
-        .dark .text-gray-500,
-        .dark .text-gray-400 { color: var(--text-secondary) !important; }
-        .dark .border-gray-100,
-        .dark .border-gray-200 { border-color: var(--border-color) !important; }
-        .dark .shadow-sm,
-        .dark .shadow-xl {
-            box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.4), 0 4px 6px -4px rgba(15, 23, 42, 0.1) !important;
-        }
-
-        /* Hides native number spin buttons */
-        .hide-spinner::-webkit-inner-spin-button, 
-        .hide-spinner::-webkit-outer-spin-button { 
-            -webkit-appearance: none; 
-            appearance: none;
-            margin: 0; 
-        }
-        .hide-spinner { 
-            -moz-appearance: textfield; 
-            appearance: textfield;
-        }
-    </style>
+    <link rel="stylesheet" href="includes/styles.css">
 </head>
 
 <body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
