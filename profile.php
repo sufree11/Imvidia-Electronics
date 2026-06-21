@@ -1,11 +1,4 @@
 <?php
-session_start();
-
-// 🛑 THE ANTI-CACHE BOUNCER 🛑
-header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-header("Cache-Control: post-check=0, pre-check=0", false);
-header("Pragma: no-cache");
-
 require_once 'includes/auth.php';
 require_once 'db/database.php';
 
