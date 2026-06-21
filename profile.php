@@ -1,26 +1,32 @@
 <?php
+session_start();
+
+// 🛑 THE ANTI-CACHE BOUNCER 🛑
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+
 require_once 'includes/auth.php';
-require_once 'includes/helpers.php';
-require_once 'includes/db-helpers.php';
+require_once 'db/database.php';
 
-// Require customer login
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'customer') {
+    header("Location: login.php");
+    exit();
+}
 
-requireCustomerLogin();
-
-$user = checkCustomerOrGuest();
 $user_id = $_SESSION['user_id'];
 $message = '';
 $msg_type = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $fname = mysqli_real_escape_string($conn, $_POST['fname']);
-    $lname = mysqli_real_escape_string($conn, $_POST['lname']);
-    $email = mysqli_real_escape_string($conn, $_POST['email']);
-    $phone = mysqli_real_escape_string($conn, $_POST['phone']);
-    $address_street = mysqli_real_escape_string($conn, $_POST['address_street']);
-    $address_city = mysqli_real_escape_string($conn, $_POST['address_city']);
-    $address_state = mysqli_real_escape_string($conn, $_POST['address_state']);
-    $address_zip = mysqli_real_escape_string($conn, $_POST['address_zip']);
+    $fname = mysqli_real_escape_string($conn, $_POST['fname'] ?? '');
+    $lname = mysqli_real_escape_string($conn, $_POST['lname'] ?? '');
+    $email = mysqli_real_escape_string($conn, $_POST['email'] ?? '');
+    $phone = mysqli_real_escape_string($conn, $_POST['phone'] ?? '');
+    $address_street = mysqli_real_escape_string($conn, $_POST['address_street'] ?? '');
+    $address_city = mysqli_real_escape_string($conn, $_POST['address_city'] ?? '');
+    $address_state = mysqli_real_escape_string($conn, $_POST['address_state'] ?? '');
+    $address_zip = mysqli_real_escape_string($conn, $_POST['address_zip'] ?? '');
     
     $current_password = $_POST['current_password'] ?? '';
     $new_password = $_POST['new_password'] ?? '';
@@ -29,13 +35,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $avatar_query_part = "";
     $password_query_part = "";
     
-    // Handle Password Change
+    // Process Password Change
     if (!empty($current_password) || !empty($new_password) || !empty($confirm_new_password)) {
         $pass_check_query = "SELECT password_hash FROM users WHERE id = '$user_id' LIMIT 1";
         $pass_check_result = mysqli_query($conn, $pass_check_query);
         $user_data = mysqli_fetch_assoc($pass_check_result);
         
-        if (!verifyPassword($current_password, $user_data['password_hash'])) {
+        if ($current_password !== $user_data['password_hash']) {
             $message = "Current password is incorrect.";
             $msg_type = "error";
         } else if ($new_password !== $confirm_new_password) {
@@ -45,23 +51,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = "New password must be at least 8 characters.";
             $msg_type = "error";
         } else {
-            $hashed_password = hashPassword($new_password);
-            $password_query_part = ", password_hash='" . mysqli_real_escape_string($conn, $hashed_password) . "'";
+            $password_query_part = ", password_hash='$new_password'";
         }
     }
     
-    // Handle Profile Picture Upload
+    // Process Profile Picture
     if ($msg_type !== "error" && isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
-        $upload_result = uploadToS3($_FILES['avatar'], 'avatars/user_', $user_id);
+        $upload_dir_absolute = __DIR__ . '/uploads/avatars/';
+        $upload_dir_relative = 'uploads/avatars/';
         
-        if ($upload_result['success']) {
-            $avatar_query_part = ", profile_picture='" . mysqli_real_escape_string($conn, $upload_result['url']) . "'";
+        if (!is_dir($upload_dir_absolute)) {
+            mkdir($upload_dir_absolute, 0777, true);
+        }
+        
+        $file_ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
+        $allowed_exts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        
+        if (in_array($file_ext, $allowed_exts)) {
+            $new_filename = 'user_' . $user_id . '_' . time() . '.' . $file_ext;
+            
+            $target_path_absolute = $upload_dir_absolute . $new_filename;
+            $target_path_relative = $upload_dir_relative . $new_filename;
+            
+            if (move_uploaded_file($_FILES['avatar']['tmp_name'], $target_path_absolute)) {
+                $avatar_query_part = ", profile_picture='$target_path_relative'";
+            } else {
+                $message = "Failed to upload image.";
+                $msg_type = "error";
+            }
         } else {
-            $message = $upload_result['error'];
+            $message = "Invalid image format. Allowed: JPG, PNG, GIF, WEBP.";
             $msg_type = "error";
         }
     }
 
+    // Execute Final Database Update
     if ($msg_type !== "error") {
         $update_query = "UPDATE users SET 
                             first_name='$fname', 
@@ -90,7 +114,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Fetch the updated user data
 $query = "SELECT * FROM users WHERE id = '$user_id' LIMIT 1";
 $result = mysqli_query($conn, $query);
-$user = mysqli_fetch_assoc($result);
+
+// 🐛 BUG FIX: Don't overwrite the $user array, merge the DB data into it!
+$db_user = mysqli_fetch_assoc($result);
+$user = array_merge($user, $db_user);
 
 $states = [
     'JHR' => 'Johor', 'KDH' => 'Kedah', 'KEL' => 'Kelantan', 'KUL' => 'Kuala Lumpur',
@@ -99,27 +126,79 @@ $states = [
     'SGR' => 'Selangor', 'TRG' => 'Terengganu'
 ];
 
-// Get avatar URL using helper
-$avatar_url = getAvatarUrl($user['first_name'], $user['last_name'], $user['profile_picture']);
-
+$avatar_url = !empty($user['profile_picture']) 
+    ? htmlspecialchars($user['profile_picture']) 
+    : "https://ui-avatars.com/api/?name=" . urlencode($user['first_name'] . ' ' . $user['last_name']) . "&background=49C2FA&color=fff&size=128";
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile - ImVidia</title>
-    <?php include 'includes/head.php'; ?>
-</head>
-<body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
-    
-    <?php 
-    include 'includes/navbar-customer.php'; 
-    ?>
+    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
 
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        imvidia: {
+                            light: '#8DFFFF',
+                            DEFAULT: '#49C2FA',
+                            dark: '#1F2468',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #475569;
+            --border-color: #e2e8f0;
+        }
+        .dark {
+            --bg: #020617;
+            --surface: #0f172a;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --border-color: #1e293b;
+        }
+        body {
+            background-color: var(--bg) !important;
+            color: var(--text-primary) !important;
+            -webkit-font-smoothing: antialiased;
+        }
+        .dark .bg-white { background-color: var(--surface) !important; }
+        .dark .bg-gray-50 { background-color: #020617 !important; }
+        .dark .bg-gray-900 { background-color: #020617 !important; }
+        .dark .border-gray-100, .dark .border-gray-200 { border-color: var(--border-color) !important; }
+    </style>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100">
+    
+    <?php include 'includes/navbar-customer.php'; ?>
+
+    <!-- Main Content -->
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full relative z-10">
         
         <nav class="flex text-xs font-medium text-gray-400 dark:text-slate-500 mb-8 uppercase tracking-widest" aria-label="Breadcrumb">
             <ol class="inline-flex items-center space-x-2">
-                <li><a href="index.php" class="hover:text-imvidia transition">Home</a></li>
+                <li><a href="index.html" class="hover:text-imvidia transition">Home</a></li>
                 <li><span class="mx-1">/</span></li>
                 <li><a href="#" class="hover:text-imvidia transition">My Account</a></li>
                 <li><span class="mx-1">/</span></li>
@@ -140,23 +219,18 @@ $avatar_url = getAvatarUrl($user['first_name'], $user['last_name'], $user['profi
 
         <form action="profile.php" method="POST" enctype="multipart/form-data" class="grid grid-cols-1 lg:grid-cols-12 gap-10">
             
-            <!-- LEFT COLUMN: Profile Sidebar -->
             <div class="lg:col-span-4 xl:col-span-3 space-y-6">
-                <!-- Avatar Card -->
                 <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 text-center">
                     
-                    <!-- Profile Picture Upload Area -->
                     <div class="relative w-32 h-32 mx-auto mb-4 group cursor-pointer" onclick="document.getElementById('avatar-upload').click()">
                         <div class="w-full h-full rounded-full overflow-hidden border-4 border-white dark:border-slate-800 shadow-md">
                             <img id="avatar-preview" src="<?php echo $avatar_url; ?>" alt="Profile Picture" class="w-full h-full object-cover bg-white">
                         </div>
                         
-                        <!-- Hover Overlay -->
                         <div class="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                             <i class="fa-solid fa-camera text-white text-2xl"></i>
                         </div>
                         
-                        <!-- Hidden input for the image -->
                         <input type="file" name="avatar" id="avatar-upload" accept="image/*" class="hidden" onchange="previewAvatar(event)">
                     </div>
 
@@ -164,7 +238,6 @@ $avatar_url = getAvatarUrl($user['first_name'], $user['last_name'], $user['profi
                     <p class="text-sm text-gray-500 dark:text-gray-400 mb-4"><?php echo htmlspecialchars($user['email']); ?></p>
                 </div>
 
-                <!-- Navigation Links -->
                 <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden">
                     <nav class="flex flex-col">
                         <a href="profile.php" class="px-6 py-4 flex items-center bg-gray-50 dark:bg-slate-800/50 border-l-4 border-imvidia text-imvidia font-semibold transition">
@@ -184,10 +257,8 @@ $avatar_url = getAvatarUrl($user['first_name'], $user['last_name'], $user['profi
                 </div>
             </div>
 
-            <!-- RIGHT COLUMN: Forms -->
             <div class="lg:col-span-8 xl:col-span-9 space-y-8">
                 
-                <!-- Section 1: Personal Info -->
                 <section class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
                     <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-5 border-b border-gray-100 dark:border-slate-800 pb-3">Personal Information</h3>
                     
@@ -211,7 +282,6 @@ $avatar_url = getAvatarUrl($user['first_name'], $user['last_name'], $user['profi
                     </div>
                 </section>
 
-                <!-- Section 2: Default Shipping Address -->
                 <section class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
                     <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-5 border-b border-gray-100 dark:border-slate-800 pb-3">Default Shipping Address</h3>
                     
@@ -242,7 +312,6 @@ $avatar_url = getAvatarUrl($user['first_name'], $user['last_name'], $user['profi
                     </div>
                 </section>
 
-                <!-- Section 3: Change Password -->
                 <section class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
                     <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-5 border-b border-gray-100 dark:border-slate-800 pb-3">Security & Password</h3>
                     <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Leave these fields blank if you do not wish to change your password.</p>
@@ -263,7 +332,6 @@ $avatar_url = getAvatarUrl($user['first_name'], $user['last_name'], $user['profi
                     </div>
                 </section>
 
-                <!-- Action Buttons -->
                 <div class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-4 pt-4">
                     <button type="button" onclick="window.location.reload();" class="mt-3 sm:mt-0 px-6 py-3 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-slate-600 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition font-medium">
                         Discard Changes
@@ -277,7 +345,6 @@ $avatar_url = getAvatarUrl($user['first_name'], $user['last_name'], $user['profi
         </form>
     </main>
 
-    <!-- Footer -->
     <footer class="bg-gray-900 text-gray-400 py-12 border-t border-gray-800 mt-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -291,8 +358,8 @@ $avatar_url = getAvatarUrl($user['first_name'], $user['last_name'], $user['profi
                 <div>
                     <h4 class="text-white font-bold mb-4 uppercase tracking-wider text-sm">Directories</h4>
                     <ul class="space-y-2 text-sm">
-                        <li><a href="index.php" class="hover:text-imvidia transition">Home</a></li>
-                        <li><a href="index.php#catalog" class="hover:text-imvidia transition">Product Catalog</a></li>
+                        <li><a href="index.html" class="hover:text-imvidia transition">Home</a></li>
+                        <li><a href="index.html#catalog" class="hover:text-imvidia transition">Product Catalog</a></li>
                     </ul>
                 </div>
                 <div>
@@ -308,25 +375,20 @@ $avatar_url = getAvatarUrl($user['first_name'], $user['last_name'], $user['profi
         </div>
     </footer>
 
-    <!-- Form & Image Logic -->
     <script>
-        // Profile Picture Preview Logic
         function previewAvatar(event) {
             const file = event.target.files[0];
             if (file) {
-                // Ensure it's an image
                 if (!file.type.startsWith('image/')) {
                     alert("Please select a valid image file.");
                     return;
                 }
                 
-                // Max size: 2MB
                 if (file.size > 2 * 1024 * 1024) {
                     alert("Profile picture must be less than 2MB.");
                     return;
                 }
 
-                // Temporary local preview
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     document.getElementById('avatar-preview').src = e.target.result;
@@ -334,11 +396,7 @@ $avatar_url = getAvatarUrl($user['first_name'], $user['last_name'], $user['profi
                 reader.readAsDataURL(file);
             }
         }
-    </script>
 
-    <!-- Global Layout Logic -->
-    <script>
-        // 1. Dark Mode
         function updateLogoForMode() {
             const logo = document.getElementById('navbarLogo');
             if (!logo) return;
@@ -366,7 +424,6 @@ $avatar_url = getAvatarUrl($user['first_name'], $user['last_name'], $user['profi
             updateDarkToggleIcon();
         });
 
-        // 2. Cart Badge Memory
         function updateCartBadge() {
             let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
