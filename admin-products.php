@@ -154,23 +154,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $sort = $_GET['sort'] ?? 'newest';
+$selected_category = $_GET['category'] ?? 'all';
+$allowed_filters = ['all', 'kitchen', 'home', 'portable', 'personal', 'audio'];
+if (!in_array($selected_category, $allowed_filters, true)) {
+    $selected_category = 'all';
+}
+
 $products = [];
+
+$where_clause = '';
+if ($selected_category !== 'all') {
+    $category_sql = mysqli_real_escape_string($conn, $selected_category);
+    $where_clause = " WHERE LOWER(category) = '$category_sql'";
+}
 
 switch ($sort) {
     case 'price_low':
-        $products_query = "SELECT * FROM product ORDER BY price ASC";
+        $products_query = "SELECT * FROM product" . $where_clause . " ORDER BY price ASC";
         break;
     case 'price_high':
-        $products_query = "SELECT * FROM product ORDER BY price DESC";
+        $products_query = "SELECT * FROM product" . $where_clause . " ORDER BY price DESC";
         break;
     case 'name_asc':
-        $products_query = "SELECT * FROM product ORDER BY name ASC";
+        $products_query = "SELECT * FROM product" . $where_clause . " ORDER BY name ASC";
         break;
     case 'name_desc':
-        $products_query = "SELECT * FROM product ORDER BY name DESC";
+        $products_query = "SELECT * FROM product" . $where_clause . " ORDER BY name DESC";
         break;
     default:
-        $products_query = "SELECT * FROM product ORDER BY created_at DESC";
+        $products_query = "SELECT * FROM product" . $where_clause . " ORDER BY created_at DESC";
 }
 
 $products_result = mysqli_query($conn, $products_query);
@@ -214,7 +226,7 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
                     <?php endif; ?>
 
                     <div class="mb-6 flex items-center justify-between">
-                        <div class="flex items-center space-x-3">
+                        <div class="flex items-center flex-wrap gap-3">
                             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Sort by:</span>
                             <select id="sortSelect" onchange="updateSort()" class="px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition cursor-pointer bg-white dark:bg-slate-800">
                                 <option value="newest" <?php echo ($sort === 'newest') ? 'selected' : ''; ?>>Newest First</option>
@@ -222,6 +234,16 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
                                 <option value="name_desc" <?php echo ($sort === 'name_desc') ? 'selected' : ''; ?>>Name (Z-A)</option>
                                 <option value="price_low" <?php echo ($sort === 'price_low') ? 'selected' : ''; ?>>Price (Low to High)</option>
                                 <option value="price_high" <?php echo ($sort === 'price_high') ? 'selected' : ''; ?>>Price (High to Low)</option>
+                            </select>
+
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Filter:</span>
+                            <select id="categoryFilter" onchange="updateSort()" class="px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition cursor-pointer bg-white dark:bg-slate-800">
+                                <option value="all" <?php echo ($selected_category === 'all') ? 'selected' : ''; ?>>All Products</option>
+                                <option value="kitchen" <?php echo ($selected_category === 'kitchen') ? 'selected' : ''; ?>>Kitchen</option>
+                                <option value="home" <?php echo ($selected_category === 'home') ? 'selected' : ''; ?>>Home</option>
+                                <option value="portable" <?php echo ($selected_category === 'portable') ? 'selected' : ''; ?>>Portable</option>
+                                <option value="personal" <?php echo ($selected_category === 'personal') ? 'selected' : ''; ?>>Personal</option>
+                                <option value="audio" <?php echo ($selected_category === 'audio') ? 'selected' : ''; ?>>Audio Visual</option>
                             </select>
                         </div>
                         <div class="text-sm text-gray-500 dark:text-gray-400">
@@ -431,20 +453,24 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
 
                             <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800">
                                 <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2 border-b border-gray-100 dark:border-slate-800 pb-3">Gallery Images</h3>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Add up to 5 gallery images.</p>
+                                <div class="mb-4 flex items-center justify-between">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Add up to 5 gallery images.</p>
+                                    <span id="gallery-counter" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-gray-300">0 of 5 images</span>
+                                </div>
                                 
                                 <div id="gallery-dropzone" class="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:border-imvidia dark:hover:border-imvidia bg-gray-50 dark:bg-slate-800/50 transition-colors group">
                                     <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 dark:text-gray-500 group-hover:text-imvidia mb-3 transition-colors"></i>
                                     <span class="text-sm font-medium text-gray-900 dark:text-white">Click to upload or drag and drop</span>
                                     <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">PNG, JPG, GIF, or WebP (max. 5MB each)</span>
                                 </div>
-                                
+
                                 <?php if ($edit_mode && !empty($existing_gallery_images)): ?>
-                                        <div id="existing-gallery-container" class="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                                    <div class="mt-6">
+                                        <div id="existing-gallery-container" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                                             <?php foreach ($existing_gallery_images as $idx => $gal_img): ?>
                                                 <div class="relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700 shadow-sm group bg-gray-100 dark:bg-slate-800" data-gallery-id="<?php echo $gal_img['id']; ?>">
                                                     <img src="<?php echo htmlspecialchars($gal_img['image_url']); ?>" alt="Gallery Image <?php echo $idx + 1; ?>" class="w-full h-full object-cover">
-                                                    <div class="absolute top-1 right-1 bg-gray-800 text-white text-xs px-2 py-1 rounded"><?php echo $idx + 1; ?>/5</div>
+                                                    <div class="absolute top-1 right-1 bg-gray-800/90 text-white text-xs px-2 py-1 rounded gallery-order-badge"><?php echo $idx + 1; ?>/5</div>
                                                     <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                                                         <button type="button" class="delete-gallery-btn w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition transform hover:scale-110 shadow-lg" data-gallery-id="<?php echo $gal_img['id']; ?>" title="Delete Image">
                                                             <i class="fa-solid fa-trash-can text-sm"></i>
@@ -455,8 +481,8 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
                                         </div>
                                     </div>
                                 <?php endif; ?>
-                                
-                                <div id="gallery-preview-container" class="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-4"></div>
+
+                                <div id="gallery-preview-container" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-6"></div>
                                 
                                 <input name="gallery_images[]" type="file" id="gallery-upload" accept="image/*" multiple class="hidden">
                                 <input type="hidden" id="deleted-gallery-ids" name="deleted_gallery_ids" value="">
@@ -672,15 +698,49 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
         const galleryCounter = document.getElementById('gallery-counter');
         const deletedIdsInput = document.getElementById('deleted-gallery-ids');
         const existingGalleryContainer = document.getElementById('existing-gallery-container');
+
+        function getCurrentExistingCount() {
+            return existingGalleryContainer ? existingGalleryContainer.querySelectorAll('[data-gallery-id]').length : 0;
+        }
+
+        function refreshExistingGalleryBadges() {
+            if (!existingGalleryContainer) {
+                return;
+            }
+
+            const tiles = existingGalleryContainer.querySelectorAll('[data-gallery-id]');
+            tiles.forEach((tile, idx) => {
+                const badge = tile.querySelector('.gallery-order-badge');
+                if (badge) {
+                    badge.textContent = `${idx + 1}/${MAX_GALLERY_IMAGES}`;
+                }
+            });
+        }
+
+        function refreshPreviewBadges(existingCount) {
+            const previewTiles = galleryPreviewContainer.querySelectorAll('[data-preview-index]');
+            previewTiles.forEach((tile, idx) => {
+                const badge = tile.querySelector('.gallery-order-badge');
+                if (badge) {
+                    badge.textContent = `${existingCount + idx + 1}/${MAX_GALLERY_IMAGES}`;
+                }
+            });
+        }
+
+        function refreshAllGalleryBadges() {
+            refreshExistingGalleryBadges();
+            refreshPreviewBadges(getCurrentExistingCount());
+        }
         
         function getCurrentGalleryCount() {
-            const existingCount = existingGalleryContainer ? existingGalleryContainer.querySelectorAll('[data-gallery-id]:not(.deleted)').length : 0;
-            return existingCount + galleryFiles.length;
+            return getCurrentExistingCount() + galleryFiles.length;
         }
         
         function updateGalleryCounter() {
             const count = getCurrentGalleryCount();
-            galleryCounter.textContent = `${count} of ${MAX_GALLERY_IMAGES} images`;
+            if (galleryCounter) {
+                galleryCounter.textContent = `${count} of ${MAX_GALLERY_IMAGES} images`;
+            }
             
             if (count >= MAX_GALLERY_IMAGES) {
                 galleryDropzone.classList.add('opacity-50', 'pointer-events-none');
@@ -754,16 +814,17 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
         
 function renderGalleryPreviews() {
     galleryPreviewContainer.innerHTML = '';
-    const existingCount = existingGalleryContainer ? existingGalleryContainer.querySelectorAll('[data-gallery-id]:not(.deleted)').length : 0;
+    const existingCount = getCurrentExistingCount();
     
     galleryFiles.forEach((file, index) => {
         const imgUrl = URL.createObjectURL(file);
         
         const previewDiv = document.createElement('div');
+        previewDiv.setAttribute('data-preview-index', index.toString());
         previewDiv.className = "relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700 shadow-sm group bg-gray-100 dark:bg-slate-800";
         previewDiv.innerHTML = `
             <img src="${imgUrl}" class="w-full h-full object-cover">
-            <div class="absolute top-1 right-1 bg-gray-800 text-white text-xs px-2 py-1 rounded">${existingCount + index + 1}/5</div>
+            <div class="absolute top-1 right-1 bg-gray-800 text-white text-xs px-2 py-1 rounded gallery-order-badge">${existingCount + index + 1}/5</div>
             <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                 <button type="button" onclick="removeGalleryImage(${index})" class="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition transform hover:scale-110 shadow-lg" title="Remove Image">
                     <i class="fa-solid fa-trash-can text-sm"></i>
@@ -772,7 +833,8 @@ function renderGalleryPreviews() {
         `;
         galleryPreviewContainer.appendChild(previewDiv);
     });
-    
+
+    refreshPreviewBadges(existingCount);
     updateGalleryCounter();
 }
         
@@ -781,26 +843,34 @@ function renderGalleryPreviews() {
             renderGalleryPreviews();
         }
         
-        document.querySelectorAll('.delete-gallery-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                const galleryId = btn.getAttribute('data-gallery-id');
-                const tile = btn.closest('[data-gallery-id]');
-                
-                if (!deletedGalleryIds.includes(galleryId)) {
-                    deletedGalleryIds.push(galleryId);
-                }
-                
-                tile.classList.add('deleted', 'opacity-50');
-                btn.disabled = true;
-                
-                deletedIdsInput.value = deletedGalleryIds.join(',');
-                
-                updateGalleryCounter();
-            });
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.delete-gallery-btn');
+            if (!btn) {
+                return;
+            }
+
+            e.preventDefault();
+            const galleryId = btn.getAttribute('data-gallery-id');
+            const tile = btn.closest('[data-gallery-id]');
+
+            if (!galleryId || !tile) {
+                return;
+            }
+
+            if (!deletedGalleryIds.includes(galleryId)) {
+                deletedGalleryIds.push(galleryId);
+            }
+
+            tile.remove();
+            deletedIdsInput.value = deletedGalleryIds.join(',');
+            refreshAllGalleryBadges();
+            renderGalleryPreviews();
+            updateGalleryCounter();
         });
         
         document.addEventListener('DOMContentLoaded', () => {
+            galleryFiles = [];
+            refreshAllGalleryBadges();
             updateGalleryCounter();
         });
     </script>
@@ -808,7 +878,8 @@ function renderGalleryPreviews() {
     <script>
         function updateSort() {
             const sortValue = document.getElementById('sortSelect').value;
-            window.location.href = `?sort=${sortValue}`;
+            const categoryValue = document.getElementById('categoryFilter').value;
+            window.location.href = `?sort=${encodeURIComponent(sortValue)}&category=${encodeURIComponent(categoryValue)}`;
         }
 
         function deleteProduct(productId, productName) {
@@ -877,20 +948,19 @@ function renderGalleryPreviews() {
     </script>
 
     <script>
-        const baseToggleDarkMode = window.toggleDarkMode;
-
-        function toggleDarkMode() {
-            if (typeof baseToggleDarkMode === 'function') {
-                baseToggleDarkMode();
-            }
-
-            if (isTinyMCEInitialized && tinymce.get('product-editor')) {
-                tinymce.remove('#product-editor');
-                initTinyMCE();
-            }
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
+            const darkToggleBtn = document.getElementById('dark-mode-toggle');
+            if (darkToggleBtn) {
+                darkToggleBtn.addEventListener('click', () => {
+                    if (isTinyMCEInitialized && tinymce.get('product-editor')) {
+                        setTimeout(() => {
+                            tinymce.remove('#product-editor');
+                            initTinyMCE();
+                        }, 0);
+                    }
+                });
+            }
+
             <?php if ($edit_mode): ?>
                 showAddProductForm();
             <?php endif; ?>

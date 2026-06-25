@@ -12,8 +12,15 @@ if (!isset($admin_data) || !is_array($admin_data)) {
 $full_name = htmlspecialchars(($admin_data['first_name'] ?? 'Admin') . ' ' . ($admin_data['last_name'] ?? 'User'));
 $profile_pic = !empty($admin_data['profile_picture']) ? htmlspecialchars($admin_data['profile_picture']) : '';
 $admin_avatar = !empty($profile_pic) ? $profile_pic : getAvatarUrl($admin_data['first_name'] ?? 'Admin', $admin_data['last_name'] ?? 'User', '', true);
+$order_count_badge = isset($admin_order_count) ? (int) $admin_order_count : 0;
 
 $current_page = basename($_SERVER['PHP_SELF']);
+$admin_page_title_map = [
+    'admin.php' => 'Dashboard Overview',
+    'admin-products.php' => 'Product Management',
+    'admin-profile.php' => 'Admin Profile'
+];
+$admin_page_title = $admin_page_title_map[$current_page] ?? 'Admin Panel';
 ?>
 
 <aside class="w-64 bg-white dark:bg-slate-900 shadow-xl border-r border-gray-100 dark:border-slate-800 hidden md:flex flex-col z-20 transition-all duration-300 relative">
@@ -37,11 +44,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <a href="#" class="flex items-center px-4 py-3 rounded-lg transition text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia">
             <i class="fa-solid fa-cart-shopping w-6"></i>
             <span class="font-medium">Orders</span>
-            <span id="order-count-badge" class="ml-auto bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-gray-400 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
-        </a>
-        <a href="#" class="flex items-center px-4 py-3 rounded-lg transition text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia">
-            <i class="fa-solid fa-users w-6"></i>
-            <span class="font-medium">Customers</span>
+            <span id="order-count-badge" class="ml-auto bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-gray-400 text-xs font-bold px-2 py-0.5 rounded-full"><?php echo number_format($order_count_badge); ?></span>
         </a>
     </nav>
 
@@ -62,7 +65,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
         </button>
 
         <div class="hidden md:flex items-center">
-            <h1 class="text-lg font-semibold text-gray-900 dark:text-white">Admin Dashboard</h1>
+            <h1 class="text-lg font-semibold text-gray-900 dark:text-white"><?php echo htmlspecialchars($admin_page_title); ?></h1>
         </div>
 
         <div class="flex items-center space-x-6">
