@@ -1,4 +1,4 @@
-![Imvidia Electronics](assets/gitbanner2.png)
+![Imvidia Electronics](assets/gitbanner3.png)
 # Imvidia Electronics
 "Powering Lives, at a Better Price."
 
