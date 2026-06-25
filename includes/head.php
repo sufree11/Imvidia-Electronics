@@ -1,70 +1,99 @@
-<?php
-/**
- * Common HTML Head Section
- * Includes: Meta tags, Tailwind CSS, Font Awesome, Google Fonts, Dark Mode CSS
- * 
- * Usage: Include this at the beginning of <head> tag
- * Example: <?php include 'includes/head.php'; ?>
- */
-?>
+<?php ?>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script>
-        // Dark mode and logo switching utilities
-        function updateLogos() {
-            const isDark = document.documentElement.classList.contains('dark');
-            const logos = document.querySelectorAll('.theme-logo');
-            logos.forEach(logo => {
-                if (logo.dataset && logo.dataset.dark && logo.dataset.light) {
-                    logo.src = isDark ? logo.dataset.dark : logo.dataset.light;
+        (function() {
+            const html = document.documentElement;
+
+            function isDarkMode() {
+                return html.classList.contains('dark');
+            }
+
+            function setThemeStorage(isDark) {
+                localStorage.theme = isDark ? 'dark' : 'light';
+                localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+                localStorage.setItem('imvidiaDarkMode', isDark ? 'true' : 'false');
+            }
+
+            function applyInitialTheme() {
+                const forceDark = localStorage.getItem('darkMode') === 'enabled' || localStorage.getItem('imvidiaDarkMode') === 'true';
+                const legacyDark = localStorage.theme === 'dark';
+                const prefersDark = !localStorage.theme && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (forceDark || legacyDark || prefersDark) {
+                    html.classList.add('dark');
                 }
+            }
+
+            window.updateDarkModeIcon = function updateDarkModeIcon() {
+                const icon = document.getElementById('dark-mode-icon');
+                if (!icon) {
+                    return;
+                }
+
+                const isDark = isDarkMode();
+                icon.classList.remove(isDark ? 'fa-moon' : 'fa-sun');
+                icon.classList.add(isDark ? 'fa-sun' : 'fa-moon');
+            };
+
+            window.updateLogos = function updateLogos() {
+                const isDark = isDarkMode();
+                const lightSrc = 'assets/logo.svg';
+                const darkSrc = 'assets/logo-light.svg';
+
+                document.querySelectorAll('.theme-logo').forEach((logo) => {
+                    if (logo.dataset && logo.dataset.dark && logo.dataset.light) {
+                        logo.src = isDark ? logo.dataset.dark : logo.dataset.light;
+                    }
+                });
+
+                document.querySelectorAll('.navbar-logo').forEach((el) => {
+                    if (el && el.tagName === 'IMG') {
+                        el.src = isDark ? darkSrc : lightSrc;
+                    }
+                });
+
+                const bigLogo = document.getElementById('bigLogo');
+                if (bigLogo && bigLogo.tagName === 'IMG') {
+                    bigLogo.src = isDark ? darkSrc : lightSrc;
+                }
+
+                const icon = document.querySelector('link[rel="icon"]');
+                if (icon) {
+                    icon.href = isDark ? darkSrc : lightSrc;
+                }
+            };
+
+            window.toggleDarkMode = function toggleDarkMode() {
+                html.classList.toggle('dark');
+                const isDark = isDarkMode();
+                setThemeStorage(isDark);
+                window.updateDarkModeIcon();
+                window.updateLogos();
+            };
+
+            applyInitialTheme();
+
+            document.addEventListener('DOMContentLoaded', function() {
+                window.updateDarkModeIcon();
+                window.updateLogos();
             });
-        }
 
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-            updateDarkModeIcon();
-            updateLogos();
-        }
-
-        function updateDarkModeIcon() {
-            const isDark = document.documentElement.classList.contains('dark');
-            const icon = document.getElementById('dark-mode-icon');
-            if (icon) {
-                icon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            if (localStorage.theme === 'dark' || (!localStorage.theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark');
-            }
-            updateDarkModeIcon();
-            updateLogos();
-        });
-
-        const observer = new MutationObserver(updateLogos);
-        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+            const observer = new MutationObserver(window.updateLogos);
+            observer.observe(html, { attributes: true, attributeFilter: ['class'] });
+        })();
     </script>
     <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
 
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Font Awesome Icon Library -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Google Fonts (Inter) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Iconify Icon Library -->
     <script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js"></script>
 
-    <!-- ImVidia Global Stylesheet -->
     <link rel="stylesheet" href="includes/styles.css">
 
-    <!-- Tailwind Configuration -->
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -83,60 +112,3 @@
         }
     </script>
 
-    <!-- Dark Mode Script -->
-    <script>
-        // Check for saved dark mode preference or default to light mode
-        if (localStorage.getItem('darkMode') === 'enabled' || localStorage.getItem('imvidiaDarkMode') === 'true') {
-            document.documentElement.classList.add('dark');
-        }
-
-        function toggleDarkMode() {
-            const html = document.documentElement;
-            if (html.classList.contains('dark')) {
-                html.classList.remove('dark');
-                localStorage.setItem('darkMode', 'disabled');
-                localStorage.setItem('imvidiaDarkMode', 'false');
-                updateDarkModeIcon();
-                updateLogos();
-            } else {
-                html.classList.add('dark');
-                localStorage.setItem('darkMode', 'enabled');
-                localStorage.setItem('imvidiaDarkMode', 'true');
-                updateDarkModeIcon();
-                updateLogos();
-            }
-        }
-
-        function updateDarkModeIcon() {
-            const icon = document.getElementById('dark-mode-icon');
-            if (icon) {
-                const isDark = document.documentElement.classList.contains('dark');
-                icon.classList.remove(isDark ? 'fa-moon' : 'fa-sun');
-                icon.classList.add(isDark ? 'fa-sun' : 'fa-moon');
-            }
-        }
-
-        function updateLogos() {
-            const isDark = document.documentElement.classList.contains('dark');
-            const lightSrc = 'assets/logo.svg';
-            const darkSrc = 'assets/logo-light.svg';
-
-            // Swap navbar logos and big page logos
-            document.querySelectorAll('.navbar-logo').forEach(el => {
-                if (el && el.tagName === 'IMG') el.src = isDark ? darkSrc : lightSrc;
-            });
-
-            const bigLogo = document.getElementById('bigLogo');
-            if (bigLogo && bigLogo.tagName === 'IMG') bigLogo.src = isDark ? darkSrc : lightSrc;
-
-            // Swap favicon
-            const icon = document.querySelector('link[rel="icon"]');
-            if (icon) icon.href = isDark ? darkSrc : lightSrc;
-        }
-
-        // Update icon and logos on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            updateDarkModeIcon();
-            updateLogos();
-        });
-    </script>

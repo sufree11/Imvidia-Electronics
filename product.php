@@ -1,35 +1,32 @@
 <?php
-require_once 'db/session.php'; // Ensures database is connected and session is started
+require_once 'db/session.php';
 require_once 'includes/auth.php';
 require_once 'includes/helpers.php';
 
-// Get user data or guest status for the navbar
 $user = checkCustomerOrGuest();
 
-// 1. Get product ID from URL parameter safely
-if (!isset($_GET['id']) || empty($_GET['id'])) {
+function renderNotFound() {
     http_response_code(404);
     include 'error.php';
     exit();
 }
 
+if (!isset($_GET['id']) || empty($_GET['id'])) {
+    renderNotFound();
+}
+
 $product_id = intval($_GET['id']);
 
-// 2. Fetch product from database using native mysqli
 $product_query = "SELECT * FROM product WHERE product_id = $product_id LIMIT 1";
 $product_result = mysqli_query($conn, $product_query);
 
-// 3. If product not found in database, trigger 404
 if (!$product_result || mysqli_num_rows($product_result) === 0) {
-    http_response_code(404);
-    include 'error.php';
-    exit();
+    renderNotFound();
 }
 
 $product = mysqli_fetch_assoc($product_result);
 $main_image = !empty($product['image_url']) ? htmlspecialchars($product['image_url']) : 'https://ui-avatars.com/api/?name=No+Image&background=f1f5f9&color=94a3b8';
 
-// 4. Fetch gallery images
 $gallery_images = [];
 $gal_query = "SELECT image_url FROM product_gallery WHERE product_id = $product_id ORDER BY id ASC";
 $gal_result = mysqli_query($conn, $gal_query);
@@ -52,7 +49,6 @@ if ($gal_result && mysqli_num_rows($gal_result) > 0) {
 
     <?php include 'includes/navbar-customer.php'; ?>
 
-    <!-- Breadcrumb Navigation -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
         <nav class="flex text-sm text-gray-500 dark:text-gray-400 font-medium">
             <a href="index.php" class="hover:text-imvidia transition">Home</a>
@@ -63,18 +59,14 @@ if ($gal_result && mysqli_num_rows($gal_result) > 0) {
         </nav>
     </div>
 
-    <!-- Product Layout -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 w-full flex-grow">
         <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden flex flex-col md:flex-row">
-            
-            <!-- Left Side: Image Gallery -->
+
             <div class="w-full md:w-1/2 p-6 md:p-10 border-b md:border-b-0 md:border-r border-gray-100 dark:border-slate-800 flex flex-col">
-                <!-- Main Image -->
                 <div class="flex-grow flex items-center justify-center bg-gray-50 dark:bg-slate-800/50 rounded-2xl mb-6 p-4 md:p-8 aspect-square relative group">
                     <img id="main-product-image" src="<?php echo $main_image; ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="max-w-full max-h-full object-contain drop-shadow-lg transition-transform duration-500 group-hover:scale-105">
                 </div>
 
-                <!-- Thumbnails (Strictly Gallery Images Only) -->
                 <?php if (count($gallery_images) > 0): ?>
                     <div class="grid grid-cols-4 sm:grid-cols-5 gap-3">
                         <?php foreach($gallery_images as $gal_img): ?>
@@ -86,9 +78,7 @@ if ($gal_result && mysqli_num_rows($gal_result) > 0) {
                 <?php endif; ?>
             </div>
 
-            <!-- Right Side: Details -->
             <div class="w-full md:w-1/2 p-6 md:p-12 flex flex-col justify-center">
-                <!-- Badges -->
                 <div class="flex items-center space-x-3 mb-4">
                     <span class="px-3 py-1 bg-imvidia/10 text-imvidia dark:bg-imvidia/20 dark:text-imvidia-light rounded-full text-xs font-bold uppercase tracking-wider">
                         <?php echo htmlspecialchars($product['category']); ?>
@@ -112,15 +102,12 @@ if ($gal_result && mysqli_num_rows($gal_result) > 0) {
                     RM <?php echo number_format($product['price'], 2); ?>
                 </p>
 
-                <!-- Render TinyMCE HTML Safely with Scrollable Container -->
                 <div class="prose dark:prose-invert mb-10 max-w-none desc-scroll-container">
                     <?php 
-                    // No htmlspecialchars here, we WANT the HTML tags from TinyMCE to render!
                     echo $product['description']; 
                     ?>
                 </div>
 
-                <!-- Add to Cart Actions -->
                 <div class="mt-auto pt-4">
                     <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Quantity</label>
                     <div class="flex items-center space-x-4">
@@ -148,7 +135,6 @@ if ($gal_result && mysqli_num_rows($gal_result) > 0) {
     <?php include 'includes/footer.php'; ?>
 
     <script>
-        // 1. Gallery JS
         function changeMainImage(src) {
             const mainImg = document.getElementById('main-product-image');
             mainImg.style.opacity = '0.5';
@@ -158,7 +144,6 @@ if ($gal_result && mysqli_num_rows($gal_result) > 0) {
             }, 150);
         }
 
-        // 2. Qty JS
         function incrementQty(max) {
             const input = document.getElementById('qty');
             if (parseInt(input.value) < max) {
@@ -172,7 +157,6 @@ if ($gal_result && mysqli_num_rows($gal_result) > 0) {
             }
         }
 
-        // 3. Cart Memory & Stock Validation JS
         function updateCartBadge() {
             let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -214,7 +198,6 @@ if ($gal_result && mysqli_num_rows($gal_result) > 0) {
             alert(`Added ${qty}x ${productName} to your cart!`);
         }
 
-        // Initialize cart logic
         document.addEventListener('DOMContentLoaded', updateCartBadge);
     </script>
 </body>

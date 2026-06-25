@@ -1,15 +1,5 @@
 <?php
-/**
- * Admin Navbar/Sidebar Component
- * Main navigation sidebar + header for admin pages
- * 
- * Requires: $admin_data (array with admin user info from getAdminUserData())
- * Example: 
- * $admin_data = getAdminUserData();
- * include 'includes/navbar-admin.php';
- */
 
-// If $admin_data not provided, try to get it
 if (!isset($admin_data) || !is_array($admin_data)) {
     $admin_data = [
         'id' => null,
@@ -26,10 +16,8 @@ $admin_avatar = !empty($profile_pic) ? $profile_pic : getAvatarUrl($admin_data['
 $current_page = basename($_SERVER['PHP_SELF']);
 ?>
 
-<!-- SIDEBAR -->
 <aside class="w-64 bg-white dark:bg-slate-900 shadow-xl border-r border-gray-100 dark:border-slate-800 hidden md:flex flex-col z-20 transition-all duration-300 relative">
-    
-    <!-- Sidebar Header -->
+
     <div class="h-16 flex items-center px-6 border-b border-gray-100 dark:border-slate-800 w-full">
         <a href="index.php" class="flex items-center cursor-pointer hover:scale-105 transition transform duration-300" title="Go to Store">
             <img class="theme-logo h-8 w-auto mr-2" data-light="assets/logo.svg" data-dark="assets/logo-light.svg" src="assets/logo.svg" alt="ImVidia Logo">
@@ -37,7 +25,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
         </a>
     </div>
 
-    <!-- Sidebar Links -->
     <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
         <a href="admin.php" class="flex items-center px-4 py-3 rounded-lg shadow-sm transition transform hover:-translate-y-0.5 <?php echo $current_page === 'admin.php' ? 'bg-imvidia text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia'; ?>">
             <i class="fa-solid fa-chart-pie w-6"></i>
@@ -58,7 +45,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
         </a>
     </nav>
 
-    <!-- Logout Button -->
     <div class="p-4 border-t border-gray-100 dark:border-slate-800">
         <a href="logout.php" class="flex items-center px-4 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition group">
             <i class="fa-solid fa-arrow-right-from-bracket w-6 group-hover:-translate-x-1 transition"></i>
@@ -67,26 +53,20 @@ $current_page = basename($_SERVER['PHP_SELF']);
     </div>
 </aside>
 
-<!-- MAIN CONTENT WRAPPER -->
 <div class="flex-1 flex flex-col h-screen overflow-hidden relative">
-    
-    <!-- HEADER -->
+
     <header class="h-16 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-sm border-b border-gray-100 dark:border-slate-800 flex items-center justify-between px-6 z-10">
-        
-        <!-- Left: Hamburger Menu (Mobile) -->
+
         <button class="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:text-imvidia transition">
             <i class="fa-solid fa-bars text-xl"></i>
         </button>
 
-        <!-- Center: Page Title (Optional) -->
         <div class="hidden md:flex items-center">
             <h1 class="text-lg font-semibold text-gray-900 dark:text-white">Admin Dashboard</h1>
         </div>
 
-        <!-- Right: Admin Info + Dark Mode Toggle + Dropdown -->
         <div class="flex items-center space-x-6">
-            
-            <!-- Dark Mode Toggle -->
+
             <button id="dark-mode-toggle" type="button" class="p-2 rounded-full text-gray-600 hover:text-imvidia transition dark:text-gray-300" aria-label="Toggle dark mode" onclick="toggleDarkMode()">
                 <i id="dark-mode-icon" class="fa-solid fa-moon"></i>
             </button>

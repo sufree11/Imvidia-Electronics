@@ -2,16 +2,71 @@
 require_once 'includes/auth.php';
 require_once 'includes/helpers.php';
 
-// Require admin login
 requireAdminLogin();
 
-// Get admin data for navbar
 $admin_data = getAdminUserData();
 
 $message = '';
 $msg_type = '';
 
-// Check if we're in edit mode
+function fetchGalleryImages($product_id) {
+    global $conn;
+
+    $images = [];
+    $gallery_query = "SELECT * FROM product_gallery WHERE product_id = $product_id ORDER BY id ASC";
+    $gallery_result = mysqli_query($conn, $gallery_query);
+    if ($gallery_result && mysqli_num_rows($gallery_result) > 0) {
+        while ($gallery = mysqli_fetch_assoc($gallery_result)) {
+            $images[] = $gallery;
+        }
+    }
+
+    return $images;
+}
+
+function saveGalleryUploads($product_id) {
+    global $conn;
+
+    if (!isset($_FILES['gallery_images']) || !is_array($_FILES['gallery_images']['name'])) {
+        return;
+    }
+
+    $file_count = count($_FILES['gallery_images']['name']);
+    for ($i = 0; $i < $file_count; $i++) {
+        if ($_FILES['gallery_images']['error'][$i] !== UPLOAD_ERR_OK) {
+            continue;
+        }
+
+        $file = [
+            'name' => $_FILES['gallery_images']['name'][$i],
+            'type' => $_FILES['gallery_images']['type'][$i],
+            'tmp_name' => $_FILES['gallery_images']['tmp_name'][$i],
+            'error' => $_FILES['gallery_images']['error'][$i],
+            'size' => $_FILES['gallery_images']['size'][$i]
+        ];
+
+        $upload_result = uploadToS3($file, 'products/gallery/gallery_', time() . '_' . rand(1000, 9999) . '_' . $i);
+        if ($upload_result['success']) {
+            $gallery_image_url = mysqli_real_escape_string($conn, $upload_result['url']);
+            mysqli_query($conn, "INSERT INTO product_gallery (product_id, image_url, created_at) VALUES ($product_id, '$gallery_image_url', NOW())");
+        }
+    }
+}
+
+function deleteMarkedGalleryImages($product_id, $deleted_ids_csv) {
+    global $conn;
+
+    if (empty($deleted_ids_csv)) {
+        return;
+    }
+
+    $deleted_ids = explode(',', $deleted_ids_csv);
+    foreach ($deleted_ids as $del_id) {
+        $del_id = intval($del_id);
+        mysqli_query($conn, "DELETE FROM product_gallery WHERE id = $del_id AND product_id = $product_id");
+    }
+}
+
 $edit_mode = false;
 $product_to_edit = null;
 $existing_gallery_images = [];
@@ -22,21 +77,12 @@ if (isset($_GET['edit'])) {
     if ($edit_result && mysqli_num_rows($edit_result) > 0) {
         $product_to_edit = mysqli_fetch_assoc($edit_result);
         $edit_mode = true;
-        
-        // Fetch existing gallery images
-        $gallery_query = "SELECT * FROM product_gallery WHERE product_id = $product_id ORDER BY id ASC";
-        $gallery_result = mysqli_query($conn, $gallery_query);
-        if ($gallery_result && mysqli_num_rows($gallery_result) > 0) {
-            while ($gallery = mysqli_fetch_assoc($gallery_result)) {
-                $existing_gallery_images[] = $gallery;
-            }
-        }
+
+        $existing_gallery_images = fetchGalleryImages($product_id);
     }
 }
 
-// Handle POST requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Check if this is a delete request
     if (isset($_POST['action']) && $_POST['action'] === 'delete' && isset($_POST['product_id'])) {
         $product_id = intval($_POST['product_id']);
         $delete_query = "DELETE FROM product WHERE product_id = $product_id";
@@ -49,7 +95,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $msg_type = "error";
         }
     } else {
-        // Add or update product
         $name = mysqli_real_escape_string($conn, $_POST['product_name'] ?? '');
         $price = floatval($_POST['product_price'] ?? 0);
         $category = mysqli_real_escape_string($conn, $_POST['product_category'] ?? 'Uncategorized');
@@ -59,7 +104,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $image_url = '';
         $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
 
-        // Handle image upload
         if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
             $upload_result = uploadToS3($_FILES['product_image'], 'products/prod_', time() . '_' . rand(100,999));
             
@@ -73,7 +117,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($msg_type !== "error") {
             if ($product_id > 0) {
-                // Update existing product
                 if (!empty($image_url)) {
                     $update_query = "UPDATE product SET name='$name', description='$desc', price=$price, category='$category', stock_quantity=$stock, image_url='" . mysqli_real_escape_string($conn, $image_url) . "' WHERE product_id=$product_id";
                 } else {
@@ -81,36 +124,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 
                 if (mysqli_query($conn, $update_query)) {
-                    // Handle gallery images on update
-                    if (isset($_POST['deleted_gallery_ids']) && !empty($_POST['deleted_gallery_ids'])) {
-                        $deleted_ids = explode(',', $_POST['deleted_gallery_ids']);
-                        foreach ($deleted_ids as $del_id) {
-                            $del_id = intval($del_id);
-                            mysqli_query($conn, "DELETE FROM product_gallery WHERE id = $del_id AND product_id = $product_id");
-                        }
-                    }
-                    
-                    // Upload new gallery images if any
-                    if (isset($_FILES['gallery_images']) && is_array($_FILES['gallery_images']['name'])) {
-                        $file_count = count($_FILES['gallery_images']['name']);
-                        for ($i = 0; $i < $file_count; $i++) {
-                            if ($_FILES['gallery_images']['error'][$i] === UPLOAD_ERR_OK) {
-                                $file = [
-                                    'name' => $_FILES['gallery_images']['name'][$i],
-                                    'type' => $_FILES['gallery_images']['type'][$i],
-                                    'tmp_name' => $_FILES['gallery_images']['tmp_name'][$i],
-                                    'error' => $_FILES['gallery_images']['error'][$i],
-                                    'size' => $_FILES['gallery_images']['size'][$i]
-                                ];
-                                
-                                $upload_result = uploadToS3($file, 'products/gallery/gallery_', time() . '_' . rand(1000, 9999) . '_' . $i);
-                                if ($upload_result['success']) {
-                                    $gallery_image_url = mysqli_real_escape_string($conn, $upload_result['url']);
-                                    mysqli_query($conn, "INSERT INTO product_gallery (product_id, image_url, created_at) VALUES ($product_id, '$gallery_image_url', NOW())");
-                                }
-                            }
-                        }
-                    }
+                    deleteMarkedGalleryImages($product_id, $_POST['deleted_gallery_ids'] ?? '');
+                    saveGalleryUploads($product_id);
                     
                     $message = "Product updated successfully!";
                     $msg_type = "success";
@@ -120,34 +135,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $msg_type = "error";
                 }
             } else {
-                // Insert new product
                 $insert_query = "INSERT INTO product (name, description, price, category, stock_quantity, image_url, admin_id, created_at) 
                                  VALUES ('$name', '$desc', '$price', '$category', '$stock', '" . mysqli_real_escape_string($conn, $image_url) . "', " . $_SESSION['user_id'] . ", NOW())";
                 
                 if (mysqli_query($conn, $insert_query)) {
                     $new_product_id = mysqli_insert_id($conn);
-                    
-                    // Upload gallery images for new product
-                    if (isset($_FILES['gallery_images']) && is_array($_FILES['gallery_images']['name'])) {
-                        $file_count = count($_FILES['gallery_images']['name']);
-                        for ($i = 0; $i < $file_count; $i++) {
-                            if ($_FILES['gallery_images']['error'][$i] === UPLOAD_ERR_OK) {
-                                $file = [
-                                    'name' => $_FILES['gallery_images']['name'][$i],
-                                    'type' => $_FILES['gallery_images']['type'][$i],
-                                    'tmp_name' => $_FILES['gallery_images']['tmp_name'][$i],
-                                    'error' => $_FILES['gallery_images']['error'][$i],
-                                    'size' => $_FILES['gallery_images']['size'][$i]
-                                ];
-                                
-                                $upload_result = uploadToS3($file, 'products/gallery/gallery_', time() . '_' . rand(1000, 9999) . '_' . $i);
-                                if ($upload_result['success']) {
-                                    $gallery_image_url = mysqli_real_escape_string($conn, $upload_result['url']);
-                                    mysqli_query($conn, "INSERT INTO product_gallery (product_id, image_url, created_at) VALUES ($new_product_id, '$gallery_image_url', NOW())");
-                                }
-                            }
-                        }
-                    }
+                    saveGalleryUploads($new_product_id);
                     
                     $message = "Product added successfully!";
                     $msg_type = "success";
@@ -160,7 +153,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch all products
 $sort = $_GET['sort'] ?? 'newest';
 $products = [];
 
@@ -177,7 +169,7 @@ switch ($sort) {
     case 'name_desc':
         $products_query = "SELECT * FROM product ORDER BY name DESC";
         break;
-    default: // 'newest'
+    default:
         $products_query = "SELECT * FROM product ORDER BY created_at DESC";
 }
 
@@ -221,7 +213,6 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
                         </div>
                     <?php endif; ?>
 
-                    <!-- Sorting Controls -->
                     <div class="mb-6 flex items-center justify-between">
                         <div class="flex items-center space-x-3">
                             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Sort by:</span>
@@ -239,7 +230,6 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
                     </div>
 
                     <?php if (empty($products)): ?>
-                        <!-- Empty State -->
                         <div class="flex flex-col items-center justify-center py-24 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-dashed border-gray-300 dark:border-slate-700">
                             <a href="https://www.google.com/logos/2010/pacman10-i.html" target="_blank" rel="noopener noreferrer" title="A blue ghost...">
                                 <i class="fa-solid fa-ghost text-6xl text-gray-300 dark:text-slate-600 mb-4 hover:text-imvidia duration-300 hover:scale-110 text-imvidia transition transform"></i>
@@ -248,11 +238,9 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
                             <p class="text-gray-400 dark:text-gray-500 mt-2 text-sm">Products will appear here once you add them.</p>
                         </div>
                     <?php else: ?>
-                        <!-- Products Grid -->
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             <?php foreach ($products as $product): ?>
                                 <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden hover:shadow-md transition">
-                                    <!-- Product Image -->
                                     <div class="relative h-48 bg-gray-100 dark:bg-slate-800 overflow-hidden group">
                                         <?php if (!empty($product['image_url'])): ?>
                                             <img src="<?php echo htmlspecialchars($product['image_url']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="w-full h-full object-contain group-hover:scale-105 transition duration-300">
@@ -263,7 +251,6 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
                                         <?php endif; ?>
                                     </div>
 
-                                    <!-- Product Info -->
                                     <div class="p-4 space-y-3">
                                         <div>
                                             <h3 class="font-bold text-gray-900 dark:text-white text-lg truncate"><?php echo htmlspecialchars($product['name']); ?></h3>
@@ -281,7 +268,6 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
                                             </div>
                                         </div>
 
-                                        <!-- Action Buttons -->
                                         <div class="flex gap-3 pt-2 border-t border-gray-100 dark:border-slate-700">
                                             <button onclick="editProduct(<?php echo $product['product_id']; ?>)" class="flex-1 py-2 px-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition text-sm font-medium flex items-center justify-center">
                                                 <i class="fa-solid fa-pencil mr-1.5"></i> Edit
@@ -425,14 +411,12 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
                             <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800">
                                 <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b border-gray-100 dark:border-slate-800 pb-3">Product Thumbnail <span class="text-red-500">*</span></h3>
                                 
-                                <!-- Upload Badge (shown when no thumbnail) -->
                                 <div id="image-dropzone" class="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-lg p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:border-imvidia dark:hover:border-imvidia bg-gray-50 dark:bg-slate-800/50 transition-colors group">
                                     <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 dark:text-gray-500 group-hover:text-imvidia mb-3 transition-colors"></i>
                                     <span class="text-sm font-medium text-gray-900 dark:text-white">Click to upload or drag and drop</span>
                                     <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">PNG, JPG, GIF, or WebP (max. 5MB)</span>
                                 </div>
                                 
-                                <!-- Thumbnail Display (shown when image exists) -->
                                 <div id="image-preview-container" class="hidden relative w-full aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700 shadow-sm group bg-gray-100 dark:bg-slate-800">
                                     <img id="thumbnail-img" src="" alt="Product Thumbnail" class="w-full h-full object-contain">
                                     <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
@@ -449,14 +433,12 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
                                 <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2 border-b border-gray-100 dark:border-slate-800 pb-3">Gallery Images</h3>
                                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Add up to 5 gallery images.</p>
                                 
-                                <!-- Upload Badge for Gallery -->
                                 <div id="gallery-dropzone" class="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:border-imvidia dark:hover:border-imvidia bg-gray-50 dark:bg-slate-800/50 transition-colors group">
                                     <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 dark:text-gray-500 group-hover:text-imvidia mb-3 transition-colors"></i>
                                     <span class="text-sm font-medium text-gray-900 dark:text-white">Click to upload or drag and drop</span>
                                     <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">PNG, JPG, GIF, or WebP (max. 5MB each)</span>
                                 </div>
                                 
-                                <!-- Existing gallery images (edit mode) -->
                                 <?php if ($edit_mode && !empty($existing_gallery_images)): ?>
                                         <div id="existing-gallery-container" class="grid grid-cols-3 sm:grid-cols-4 gap-3">
                                             <?php foreach ($existing_gallery_images as $idx => $gal_img): ?>
@@ -474,7 +456,6 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
                                     </div>
                                 <?php endif; ?>
                                 
-                                <!-- New uploaded gallery images preview -->
                                 <div id="gallery-preview-container" class="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-4"></div>
                                 
                                 <input name="gallery_images[]" type="file" id="gallery-upload" accept="image/*" multiple class="hidden">
@@ -568,24 +549,20 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
         function handleFormSubmit(event) {
             tinymce.triggerSave();
             
-            // Validate that at least one thumbnail exists
             if (!currentThumbnailFile) {
                 event.preventDefault();
                 alert('Please upload a product thumbnail before submitting.');
                 return;
             }
             
-            // Only add file to input if it's a new upload (not an existing image from DB)
             if (currentThumbnailFile && !currentThumbnailFile.isExisting) {
                 const dataTransfer = new DataTransfer();
                 dataTransfer.items.add(currentThumbnailFile);
                 document.getElementById('thumbnail-upload').files = dataTransfer.files;
             } else {
-                // Clear the file input if using existing image
                 document.getElementById('thumbnail-upload').value = '';
             }
             
-            // Add gallery images to the form
             if (galleryFiles.length > 0) {
                 const galleryDataTransfer = new DataTransfer();
                 galleryFiles.forEach(file => {
@@ -630,7 +607,6 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
         });
 
         function handleFiles(files) {
-            // Only accept one file at a time
             const file = files[0];
             
             if (!file) return;
@@ -672,19 +648,16 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
             displayThumbnail();
         });
 
-        // Initialize with existing image if in edit mode
         function initializeEditModePreview() {
             const existingImageUrl = document.getElementById('existing-image-url');
             if (existingImageUrl && existingImageUrl.value) {
                 thumbnailImg.src = existingImageUrl.value;
                 previewContainer.classList.remove('hidden');
                 dropzone.classList.add('hidden');
-                // Mark that we have an existing image (no file object, but image exists)
                 currentThumbnailFile = { isExisting: true };
             }
         }
 
-        // Call on page load if in edit mode
         document.addEventListener('DOMContentLoaded', initializeEditModePreview);
     </script>
 
@@ -700,7 +673,6 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
         const deletedIdsInput = document.getElementById('deleted-gallery-ids');
         const existingGalleryContainer = document.getElementById('existing-gallery-container');
         
-        // Get current count of existing gallery images
         function getCurrentGalleryCount() {
             const existingCount = existingGalleryContainer ? existingGalleryContainer.querySelectorAll('[data-gallery-id]:not(.deleted)').length : 0;
             return existingCount + galleryFiles.length;
@@ -710,7 +682,6 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
             const count = getCurrentGalleryCount();
             galleryCounter.textContent = `${count} of ${MAX_GALLERY_IMAGES} images`;
             
-            // Disable dropzone if max reached
             if (count >= MAX_GALLERY_IMAGES) {
                 galleryDropzone.classList.add('opacity-50', 'pointer-events-none');
             } else {
@@ -786,7 +757,6 @@ function renderGalleryPreviews() {
     const existingCount = existingGalleryContainer ? existingGalleryContainer.querySelectorAll('[data-gallery-id]:not(.deleted)').length : 0;
     
     galleryFiles.forEach((file, index) => {
-        // Generate a synchronous, temporary URL for the image
         const imgUrl = URL.createObjectURL(file);
         
         const previewDiv = document.createElement('div');
@@ -811,36 +781,30 @@ function renderGalleryPreviews() {
             renderGalleryPreviews();
         }
         
-        // Handle delete button for existing gallery images
         document.querySelectorAll('.delete-gallery-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
                 const galleryId = btn.getAttribute('data-gallery-id');
                 const tile = btn.closest('[data-gallery-id]');
                 
-                // Add to deleted list
                 if (!deletedGalleryIds.includes(galleryId)) {
                     deletedGalleryIds.push(galleryId);
                 }
                 
-                // Mark as deleted visually
                 tile.classList.add('deleted', 'opacity-50');
                 btn.disabled = true;
                 
-                // Update hidden input
                 deletedIdsInput.value = deletedGalleryIds.join(',');
                 
                 updateGalleryCounter();
             });
         });
         
-        // Initialize counter on page load
         document.addEventListener('DOMContentLoaded', () => {
             updateGalleryCounter();
         });
     </script>
 
-    <!-- Product Management Scripts -->
     <script>
         function updateSort() {
             const sortValue = document.getElementById('sortSelect').value;
@@ -885,7 +849,6 @@ function renderGalleryPreviews() {
             `;
             document.body.appendChild(modal);
             
-            // Close modal when clicking outside
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     closeDeleteModal();
@@ -914,25 +877,12 @@ function renderGalleryPreviews() {
     </script>
 
     <script>
-        function updateLogoForMode() {
-            const logo = document.getElementById('navbarLogo');
-            if (!logo) return;
-            logo.src = document.documentElement.classList.contains('dark') ? 'assets/logo-light.svg' : 'assets/logo.svg';
-        }
-
-        function updateDarkToggleIcon() {
-            const icon = document.getElementById('dark-mode-icon');
-            if (!icon) return;
-            icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun text-lg' : 'fa-solid fa-moon text-lg';
-        }
+        const baseToggleDarkMode = window.toggleDarkMode;
 
         function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            const isDark = document.documentElement.classList.contains('dark');
-            localStorage.setItem('imvidiaDarkMode', isDark ? 'true' : 'false');
-            
-            updateLogoForMode();
-            updateDarkToggleIcon();
+            if (typeof baseToggleDarkMode === 'function') {
+                baseToggleDarkMode();
+            }
 
             if (isTinyMCEInitialized && tinymce.get('product-editor')) {
                 tinymce.remove('#product-editor');
@@ -941,14 +891,6 @@ function renderGalleryPreviews() {
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            const stored = localStorage.getItem('imvidiaDarkMode');
-            if (stored === 'true') {
-                document.documentElement.classList.add('dark');
-            }
-            updateLogoForMode();
-            updateDarkToggleIcon();
-            
-            // Auto-open edit form if in edit mode
             <?php if ($edit_mode): ?>
                 showAddProductForm();
             <?php endif; ?>

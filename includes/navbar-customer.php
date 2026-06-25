@@ -1,25 +1,11 @@
 <?php
-/**
- * Customer Navbar Component
- * Main navigation bar for customer-facing pages
- * Also displays Admin Panel access for logged-in admins
- * 
- * Requires: $user (array with user data from checkCustomerOrGuest() or manual fetch)
- * Example: 
- * $user = checkCustomerOrGuest();
- * include 'includes/navbar-customer.php';
- */
 
-// If $user not provided, try to get it - check for both customer and admin
-if (!isset($user) || !is_array($user)) {
-    // First check if it's an admin
-    $admin_check = checkAdminOrGuest();
-    if ($admin_check['is_admin']) {
-        $user = $admin_check;
-    } else {
-        // Otherwise check for customer
-        $user = checkCustomerOrGuest();
-    }
+$admin_check = checkAdminOrGuest();
+
+if ($admin_check['is_admin']) {
+    $user = $admin_check;
+} elseif (!isset($user) || !is_array($user)) {
+    $user = checkCustomerOrGuest();
 }
 
 $is_logged_in = $user['is_logged_in'] ?? false;
@@ -54,13 +40,11 @@ $avatar_url = !empty($user['profile_picture']) ? htmlspecialchars($user['profile
 
             <div class="flex items-center space-x-4">
                 <?php if ($is_admin): ?>
-                    <!-- Admin logged in - show admin panel access only -->
                     <a href="admin.php" class="flex items-center cursor-pointer hover:opacity-80 transition group">
                         <img class="navbar-logo h-8 w-auto mr-2" src="assets/logo.svg" alt="Admin Panel">
                         <span class="hidden md:inline font-bold text-sm tracking-tight text-gray-900 dark:text-white group-hover:text-imvidia transition">Admin<span class="text-imvidia">Panel</span></span>
                     </a>
                 <?php elseif ($is_logged_in): ?>
-                    <!-- Customer logged in - show profile and cart -->
                     <div class="hidden md:block mr-2 text-right">
                         <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Welcome, <?php echo htmlspecialchars($first_name); ?>.</span>
                     </div>
@@ -74,7 +58,6 @@ $avatar_url = !empty($user['profile_picture']) ? htmlspecialchars($user['profile
                         </span>
                     </button>
                 <?php else: ?>
-                    <!-- Guest - show login/register and cart -->
                     <div class="hidden md:flex items-center space-x-4">
                         <a href="login.php" class="text-sm font-semibold text-gray-600 hover:text-imvidia transition dark:text-gray-300">Log In</a>
                         <a href="register.php" class="text-sm font-bold bg-imvidia hover:bg-imvidia-dark text-white px-4 py-2 rounded-lg shadow-md transition transform hover:-translate-y-0.5">Register</a>

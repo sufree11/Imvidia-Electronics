@@ -6,7 +6,6 @@ require_once 'includes/helpers.php';
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Get and sanitize form inputs
     $fname = mysqli_real_escape_string($conn, trim($_POST['fname'] ?? ''));
     $lname = mysqli_real_escape_string($conn, trim($_POST['lname'] ?? ''));
     $email = mysqli_real_escape_string($conn, trim($_POST['email'] ?? ''));
@@ -17,45 +16,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $address_zip = mysqli_real_escape_string($conn, trim($_POST['address_zip'] ?? ''));
     $password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
+    $required = [$fname, $lname, $email, $phone, $address_street, $address_city, $address_state, $address_zip, $password];
     
-    // Validate required fields
-    if (empty($fname) || empty($lname) || empty($email) || empty($phone) || 
-        empty($address_street) || empty($address_city) || empty($address_state) || 
-        empty($address_zip) || empty($password)) {
+    if (in_array('', $required, true)) {
         $error_message = "All fields are required.";
-    }
-    // Validate email format
-    elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error_message = "Please enter a valid email address.";
-    }
-    // Validate password length
-    elseif (strlen($password) < 8) {
+    } elseif (strlen($password) < 8) {
         $error_message = "Password must be at least 8 characters long.";
-    }
-    // Validate passwords match
-    elseif ($password !== $confirm_password) {
+    } elseif ($password !== $confirm_password) {
         $error_message = "Passwords do not match.";
-    }
-    // Check if email already exists
-    elseif (!empty($error_message) === false) {
+    } else {
         $check_email = "SELECT id FROM users WHERE email = '$email' LIMIT 1";
         $check_result = mysqli_query($conn, $check_email);
         
         if (mysqli_num_rows($check_result) > 0) {
             $error_message = "This email address is already registered.";
         } else {
-            // Insert user with plain text password
-            $password_escaped = mysqli_real_escape_string($conn, $password);
+            $password_hash = mysqli_real_escape_string($conn, hashPassword($password));
             
             $insert_query = "INSERT INTO users 
                             (first_name, last_name, email, phone, password_hash, 
                              address_street, address_city, address_state, address_zip, role) 
                             VALUES 
-                            ('$fname', '$lname', '$email', '$phone', '$password_escaped', 
+                            ('$fname', '$lname', '$email', '$phone', '$password_hash', 
                              '$address_street', '$address_city', '$address_state', '$address_zip', 'customer')";
             
             if (mysqli_query($conn, $insert_query)) {
-                // Registration successful, redirect to login
                 header("Location: login.php");
                 exit();
             } else {
@@ -216,38 +203,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             regConfirm.addEventListener('input', validatePasswords);
         }
 
-        
-        function updateLogoForMode() {
-            const logo = document.getElementById('navbarLogo');
-            if (!logo) return;
-            logo.src = document.documentElement.classList.contains('dark') ? 'assets/logo-light.svg' : 'assets/logo.svg';
-        }
-
-        function updateDarkToggleIcon() {
-            const icon = document.getElementById('dark-mode-icon');
-            if (!icon) return;
-            icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
-        }
-
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            const isDark = document.documentElement.classList.contains('dark');
-            localStorage.setItem('imvidiaDarkMode', isDark ? 'true' : 'false');
-            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
-            if (typeof updateLogos === 'function') updateLogos();
-            if (typeof updateDarkModeIcon === 'function') updateDarkModeIcon();
-            updateLogoForMode();
-            updateDarkToggleIcon();
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const stored = localStorage.getItem('imvidiaDarkMode');
-            if (stored === 'true') {
-                document.documentElement.classList.add('dark');
-            }
-            updateLogoForMode();
-            updateDarkToggleIcon();
-        });
     </script>
 </body>
 </html>

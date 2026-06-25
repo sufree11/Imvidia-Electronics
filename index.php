@@ -2,16 +2,9 @@
 require_once 'includes/auth.php';
 require_once 'includes/helpers.php';
 
-// Get user data (customer, admin, or guest)
 $customer = checkCustomerOrGuest();
 $admin = checkAdminOrGuest();
-
-// Determine which user is logged in
-if ($admin['is_admin']) {
-    $user = $admin;
-} else {
-    $user = $customer;
-}
+$user = $admin['is_admin'] ? $admin : $customer;
 ?>
 
 <!DOCTYPE html>
@@ -56,7 +49,6 @@ if ($admin['is_admin']) {
     </header>
 
     <?php
-    // Pre-load all products and organize them into arrays by category
     $products_by_category = [
         'kitchen' => [],
         'audio' => [],
@@ -65,7 +57,6 @@ if ($admin['is_admin']) {
         'home' => []
     ];
 
-    // Using your exact 'product' table and 'product_id'
     $catalog_query = "SELECT * FROM product ORDER BY product_id DESC";
     $catalog_result = mysqli_query($conn, $catalog_query);
 
@@ -81,7 +72,6 @@ if ($admin['is_admin']) {
 
     <div id="catalog" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 w-full">
         
-        <!-- STRICT GRID LAYOUT: Forces all 5 buttons to be identical width in a single row, no weird resizing! -->
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 lg:gap-6 mt-12 relative z-10 w-full">
             <button id="cat-kitchen" onclick="toggleCategory('Kitchen Appliances', 'cat-kitchen')" class="category-btn w-full relative pt-4 px-4 pb-8 backdrop-blur-lg flex flex-col items-center justify-center border-2 border-gray-200 dark:border-slate-800 rounded-xl hover:border-imvidia hover:bg-imvidia dark:hover:bg-imvidia hover:shadow-md transition duration-300 group min-h-[140px]">
                 <iconify-icon icon="material-symbols-light:kitchen-outline" class="z-10 text-5xl text-gray-500 dark:text-gray-400 transition duration-300 transform group-hover:text-white group-hover:scale-110"></iconify-icon>
@@ -119,19 +109,15 @@ if ($admin['is_admin']) {
             </button>
         </div>
 
-        <!-- MAIN BIG DROPDOWN CONTAINER WRAPPER -->
         <div id="productContainer" class="dropdown-wrapper mt-6 relative z-0 w-full">
-            <!-- This inner div is what slides down -->
             <div class="dropdown-inner w-full">
-                
-                <!-- THE LARGE BACKGROUND AREA BEHIND THE PRODUCTS -->
+
                 <div class="w-full bg-white dark:bg-slate-900/80 rounded-[2rem] shadow-sm border border-gray-200 dark:border-slate-800 p-6 md:p-10 backdrop-blur-md">
                     
                     <?php foreach($products_by_category as $cat_key => $products): ?>
                         <div id="grid-<?php echo $cat_key; ?>" class="category-grid hidden w-full">
                             
                             <?php if (count($products) > 0): ?>
-                                <!-- LOCKED 3-COLUMN GRID: Prevents shrinking or stretching. 1 item takes 1 slot! -->
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
                                     
                                     <?php foreach($products as $prod):
@@ -141,7 +127,6 @@ if ($admin['is_admin']) {
                                         $prod_cat = htmlspecialchars($prod['category']);
                                         $prod_img = !empty($prod['image_url']) ? htmlspecialchars($prod['image_url']) : 'https://ui-avatars.com/api/?name=No+Image&background=f1f5f9&color=94a3b8';
                                     ?>
-                                        <!-- INDIVIDUAL PRODUCT OUTLINE/BOX -->
                                         <div class="group relative bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 transition hover:shadow-lg flex flex-col h-80 w-full">
                                             <div class="w-full h-48 bg-white dark:bg-slate-700 rounded-xl overflow-hidden group-hover:opacity-75 flex items-center justify-center p-2">
                                                 <img src="<?php echo $prod_img; ?>" alt="<?php echo $prod_name; ?>" class="max-w-full max-h-full object-contain drop-shadow-md">
@@ -163,7 +148,6 @@ if ($admin['is_admin']) {
                                     
                                 </div>
                             <?php else: ?>
-                                <!-- Ghost Empty State centered perfectly across the full width -->
                                 <div class="col-span-1 md:col-span-3 flex flex-col items-center justify-center py-16 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-dashed border-gray-300 dark:border-slate-700 w-full">
                                     <a href="https://www.google.com/logos/2010/pacman10-i.html" target="_blank" rel="noopener noreferrer" title="A blue ghost...">
                                         <i class="fa-solid fa-ghost text-6xl text-gray-300 dark:text-slate-600 mb-4 hover:text-imvidia duration-300 hover:scale-110 transition transform"></i>
@@ -183,7 +167,6 @@ if ($admin['is_admin']) {
 
     <?php include 'includes/footer.php'; ?>
 
-    <!-- Carousel & Product Toggle Scripts -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const images = document.querySelectorAll('.carousel-image');
@@ -244,7 +227,6 @@ if ($admin['is_admin']) {
         });
     </script>
 
-    <!-- Upgraded Category Anim -->
     <script>
         let activeCategoryId = null;
 
@@ -255,13 +237,11 @@ if ($admin['is_admin']) {
             
             const categoryKey = btnId.replace('cat-', '');
 
-            // Hide ALL category grids first
             document.querySelectorAll('.category-grid').forEach(grid => {
                 grid.classList.add('hidden');
             });
 
             if (activeCategoryId === btnId) {
-                // Clicking the same button closes the slider
                 container.classList.remove('open');
                 clickedArrow.classList.remove('rotate-180', 'text-imvidia', 'opacity-100');
                 activeCategoryId = null;
@@ -274,7 +254,6 @@ if ($admin['is_admin']) {
                     }
                 }
 
-                // Show the specific grid we requested
                 const targetGrid = document.getElementById('grid-' + categoryKey);
                 if (targetGrid) {
                     targetGrid.classList.remove('hidden');
@@ -282,11 +261,8 @@ if ($admin['is_admin']) {
 
                 const catText = document.getElementById('text-' + categoryKey);
                 if (catText) {
-                    if (categoryName === 'Audio Visual' || categoryName === 'Personal Care') {
-                        catText.innerText = categoryName + " products will appear here.";
-                    } else {
-                        catText.innerText = categoryName + " will appear here.";
-                    }
+                    const suffix = (categoryName === 'Audio Visual' || categoryName === 'Personal Care') ? ' products will appear here.' : ' will appear here.';
+                    catText.innerText = categoryName + suffix;
                 }
 
                 container.classList.add('open');
@@ -304,43 +280,6 @@ if ($admin['is_admin']) {
         }
     </script>
 
-    <!-- Dark Mode Scripts -->
-    <script>
-        function updateLogoForMode() {
-            const logo = document.getElementById('navbarLogo');
-            if (!logo) return;
-            logo.src = document.documentElement.classList.contains('dark') ? 'assets/logo-light.svg' : 'assets/logo.svg';
-        }
-
-        function updateDarkToggleIcon() {
-            const icon = document.getElementById('dark-mode-icon');
-            if (!icon) return;
-            icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
-        }
-
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            const isDark = document.documentElement.classList.contains('dark');
-            localStorage.setItem('imvidiaDarkMode', isDark ? 'true' : 'false');
-            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
-            if (typeof updateLogos === 'function') updateLogos();
-            if (typeof updateDarkModeIcon === 'function') updateDarkModeIcon();
-
-            updateLogoForMode();
-            updateDarkToggleIcon();
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('imvidiaDarkMode') === 'true') {
-                document.documentElement.classList.add('dark');
-            }
-            if (typeof updateLogos === 'function') updateLogos();
-            updateLogoForMode();
-            updateDarkToggleIcon();
-        });
-    </script>
-
-    <!-- Cart Logic -->
     <script>
         function updateCartBadge() {
             let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];

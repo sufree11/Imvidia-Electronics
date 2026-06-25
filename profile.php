@@ -1,15 +1,8 @@
 <?php
 require_once 'includes/auth.php';
-require_once 'db/database.php';
+require_once 'includes/helpers.php';
 
-header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-header('Cache-Control: post-check=0, pre-check=0', false);
-header('Pragma: no-cache');
-
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'customer') {
-    header("Location: login.php");
-    exit();
-}
+requireCustomerLogin();
 
 $user = checkCustomerOrGuest();
 $user_id = $_SESSION['user_id'];
@@ -33,7 +26,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $avatar_query_part = "";
     $password_query_part = "";
     
-    // Process Password Change
     if (!empty($current_password) || !empty($new_password) || !empty($confirm_new_password)) {
         $pass_check_query = "SELECT password_hash FROM users WHERE id = '$user_id' LIMIT 1";
         $pass_check_result = mysqli_query($conn, $pass_check_query);
@@ -49,13 +41,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = "New password must be at least 8 characters.";
             $msg_type = "error";
         } else {
-            // Hash the new password properly before saving
             $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
             $password_query_part = ", password_hash='$hashed_password'";
         }
     }
     
-    // Process Profile Picture (Local Upload)
     if ($msg_type !== "error" && isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
         $upload_dir_absolute = __DIR__ . '/uploads/avatars/';
         $upload_dir_relative = 'uploads/avatars/';
@@ -85,7 +75,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Execute Final Database Update
     if ($msg_type !== "error") {
         $update_query = "UPDATE users SET 
                             first_name='$fname', 
@@ -127,40 +116,13 @@ $states = [
     'SGR' => 'Selangor', 'TRG' => 'Terengganu'
 ];
 
-$avatar_url = !empty($user['profile_picture']) 
-    ? htmlspecialchars($user['profile_picture']) 
-    : "https://ui-avatars.com/api/?name=" . urlencode(($user['first_name']??'') . ' ' . ($user['last_name']??'')) . "&background=49C2FA&color=fff&size=128";
+$avatar_url = getAvatarUrl($user['first_name'] ?? '', $user['last_name'] ?? '', $user['profile_picture'] ?? '');
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile - ImVidia</title>
-    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js"></script>
-
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        imvidia: {
-                            light: '#8DFFFF',
-                            DEFAULT: '#49C2FA',
-                            dark: '#1F2468',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <?php include 'includes/head.php'; ?>
 
     <style>
         :root {
@@ -187,14 +149,12 @@ $avatar_url = !empty($user['profile_picture'])
         .dark .bg-gray-900 { background-color: #020617 !important; }
         .dark .border-gray-100, .dark .border-gray-200 { border-color: var(--border-color) !important; }
     </style>
-    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100">
     
     <?php include 'includes/navbar-customer.php'; ?>
 
-    <!-- Main Content -->
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full relative z-10">
         
         <nav class="flex text-xs font-medium text-gray-400 dark:text-slate-500 mb-8 uppercase tracking-widest" aria-label="Breadcrumb">
@@ -395,39 +355,6 @@ $avatar_url = !empty($user['profile_picture'])
                 reader.readAsDataURL(file);
             }
         }
-
-        function updateLogoForMode() {
-            const logo = document.getElementById('navbarLogo');
-            if (!logo) return;
-            logo.src = document.documentElement.classList.contains('dark') ? 'assets/logo-light.svg' : 'assets/logo.svg';
-        }
-
-        function updateDarkToggleIcon() {
-            const icon = document.getElementById('dark-mode-icon');
-            if (!icon) return;
-            icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
-        }
-
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            const isDark = document.documentElement.classList.contains('dark');
-            localStorage.setItem('imvidiaDarkMode', isDark ? 'true' : 'false');
-            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
-            if (typeof updateLogos === 'function') updateLogos();
-            if (typeof updateDarkModeIcon === 'function') updateDarkModeIcon();
-
-            updateLogoForMode();
-            updateDarkToggleIcon();
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('imvidiaDarkMode') === 'true') {
-                document.documentElement.classList.add('dark');
-            }
-            if (typeof updateLogos === 'function') updateLogos();
-            updateLogoForMode();
-            updateDarkToggleIcon();
-        });
 
         function updateCartBadge() {
             let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];

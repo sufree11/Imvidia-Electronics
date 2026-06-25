@@ -283,28 +283,6 @@ $admin_data = [
             }
         }
 
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            const isDark = document.documentElement.classList.contains('dark');
-            localStorage.setItem('imvidiaDarkMode', isDark ? 'true' : 'false');
-            document.getElementById('dark-mode-icon').className = isDark ? 'fa-solid fa-sun text-lg' : 'fa-solid fa-moon text-lg';
-            // Update all navbar logos (supports multiple logo elements)
-            document.querySelectorAll('.navbar-logo').forEach(img => {
-                if (img && img.tagName === 'IMG') img.src = isDark ? 'assets/logo-light.svg' : 'assets/logo.svg';
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const stored = localStorage.getItem('imvidiaDarkMode');
-            if (stored === 'true') {
-                document.documentElement.classList.add('dark');
-                document.getElementById('dark-mode-icon').className = 'fa-solid fa-sun text-lg';
-                // Ensure any navbar logos update as well
-                document.querySelectorAll('.navbar-logo').forEach(img => {
-                    if (img && img.tagName === 'IMG') img.src = 'assets/logo-light.svg';
-                });
-            }
-        });
     </script>
 </body>
 </html>

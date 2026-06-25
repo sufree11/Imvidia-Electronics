@@ -2,10 +2,8 @@
 require_once 'includes/auth.php';
 require_once 'includes/helpers.php';
 
-// Require admin login
 requireAdminLogin();
 
-// Get admin user data for navbar
 $admin_data = getAdminUserData();
 ?>
 
@@ -20,10 +18,7 @@ $admin_data = getAdminUserData();
 <body class="bg-fixed bg-gray-50 text-gray-800 flex h-screen overflow-hidden dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
 
     <?php include 'includes/navbar-admin.php'; ?>
-            <!--mobile menu (bug) -->
-           
 
-        <!-- dashboard -->
         <main class="flex-1 overflow-y-auto p-6 lg:p-8">
             <div class="max-w-7xl mx-auto">
                 
@@ -32,7 +27,6 @@ $admin_data = getAdminUserData();
                     <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Waiting for database connection to load live metrics.</p>
                 </div>
 
-                <!-- widgets -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     
                     <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 flex items-center">
@@ -76,7 +70,6 @@ $admin_data = getAdminUserData();
                     </div>
                 </div>
 
-                <!-- Recent orders -->
                 <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden">
                     <div class="px-6 py-5 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center">
                         <h3 class="text-lg font-bold text-gray-900 dark:text-white">Recent Orders</h3>
@@ -95,7 +88,6 @@ $admin_data = getAdminUserData();
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- database here -->
                                 <tr>
                                     <td colspan="6" class="px-6 py-16 text-center">
                                         <div class="flex flex-col items-center justify-center">
@@ -105,7 +97,6 @@ $admin_data = getAdminUserData();
                                         </div>
                                     </td>
                                 </tr>
-                                <!-- to here -->
                             </tbody>
                         </table>
                     </div>
@@ -114,43 +105,6 @@ $admin_data = getAdminUserData();
             </div>
         </main>
     </div>
-
-    <!-- Dark mode stuff -->
-    <script>
-        function updateLogoForMode() {
-            const logo = document.getElementById('navbarLogo');
-            if (!logo) return;
-            logo.src = document.documentElement.classList.contains('dark') ? 'assets/logo-light.svg' : 'assets/logo.svg';
-        }
-
-        function updateDarkToggleIcon() {
-            const icon = document.getElementById('dark-mode-icon');
-            if (!icon) return;
-            icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun text-lg' : 'fa-solid fa-moon text-lg';
-        }
-
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            const isDark = document.documentElement.classList.contains('dark');
-            localStorage.setItem('imvidiaDarkMode', isDark ? 'true' : 'false');
-            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
-            if (typeof updateLogos === 'function') updateLogos();
-            if (typeof updateDarkModeIcon === 'function') updateDarkModeIcon();
-
-            updateLogoForMode();
-            updateDarkToggleIcon();
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const stored = localStorage.getItem('imvidiaDarkMode');
-            if (stored === 'true') {
-                document.documentElement.classList.add('dark');
-            }
-            if (typeof updateLogos === 'function') updateLogos();
-            updateLogoForMode();
-            updateDarkToggleIcon();
-        });
-    </script>
 
 </body>
 </html>

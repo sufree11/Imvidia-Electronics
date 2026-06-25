@@ -101,7 +101,6 @@ switch ($error_code) {
     <?php include 'includes/footer.php'; ?>
 
     <script>
-        // Initialize cart logic for the navbar
         function updateCartBadge() {
             let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);

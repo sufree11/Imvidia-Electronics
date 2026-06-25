@@ -5,20 +5,15 @@ require_once 'includes/db-helpers.php';
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    global $conn;
-    
     $role = $_POST['role'] ?? 'customer';
     $identity = trim($_POST['identity'] ?? ''); 
     $password = $_POST['password'] ?? '';
     
     if (!empty($identity) && !empty($password)) {
         $safe_identity = mysqli_real_escape_string($conn, $identity);
-        
-        if ($role === 'admin') {
-            $query = "SELECT id, role, password_hash FROM users WHERE admin_id = '$safe_identity' LIMIT 1";
-        } else {
-            $query = "SELECT id, role, password_hash FROM users WHERE email = '$safe_identity' LIMIT 1";
-        }
+
+        $identity_field = $role === 'admin' ? 'admin_id' : 'email';
+        $query = "SELECT id, role, password_hash FROM users WHERE $identity_field = '$safe_identity' LIMIT 1";
         
         $result = mysqli_query($conn, $query);
         
@@ -168,15 +163,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const submitBtn = document.getElementById('submit-btn');
         const roleInput = document.getElementById('role-input');
 
+        function setActiveTab(activeTab, inactiveTab) {
+            activeTab.classList.add('bg-white', 'dark:bg-slate-700', 'text-gray-900', 'dark:text-white', 'shadow-sm');
+            activeTab.classList.remove('text-gray-500', 'dark:text-gray-400', 'hover:text-gray-700', 'dark:hover:text-gray-200');
+
+            inactiveTab.classList.remove('bg-white', 'dark:bg-slate-700', 'text-gray-900', 'dark:text-white', 'shadow-sm');
+            inactiveTab.classList.add('text-gray-500', 'dark:text-gray-400', 'hover:text-gray-700', 'dark:hover:text-gray-200');
+        }
+
         function switchTab(role) {
             roleInput.value = role;
 
             if (role === 'admin') {
-                tabAdmin.classList.add('bg-white', 'dark:bg-slate-700', 'text-gray-900', 'dark:text-white', 'shadow-sm');
-                tabAdmin.classList.remove('text-gray-500', 'dark:text-gray-400', 'hover:text-gray-700', 'dark:hover:text-gray-200');
-                
-                tabCustomer.classList.remove('bg-white', 'dark:bg-slate-700', 'text-gray-900', 'dark:text-white', 'shadow-sm');
-                tabCustomer.classList.add('text-gray-500', 'dark:text-gray-400', 'hover:text-gray-700', 'dark:hover:text-gray-200');
+                setActiveTab(tabAdmin, tabCustomer);
 
                 identityLabel.innerText = "Admin ID";
                 identityInput.type = "text";
@@ -187,11 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 submitBtn.classList.replace('hover:bg-imvidia-dark', 'hover:bg-gray-800');
 
             } else {
-                tabCustomer.classList.add('bg-white', 'dark:bg-slate-700', 'text-gray-900', 'dark:text-white', 'shadow-sm');
-                tabCustomer.classList.remove('text-gray-500', 'dark:text-gray-400', 'hover:text-gray-700', 'dark:hover:text-gray-200');
-
-                tabAdmin.classList.remove('bg-white', 'dark:bg-slate-700', 'text-gray-900', 'dark:text-white', 'shadow-sm');
-                tabAdmin.classList.add('text-gray-500', 'dark:text-gray-400', 'hover:text-gray-700', 'dark:hover:text-gray-200');
+                setActiveTab(tabCustomer, tabAdmin);
 
                 identityLabel.innerText = "Email Address";
                 identityInput.type = "email";
@@ -203,37 +198,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        function updateLogoForMode() {
-            const logo = document.getElementById('navbarLogo');
-            if (logo) logo.src = document.documentElement.classList.contains('dark') ? 'assets/logo-light.svg' : 'assets/logo.svg';
-            const bigLogo = document.getElementById('bigLogo');
-            if (bigLogo) bigLogo.src = document.documentElement.classList.contains('dark') ? 'assets/logo-light.svg' : 'assets/logo.svg';
-        }
-
-        function updateDarkToggleIcon() {
-            const icon = document.getElementById('dark-mode-icon');
-            if (icon) icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
-        }
-
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            const isDark = document.documentElement.classList.contains('dark');
-            localStorage.setItem('imvidiaDarkMode', isDark ? 'true' : 'false');
-            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
-            if (typeof updateLogos === 'function') updateLogos();
-            if (typeof updateDarkModeIcon === 'function') updateDarkModeIcon();
-            updateLogoForMode();
-            updateDarkToggleIcon();
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const stored = localStorage.getItem('imvidiaDarkMode');
-            if (stored === 'true') {
-                document.documentElement.classList.add('dark');
-            }
-            updateLogoForMode();
-            updateDarkToggleIcon();
-        });
     </script>
 </body>
 </html>
