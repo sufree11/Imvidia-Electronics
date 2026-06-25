@@ -32,7 +32,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <!-- Sidebar Header -->
     <div class="h-16 flex items-center px-6 border-b border-gray-100 dark:border-slate-800 w-full">
         <a href="index.php" class="flex items-center cursor-pointer hover:scale-105 transition transform duration-300" title="Go to Store">
-            <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-8 w-auto mr-2">
+            <img class="theme-logo h-8 w-auto mr-2" data-light="assets/logo.svg" data-dark="assets/logo-light.svg" src="assets/logo.svg" alt="ImVidia Logo">
             <span class="font-bold text-xl tracking-tight text-gray-900 dark:text-white">Admin<span class="text-imvidia">Panel</span></span>
         </a>
     </div>

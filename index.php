@@ -320,7 +320,12 @@ if ($admin['is_admin']) {
 
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
-            localStorage.setItem('imvidiaDarkMode', document.documentElement.classList.contains('dark') ? 'true' : 'false');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('imvidiaDarkMode', isDark ? 'true' : 'false');
+            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+            if (typeof updateLogos === 'function') updateLogos();
+            if (typeof updateDarkModeIcon === 'function') updateDarkModeIcon();
+
             updateLogoForMode();
             updateDarkToggleIcon();
         }
@@ -329,6 +334,7 @@ if ($admin['is_admin']) {
             if (localStorage.getItem('imvidiaDarkMode') === 'true') {
                 document.documentElement.classList.add('dark');
             }
+            if (typeof updateLogos === 'function') updateLogos();
             updateLogoForMode();
             updateDarkToggleIcon();
         });

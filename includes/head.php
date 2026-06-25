@@ -9,6 +9,44 @@
 ?>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Dark mode and logo switching utilities
+        function updateLogos() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const logos = document.querySelectorAll('.theme-logo');
+            logos.forEach(logo => {
+                if (logo.dataset && logo.dataset.dark && logo.dataset.light) {
+                    logo.src = isDark ? logo.dataset.dark : logo.dataset.light;
+                }
+            });
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+            updateDarkModeIcon();
+            updateLogos();
+        }
+
+        function updateDarkModeIcon() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const icon = document.getElementById('dark-mode-icon');
+            if (icon) {
+                icon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (localStorage.theme === 'dark' || (!localStorage.theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+            updateDarkModeIcon();
+            updateLogos();
+        });
+
+        const observer = new MutationObserver(updateLogos);
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    </script>
     <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
 
     <!-- Tailwind CSS CDN -->
@@ -48,7 +86,7 @@
     <!-- Dark Mode Script -->
     <script>
         // Check for saved dark mode preference or default to light mode
-        if (localStorage.getItem('darkMode') === 'enabled') {
+        if (localStorage.getItem('darkMode') === 'enabled' || localStorage.getItem('imvidiaDarkMode') === 'true') {
             document.documentElement.classList.add('dark');
         }
 
@@ -57,11 +95,15 @@
             if (html.classList.contains('dark')) {
                 html.classList.remove('dark');
                 localStorage.setItem('darkMode', 'disabled');
+                localStorage.setItem('imvidiaDarkMode', 'false');
                 updateDarkModeIcon();
+                updateLogos();
             } else {
                 html.classList.add('dark');
                 localStorage.setItem('darkMode', 'enabled');
+                localStorage.setItem('imvidiaDarkMode', 'true');
                 updateDarkModeIcon();
+                updateLogos();
             }
         }
 
@@ -74,6 +116,27 @@
             }
         }
 
-        // Update icon on page load
-        document.addEventListener('DOMContentLoaded', updateDarkModeIcon);
+        function updateLogos() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const lightSrc = 'assets/logo.svg';
+            const darkSrc = 'assets/logo-light.svg';
+
+            // Swap navbar logos and big page logos
+            document.querySelectorAll('.navbar-logo').forEach(el => {
+                if (el && el.tagName === 'IMG') el.src = isDark ? darkSrc : lightSrc;
+            });
+
+            const bigLogo = document.getElementById('bigLogo');
+            if (bigLogo && bigLogo.tagName === 'IMG') bigLogo.src = isDark ? darkSrc : lightSrc;
+
+            // Swap favicon
+            const icon = document.querySelector('link[rel="icon"]');
+            if (icon) icon.href = isDark ? darkSrc : lightSrc;
+        }
+
+        // Update icon and logos on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDarkModeIcon();
+            updateLogos();
+        });
     </script>

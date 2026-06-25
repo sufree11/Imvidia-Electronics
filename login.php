@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-6">
             <div class="flex justify-between md:justify-start h-16 items-center w-full">
                 <a href="index.php" class="flex-shrink-0 flex items-center cursor-pointer hover:scale-105 transition transform duration-300">
-                    <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
+                    <img class="navbar-logo h-10 w-auto mr-2" src="assets/logo.svg" alt="ImVidia Logo">
                     <span class="font-bold text-2xl tracking-tight text-gray-900 dark:text-white" >ImVidia<span class="text-imvidia">.</span></span>
                 </a>
                 <button id="dark-mode-toggle" type="button" class="p-2 rounded-full text-gray-600 hover:text-imvidia transition dark:text-gray-300" aria-label="Toggle dark mode" onclick="toggleDarkMode()">
@@ -217,7 +217,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
-            localStorage.setItem('imvidiaDarkMode', document.documentElement.classList.contains('dark') ? 'true' : 'false');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('imvidiaDarkMode', isDark ? 'true' : 'false');
+            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+            if (typeof updateLogos === 'function') updateLogos();
+            if (typeof updateDarkModeIcon === 'function') updateDarkModeIcon();
             updateLogoForMode();
             updateDarkToggleIcon();
         }

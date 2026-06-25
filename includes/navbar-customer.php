@@ -37,7 +37,7 @@ $avatar_url = !empty($user['profile_picture']) ? htmlspecialchars($user['profile
             
             <div class="flex items-center space-x-6">
                 <a href="index.php" class="flex-shrink-0 flex items-center cursor-pointer hover:opacity-80 transition">
-                    <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
+                    <img class="theme-logo h-10 w-auto mr-2" data-light="assets/logo.svg" data-dark="assets/logo-light.svg" src="assets/logo.svg" alt="ImVidia Logo">
                     <span class="font-bold text-2xl tracking-tight text-gray-900 dark:text-white">ImVidia<span class="text-imvidia">.</span></span>
                 </a>
                 
@@ -56,7 +56,7 @@ $avatar_url = !empty($user['profile_picture']) ? htmlspecialchars($user['profile
                 <?php if ($is_admin): ?>
                     <!-- Admin logged in - show admin panel access only -->
                     <a href="admin.php" class="flex items-center cursor-pointer hover:opacity-80 transition group">
-                        <img src="assets/logo.svg" alt="Admin Panel" class="h-8 w-auto mr-2">
+                        <img class="navbar-logo h-8 w-auto mr-2" src="assets/logo.svg" alt="Admin Panel">
                         <span class="hidden md:inline font-bold text-sm tracking-tight text-gray-900 dark:text-white group-hover:text-imvidia transition">Admin<span class="text-imvidia">Panel</span></span>
                     </a>
                 <?php elseif ($is_logged_in): ?>
