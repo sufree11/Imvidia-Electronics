@@ -2,6 +2,7 @@
 /**
  * Customer Navbar Component
  * Main navigation bar for customer-facing pages
+ * Also displays Admin Panel access for logged-in admins
  * 
  * Requires: $user (array with user data from checkCustomerOrGuest() or manual fetch)
  * Example: 
@@ -9,16 +10,20 @@
  * include 'includes/navbar-customer.php';
  */
 
-// If $user not provided, try to get it
+// If $user not provided, try to get it - check for both customer and admin
 if (!isset($user) || !is_array($user)) {
-    $user = [
-        'is_logged_in' => false,
-        'first_name' => '',
-        'profile_picture' => ''
-    ];
+    // First check if it's an admin
+    $admin_check = checkAdminOrGuest();
+    if ($admin_check['is_admin']) {
+        $user = $admin_check;
+    } else {
+        // Otherwise check for customer
+        $user = checkCustomerOrGuest();
+    }
 }
 
 $is_logged_in = $user['is_logged_in'] ?? false;
+$is_admin = $user['is_admin'] ?? false;
 $first_name = $user['first_name'] ?? '';
 $avatar_url = !empty($user['profile_picture']) ? htmlspecialchars($user['profile_picture']) : 
     (isset($user['first_name'], $user['last_name']) ? 
@@ -48,14 +53,28 @@ $avatar_url = !empty($user['profile_picture']) ? htmlspecialchars($user['profile
             </div>
 
             <div class="flex items-center space-x-4">
-                <?php if ($is_logged_in): ?>
+                <?php if ($is_admin): ?>
+                    <!-- Admin logged in - show admin panel access only -->
+                    <a href="admin.php" class="flex items-center cursor-pointer hover:opacity-80 transition group">
+                        <img src="assets/logo.svg" alt="Admin Panel" class="h-8 w-auto mr-2">
+                        <span class="hidden md:inline font-bold text-sm tracking-tight text-gray-900 dark:text-white group-hover:text-imvidia transition">Admin<span class="text-imvidia">Panel</span></span>
+                    </a>
+                <?php elseif ($is_logged_in): ?>
+                    <!-- Customer logged in - show profile and cart -->
                     <div class="hidden md:block mr-2 text-right">
                         <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Welcome, <?php echo htmlspecialchars($first_name); ?>.</span>
                     </div>
                     <a href="profile.php" class="relative group cursor-pointer transition transform hover:scale-105" title="User Profile">
                         <img src="<?php echo $avatar_url; ?>" alt="Profile Picture" class="w-9 h-9 rounded-full border-2 border-imvidia object-cover bg-white shadow-sm">
                     </a>
+                    <button class="relative p-2 text-gray-600 hover:text-imvidia transition dark:text-gray-300" onclick="viewCart()">
+                        <i class="fa-solid fa-cart-shopping text-xl"></i>
+                        <span id="cart-badge" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-imvidia rounded-full transition-transform duration-200">
+                            0
+                        </span>
+                    </button>
                 <?php else: ?>
+                    <!-- Guest - show login/register and cart -->
                     <div class="hidden md:flex items-center space-x-4">
                         <a href="login.php" class="text-sm font-semibold text-gray-600 hover:text-imvidia transition dark:text-gray-300">Log In</a>
                         <a href="register.php" class="text-sm font-bold bg-imvidia hover:bg-imvidia-dark text-white px-4 py-2 rounded-lg shadow-md transition transform hover:-translate-y-0.5">Register</a>
@@ -63,15 +82,13 @@ $avatar_url = !empty($user['profile_picture']) ? htmlspecialchars($user['profile
                     <a href="login.php" class="md:hidden relative p-2 text-gray-600 hover:text-imvidia transition dark:text-gray-300">
                         <i class="fa-solid fa-user text-xl"></i>
                     </a>
+                    <button class="relative p-2 text-gray-600 hover:text-imvidia transition dark:text-gray-300" onclick="viewCart()">
+                        <i class="fa-solid fa-cart-shopping text-xl"></i>
+                        <span id="cart-badge" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-imvidia rounded-full transition-transform duration-200">
+                            0
+                        </span>
+                    </button>
                 <?php endif; ?>
-
-                <button class="relative p-2 text-gray-600 hover:text-imvidia transition dark:text-gray-300" onclick="viewCart()">
-                    <i class="fa-solid fa-cart-shopping text-xl"></i>
-                    <span id="cart-badge" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-imvidia rounded-full transition-transform duration-200">
-                        0
-                    </span>
-                </button>
-            </div>
         </div>
     </div>
 </nav>

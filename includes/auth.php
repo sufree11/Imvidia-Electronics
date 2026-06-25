@@ -98,6 +98,44 @@ function getAdminUserData() {
     return $user_data;
 }
 
+/**
+ * Check if admin is logged in or return guest
+ * Returns admin info if logged in as admin, otherwise returns guest array
+ * Allows admin to visit customer pages without logging out
+ */
+function checkAdminOrGuest() {
+    global $conn;
+    
+    $user_data = [
+        'is_logged_in' => false,
+        'is_admin' => false,
+        'user_id' => null,
+        'first_name' => '',
+        'last_name' => '',
+        'profile_picture' => ''
+    ];
+    
+    if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'admin') {
+        $user_id = mysqli_real_escape_string($conn, $_SESSION['user_id']);
+        $query = "SELECT id, first_name, last_name, profile_picture FROM users WHERE id = '$user_id' LIMIT 1";
+        $result = mysqli_query($conn, $query);
+        
+        if ($result && mysqli_num_rows($result) > 0) {
+            $row = mysqli_fetch_assoc($result);
+            $user_data = [
+                'is_logged_in' => true,
+                'is_admin' => true,
+                'user_id' => $row['id'],
+                'first_name' => $row['first_name'],
+                'last_name' => $row['last_name'],
+                'profile_picture' => $row['profile_picture']
+            ];
+        }
+    }
+    
+    return $user_data;
+}
+
 // Set cache control headers for all protected pages
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);

@@ -2,8 +2,16 @@
 require_once 'includes/auth.php';
 require_once 'includes/helpers.php';
 
-// Get user data or guest status
-$user = checkCustomerOrGuest();
+// Get user data (customer, admin, or guest)
+$customer = checkCustomerOrGuest();
+$admin = checkAdminOrGuest();
+
+// Determine which user is logged in
+if ($admin['is_admin']) {
+    $user = $admin;
+} else {
+    $user = $customer;
+}
 ?>
 
 <!DOCTYPE html>

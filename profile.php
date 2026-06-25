@@ -1,14 +1,17 @@
 <?php
-session_start();
-
 require_once 'includes/auth.php';
 require_once 'db/database.php';
+
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Cache-Control: post-check=0, pre-check=0', false);
+header('Pragma: no-cache');
 
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'customer') {
     header("Location: login.php");
     exit();
 }
 
+$user = checkCustomerOrGuest();
 $user_id = $_SESSION['user_id'];
 $message = '';
 $msg_type = '';
@@ -36,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pass_check_result = mysqli_query($conn, $pass_check_query);
         $user_data = mysqli_fetch_assoc($pass_check_result);
         
-        if ($current_password !== $user_data['password_hash']) {
+        if ($current_password !== $user_data['password_hash'] && !password_verify($current_password, $user_data['password_hash'])) {
             $message = "Current password is incorrect.";
             $msg_type = "error";
         } else if ($new_password !== $confirm_new_password) {
@@ -46,11 +49,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = "New password must be at least 8 characters.";
             $msg_type = "error";
         } else {
-            $password_query_part = ", password_hash='$new_password'";
+            // Hash the new password properly before saving
+            $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+            $password_query_part = ", password_hash='$hashed_password'";
         }
     }
     
-    // Process Profile Picture
+    // Process Profile Picture (Local Upload)
     if ($msg_type !== "error" && isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
         $upload_dir_absolute = __DIR__ . '/uploads/avatars/';
         $upload_dir_relative = 'uploads/avatars/';
@@ -106,13 +111,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch the updated user data
 $query = "SELECT * FROM users WHERE id = '$user_id' LIMIT 1";
 $result = mysqli_query($conn, $query);
 
-// 🐛 BUG FIX: Don't overwrite the $user array, merge the DB data into it!
+
 $db_user = mysqli_fetch_assoc($result);
-$user = array_merge($user, $db_user);
+if ($db_user) {
+    $user = array_merge($user, $db_user);
+}
 
 $states = [
     'JHR' => 'Johor', 'KDH' => 'Kedah', 'KEL' => 'Kelantan', 'KUL' => 'Kuala Lumpur',
@@ -123,7 +129,7 @@ $states = [
 
 $avatar_url = !empty($user['profile_picture']) 
     ? htmlspecialchars($user['profile_picture']) 
-    : "https://ui-avatars.com/api/?name=" . urlencode($user['first_name'] . ' ' . $user['last_name']) . "&background=49C2FA&color=fff&size=128";
+    : "https://ui-avatars.com/api/?name=" . urlencode(($user['first_name']??'') . ' ' . ($user['last_name']??'')) . "&background=49C2FA&color=fff&size=128";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -193,9 +199,7 @@ $avatar_url = !empty($user['profile_picture'])
         
         <nav class="flex text-xs font-medium text-gray-400 dark:text-slate-500 mb-8 uppercase tracking-widest" aria-label="Breadcrumb">
             <ol class="inline-flex items-center space-x-2">
-                <li><a href="index.html" class="hover:text-imvidia transition">Home</a></li>
-                <li><span class="mx-1">/</span></li>
-                <li><a href="#" class="hover:text-imvidia transition">My Account</a></li>
+                <li><a href="index.php" class="hover:text-imvidia transition">Home</a></li>
                 <li><span class="mx-1">/</span></li>
                 <li><span class="text-gray-600 dark:text-gray-300">Profile Settings</span></li>
             </ol>
@@ -353,8 +357,8 @@ $avatar_url = !empty($user['profile_picture'])
                 <div>
                     <h4 class="text-white font-bold mb-4 uppercase tracking-wider text-sm">Directories</h4>
                     <ul class="space-y-2 text-sm">
-                        <li><a href="index.html" class="hover:text-imvidia transition">Home</a></li>
-                        <li><a href="index.html#catalog" class="hover:text-imvidia transition">Product Catalog</a></li>
+                        <li><a href="index.php" class="hover:text-imvidia transition">Home</a></li>
+                        <li><a href="index.php#catalog" class="hover:text-imvidia transition">Product Catalog</a></li>
                     </ul>
                 </div>
                 <div>
