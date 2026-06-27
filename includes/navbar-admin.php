@@ -16,9 +16,10 @@ $order_count_badge = isset($admin_order_count) ? (int) $admin_order_count : 0;
 
 $current_page = basename($_SERVER['PHP_SELF']);
 $admin_page_title_map = [
-    'admin.php' => 'Dashboard Overview',
+    'admin.php' => 'Dashboard',
     'admin-products.php' => 'Product Management',
-    'admin-profile.php' => 'Admin Profile'
+    'admin-profile.php' => 'Admin Profile',
+    'admin-orders.php' => 'Orders Management'
 ];
 $admin_page_title = $admin_page_title_map[$current_page] ?? 'Admin Panel';
 ?>
@@ -35,13 +36,13 @@ $admin_page_title = $admin_page_title_map[$current_page] ?? 'Admin Panel';
     <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
         <a href="admin.php" class="flex items-center px-4 py-3 rounded-lg shadow-sm transition transform hover:-translate-y-0.5 <?php echo $current_page === 'admin.php' ? 'bg-imvidia text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia'; ?>">
             <i class="fa-solid fa-chart-pie w-6"></i>
-            <span class="font-medium">Overview</span>
+            <span class="font-medium">Dashboard</span>
         </a>
-        <a href="admin-products.php" class="flex items-center px-4 py-3 rounded-lg transition <?php echo $current_page === 'admin-products.php' ? 'bg-imvidia text-white shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia'; ?>">
+        <a href="admin-products.php" class="flex items-center px-4 py-3 rounded-lg shadow-sm transition transform hover:-translate-y-0.5 <?php echo $current_page === 'admin-products.php' ? 'bg-imvidia text-white shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia'; ?>">
             <i class="fa-solid fa-box-open w-6"></i>
             <span class="font-medium">Products</span>
         </a>
-        <a href="#" class="flex items-center px-4 py-3 rounded-lg transition text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia">
+        <a href="admin-orders.php" class="flex items-center px-4 py-3 rounded-lg shadow-sm transition transform hover:-translate-y-0.5 <?php echo $current_page === 'admin-orders.php' ? 'bg-imvidia text-white shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-imvidia dark:hover:text-imvidia'; ?>">
             <i class="fa-solid fa-cart-shopping w-6"></i>
             <span class="font-medium">Orders</span>
             <span id="order-count-badge" class="ml-auto bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-gray-400 text-xs font-bold px-2 py-0.5 rounded-full"><?php echo number_format($order_count_badge); ?></span>

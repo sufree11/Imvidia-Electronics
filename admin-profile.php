@@ -82,7 +82,7 @@ $admin_data = [
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Admin Profile - ImVidia Panel</title>
+    <title>Admin Profile - AdminPanel</title>
     <?php include 'includes/head.php'; ?>
 </head>
 

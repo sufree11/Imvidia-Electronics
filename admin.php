@@ -85,7 +85,7 @@ $admin_order_count = $total_orders;
 <html>
 <head>
     
-    <title>Admin Dashboard - ImVidia</title>
+    <title>Dashboard - AdminPanel</title>
     <?php include 'includes/head.php'; ?>
 </head>
 
@@ -97,7 +97,7 @@ $admin_order_count = $total_orders;
             <div class="max-w-7xl mx-auto">
                 
                 <div class="mb-8">
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard Overview</h1>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
                     <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Live business metrics from your store database.</p>
                 </div>
 

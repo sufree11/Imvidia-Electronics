@@ -10,7 +10,7 @@ $user = $admin['is_admin'] ? $admin : $customer;
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>ImVidia Electronics</title>
+    <title>ImVidia</title>
     <?php include 'includes/head.php'; ?>
 </head>
 

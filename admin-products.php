@@ -196,7 +196,7 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Products - Admin Panel</title>
+    <title>Products - AdminPanel</title>
     <?php include 'includes/head.php'; ?>
     <script src="https://cdn.tiny.cloud/1/be8dfp6y9j7hrwecamdcd0qll0us7grftmz5xjf4sb32mcqg/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
 </head>

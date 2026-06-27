@@ -161,12 +161,12 @@ $avatar_url = getAvatarUrl($user['first_name'] ?? '', $user['last_name'] ?? '', 
             <ol class="inline-flex items-center space-x-2">
                 <li><a href="index.php" class="hover:text-imvidia transition">Home</a></li>
                 <li><span class="mx-1">/</span></li>
-                <li><span class="text-gray-600 dark:text-gray-300">Profile Settings</span></li>
+                <li><span class="text-gray-600 dark:text-gray-300">My Profile</span></li>
             </ol>
         </nav>
 
         <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Account Settings</h1>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">My Profile</h1>
             <p class="text-gray-500 dark:text-gray-400 mt-1">Manage your personal details and security.</p>
         </div>
 
