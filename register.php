@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (mysqli_num_rows($check_result) > 0) {
             $error_message = "This email address is already registered.";
         } else {
-            $password_hash = mysqli_real_escape_string($conn, hashPassword($password));
+            $password_hash = mysqli_real_escape_string($conn, $password);
             
             $insert_query = "INSERT INTO users 
                             (first_name, last_name, email, phone, password_hash, 
