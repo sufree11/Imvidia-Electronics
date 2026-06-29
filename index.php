@@ -36,7 +36,7 @@ $user = $admin['is_admin'] ? $admin : $customer;
                         });
                     </script>
                     <a href="about.php">
-                        <button class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:-translate-y-1">Learn More</button>
+                        <button class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition transform hover:-translate-y-1">About Us</button>
                     </a>
                 </div>
             </div>
@@ -118,7 +118,9 @@ $user = $admin['is_admin'] ? $admin : $customer;
                         <div id="grid-<?php echo $cat_key; ?>" class="category-grid hidden w-full">
                             
                             <?php if (count($products) > 0): ?>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
+                                <?php $is_scrollable_category = count($products) > 6; ?>
+                                <div class="<?php echo $is_scrollable_category ? 'max-h-[44rem] overflow-y-auto pr-2' : ''; ?> w-full">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
                                     
                                     <?php foreach($products as $prod):
                                         $prod_id = $prod['product_id'];
@@ -146,6 +148,7 @@ $user = $admin['is_admin'] ? $admin : $customer;
                                         </div>
                                     <?php endforeach; ?>
                                     
+                                    </div>
                                 </div>
                             <?php else: ?>
                                 <div class="col-span-1 md:col-span-3 flex flex-col items-center justify-center py-16 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-dashed border-gray-300 dark:border-slate-700 w-full">

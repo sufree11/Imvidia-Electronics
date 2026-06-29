@@ -35,7 +35,7 @@ $avatar_url = !empty($user['profile_picture']) ? htmlspecialchars($user['profile
             <div class="hidden md:flex space-x-8 items-center absolute left-1/2 transform -translate-x-1/2">
                 <a href="index.php" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Home</a>
                 <a href="#catalog" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Catalog</a>
-                <a href="#" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Support</a>
+                <a href="about.php#support" class="text-gray-600 hover:text-imvidia font-medium transition dark:text-gray-300">Support</a>
             </div>
 
             <div class="flex items-center space-x-4">

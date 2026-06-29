@@ -468,7 +468,7 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
                                     <div class="mt-6">
                                         <div id="existing-gallery-container" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                                             <?php foreach ($existing_gallery_images as $idx => $gal_img): ?>
-                                                <div class="relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700 shadow-sm group bg-gray-100 dark:bg-slate-800" data-gallery-id="<?php echo $gal_img['id']; ?>">
+                                                <div class="existing-gallery-tile relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700 shadow-sm group bg-gray-100 dark:bg-slate-800" data-gallery-id="<?php echo $gal_img['id']; ?>">
                                                     <img src="<?php echo htmlspecialchars($gal_img['image_url']); ?>" alt="Gallery Image <?php echo $idx + 1; ?>" class="w-full h-full object-cover">
                                                     <div class="absolute top-1 right-1 bg-gray-800/90 text-white text-xs px-2 py-1 rounded gallery-order-badge"><?php echo $idx + 1; ?>/5</div>
                                                     <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
@@ -851,7 +851,7 @@ function renderGalleryPreviews() {
 
             e.preventDefault();
             const galleryId = btn.getAttribute('data-gallery-id');
-            const tile = btn.closest('[data-gallery-id]');
+            const tile = btn.closest('.existing-gallery-tile');
 
             if (!galleryId || !tile) {
                 return;

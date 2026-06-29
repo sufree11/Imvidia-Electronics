@@ -16,8 +16,8 @@
                 <ul class="space-y-2 text-sm">
                     <li><a href="index.php" class="hover:text-imvidia transition">Home</a></li>
                     <li><a href="index.php#catalog" class="hover:text-imvidia transition">Product Catalog</a></li>
-                    <li><a href="#" class="hover:text-imvidia transition">About the Company</a></li>
-                    <li><a href="#" class="hover:text-imvidia transition">Contact Support</a></li>
+                    <li><a href="about.php" class="hover:text-imvidia transition">About the Company</a></li>
+                    <li><a href="about.php#support" class="hover:text-imvidia transition">Contact Support</a></li>
                 </ul>
             </div>
             <div>
