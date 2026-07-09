@@ -14,6 +14,88 @@ $user = checkCustomerOrGuest();
 $receipt_data = null;
 $checkout_success = false;
 
+/**
+ * Save checkout order items to the database using existing orders schema.
+ *
+ * This persists one row per purchased product item using the current
+ * orders table columns: user_id, product_id, order_date, payment_method,
+ * delivery_time, order_progress.
+ */
+function saveOrderItemsToDatabase(int $user_id, array $cart, string $payment_method): bool {
+    global $conn;
+
+    if (empty($cart)) {
+        return false;
+    }
+
+    // Use a transaction so orders are either all saved or none are.
+    mysqli_begin_transaction($conn);
+
+    $order_date = date('Y-m-d H:i:s');
+    $delivery_time = date('Y-m-d H:i:s', strtotime('+3 days')); // Estimated delivery time
+    $order_progress = 'Pending';
+
+    $product_stmt = mysqli_prepare($conn, "SELECT product_id FROM product WHERE name = ? LIMIT 1");
+    $order_stmt = mysqli_prepare($conn, "INSERT INTO orders (user_id, product_id, order_date, payment_method, delivery_time, order_progress) VALUES (?, ?, ?, ?, ?, ?)");
+
+    if (!$product_stmt || !$order_stmt) {
+        mysqli_rollback($conn);
+        return false;
+    }
+
+    foreach ($cart as $item) {
+        $product_name = trim((string) ($item['name'] ?? ''));
+        $quantity = max(1, (int) ($item['quantity'] ?? 1));
+
+        if ($product_name === '') {
+            mysqli_stmt_close($product_stmt);
+            mysqli_stmt_close($order_stmt);
+            mysqli_rollback($conn);
+            return false;
+        }
+
+        mysqli_stmt_bind_param($product_stmt, 's', $product_name);
+        if (!mysqli_stmt_execute($product_stmt)) {
+            mysqli_stmt_close($product_stmt);
+            mysqli_stmt_close($order_stmt);
+            mysqli_rollback($conn);
+            return false;
+        }
+
+        mysqli_stmt_store_result($product_stmt);
+        if (mysqli_stmt_num_rows($product_stmt) === 0) {
+            mysqli_stmt_close($product_stmt);
+            mysqli_stmt_close($order_stmt);
+            mysqli_rollback($conn);
+            return false;
+        }
+
+        mysqli_stmt_bind_result($product_stmt, $product_id);
+        mysqli_stmt_fetch($product_stmt);
+        mysqli_stmt_free_result($product_stmt);
+
+        for ($i = 0; $i < $quantity; $i++) {
+            mysqli_stmt_bind_param($order_stmt, 'iissss', $user_id, $product_id, $order_date, $payment_method, $delivery_time, $order_progress);
+            if (!mysqli_stmt_execute($order_stmt)) {
+                mysqli_stmt_close($product_stmt);
+                mysqli_stmt_close($order_stmt);
+                mysqli_rollback($conn);
+                return false;
+            }
+        }
+    }
+
+    mysqli_stmt_close($product_stmt);
+    mysqli_stmt_close($order_stmt);
+
+    if (!mysqli_commit($conn)) {
+        mysqli_rollback($conn);
+        return false;
+    }
+
+    return true;
+}
+
 // Handle POST request (order submission)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validate and collect customer information from form
@@ -69,6 +151,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'shipping' => $shipping,
                 'total' => $total
             ];
+
+            if (!empty($user['is_logged_in']) && isset($user['user_id'])) {
+                $saved = saveOrderItemsToDatabase((int) $user['user_id'], $cart, $payment_method);
+                if (!$saved) {
+                    error_log('Checkout persistence failed for user_id=' . (int) $user['user_id'] . '.');
+                }
+            }
             
             $checkout_success = true;
         }
@@ -305,6 +394,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </button>
             </div>
         </div>
+
+        <script>
+            if (window.localStorage) {
+                localStorage.removeItem('imvidia_cart');
+            }
+        </script>
 
         <?php else: ?>
         <!-- CHECKOUT FORM (shown on initial page load) -->
