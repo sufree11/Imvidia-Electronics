@@ -62,10 +62,22 @@ $user = checkCustomerOrGuest();
                             ImVidia operates with a founder-led structure focused on product quality, customer support, and operations.
                         </p>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-                            <div class="rounded-lg border border-gray-200 dark:border-slate-700 px-4 py-3 text-center font-medium bg-white dark:bg-slate-900">Founder / Management</div>
-                            <div class="rounded-lg border border-gray-200 dark:border-slate-700 px-4 py-3 text-center font-medium bg-white dark:bg-slate-900">Product &amp; Quality</div>
-                            <div class="rounded-lg border border-gray-200 dark:border-slate-700 px-4 py-3 text-center font-medium bg-white dark:bg-slate-900">Operations &amp; Logistics</div>
-                            <div class="rounded-lg border border-gray-200 dark:border-slate-700 px-4 py-3 text-center font-medium bg-white dark:bg-slate-900">Customer Support</div>
+                            <div class="rounded-lg border border-gray-200 dark:border-slate-700 px-4 py-3 text-center font-medium bg-white dark:bg-slate-900">
+                                <img src="assets/founder.png" alt="Founder / Management" class="w-32 h-32 mx-auto mb-2 rounded-full border border-gray-200 dark:border-slate-700">
+                                <b>Mohammad Imran Shakir</b> <br> Founder / Management
+                            </div>
+                            <div class="rounded-lg border border-gray-200 dark:border-slate-700 px-4 py-3 text-center font-medium bg-white dark:bg-slate-900">
+                                <img src="assets/quality.png" alt="Product & Quality" class="w-32 h-32 mx-auto mb-2 rounded-full border border-gray-200 dark:border-slate-700">
+                                <b>Putera Mikhail Fallon</b> <br> Product &amp; Quality
+                            </div>
+                            <div class="rounded-lg border border-gray-200 dark:border-slate-700 px-4 py-3 text-center font-medium bg-white dark:bg-slate-900">
+                                <img src="assets/operations.png" alt="Operations & Logistics" class="w-32 h-32 mx-auto mb-2 rounded-full border border-gray-200 dark:border-slate-700">
+                                <b>Mohammad Sufree</b> <br> Operations &amp; Logistics
+                            </div>
+                            <div class="rounded-lg border border-gray-200 dark:border-slate-700 px-4 py-3 text-center font-medium bg-white dark:bg-slate-900">
+                                <img src="assets/support.png" alt="Customer Support" class="w-32 h-32 mx-auto mb-2 rounded-full border border-gray-200 dark:border-slate-700">
+                                <b>Muhammad Firas Faiq</b> <br> Customer Support
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -105,11 +117,7 @@ $user = checkCustomerOrGuest();
 
                 <div class="border border-gray-200 dark:border-slate-700 rounded-xl p-4 bg-gray-50 dark:bg-slate-800/60">
                     <h3 class="font-semibold text-gray-900 dark:text-white mb-1">Q: How do I know if a product is good if there is no review system?</h3>
-                    <p class="text-gray-600 dark:text-gray-300">A: uhh... Distraction:</p>
-                    <a href="https://www.youtube.com/watch?v=J8WId0vbJ3I&list=RDJ8WId0vbJ3I&start_radio=1" target="_blank" rel="noopener noreferrer">
-                    <img src="assets/distraction.jpg" alt="Distraction" class="w-1/4 h-auto mt-2 rounded-lg border border-gray-200 dark:border-slate-700 hover:-translate-y-1 hover:shadow-lg duration-300 transition-transform">
-                    </a>
-                    
+                    <p class="text-gray-600 dark:text-gray-300">A: That's actually a good idea... Maybe we'll add one in the future.</p>
                 </div>
             </div>
         </section>
