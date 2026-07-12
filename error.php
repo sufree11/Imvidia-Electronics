@@ -111,10 +111,6 @@ switch ($error_code) {
             }
         }
 
-        function viewCart() {
-            window.location.href = 'cart.html';
-        }
-
         document.addEventListener('DOMContentLoaded', updateCartBadge);
     </script>
 

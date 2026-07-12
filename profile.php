@@ -205,7 +205,7 @@ $avatar_url = getAvatarUrl($user['first_name'] ?? '', $user['last_name'] ?? '', 
                         <a href="#" class="px-6 py-4 flex items-center text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800/50 hover:text-imvidia dark:hover:text-imvidia transition border-l-4 border-transparent">
                             <i class="fa-solid fa-box-open w-6"></i> Order History
                         </a>
-                        <a href="#" class="px-6 py-4 flex items-center text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800/50 hover:text-imvidia dark:hover:text-imvidia transition border-l-4 border-transparent">
+                        <a href="wishlist.php" class="px-6 py-4 flex items-center text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800/50 hover:text-imvidia dark:hover:text-imvidia transition border-l-4 border-transparent">
                             <i class="fa-regular fa-heart w-6"></i> Wishlist
                         </a>
                         <div class="border-t border-gray-100 dark:border-slate-800 my-1"></div>
@@ -364,10 +364,6 @@ $avatar_url = getAvatarUrl($user['first_name'] ?? '', $user['last_name'] ?? '', 
             if (badge) {
                 badge.innerText = totalItems;
             }
-        }
-
-        function viewCart() {
-            window.location.href = 'cart.html';
         }
 
         document.addEventListener('DOMContentLoaded', updateCartBadge);

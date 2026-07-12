@@ -1,10 +1,17 @@
 <?php
 require_once 'includes/auth.php';
+require_once 'includes/db-helpers.php';
 require_once 'includes/helpers.php';
 
 $customer = checkCustomerOrGuest();
 $admin = checkAdminOrGuest();
 $user = $admin['is_admin'] ? $admin : $customer;
+
+$wishlist_product_ids = [];
+if ($customer['is_logged_in'] && !$admin['is_admin']) {
+    $wishlist_rows = getRows("SELECT product_id FROM wishlist WHERE user_id = ?", [$customer['user_id']], 'i');
+    $wishlist_product_ids = array_column($wishlist_rows, 'product_id');
+}
 ?>
 
 <!DOCTYPE html>
@@ -128,8 +135,12 @@ $user = $admin['is_admin'] ? $admin : $customer;
                                         $prod_price = number_format($prod['price'], 2);
                                         $prod_cat = htmlspecialchars($prod['category']);
                                         $prod_img = !empty($prod['image_url']) ? htmlspecialchars($prod['image_url']) : 'https://ui-avatars.com/api/?name=No+Image&background=f1f5f9&color=94a3b8';
+                                        $prod_wishlisted = in_array($prod_id, $wishlist_product_ids);
                                     ?>
                                         <div class="group relative bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 p-4 transition hover:shadow-lg flex flex-col h-80 w-full">
+                                            <button onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist(<?php echo $prod_id; ?>, this.querySelector('i'))" class="absolute top-6 right-6 z-20 w-9 h-9 rounded-full bg-white/90 dark:bg-slate-900/90 shadow-md flex items-center justify-center hover:scale-110 transition" title="Toggle wishlist">
+                                                <i class="<?php echo $prod_wishlisted ? 'fa-solid text-imvidia-light' : 'fa-regular text-gray-400'; ?> fa-heart text-lg"></i>
+                                            </button>
                                             <div class="w-full h-48 bg-white dark:bg-slate-700 rounded-xl overflow-hidden group-hover:opacity-75 flex items-center justify-center p-2">
                                                 <img src="<?php echo $prod_img; ?>" alt="<?php echo $prod_name; ?>" class="max-w-full max-h-full object-contain drop-shadow-md">
                                             </div>
@@ -306,11 +317,7 @@ $user = $admin['is_admin'] ? $admin : $customer;
             }
             localStorage.setItem('imvidia_cart', JSON.stringify(cart));
             updateCartBadge();
-            alert(`Added 1x ${productName} to your cart!`);
-        }
-
-        function viewCart() {
-            window.location.href = 'cart.html';
+            showToast('Added to cart!', 'fa-solid fa-cart-plus');
         }
 
         document.addEventListener('DOMContentLoaded', updateCartBadge);

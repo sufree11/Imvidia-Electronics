@@ -1,6 +1,7 @@
 <?php
 require_once 'db/session.php';
 require_once 'includes/auth.php';
+require_once 'includes/db-helpers.php';
 require_once 'includes/helpers.php';
 
 $user = checkCustomerOrGuest();
@@ -35,6 +36,11 @@ if ($gal_result && mysqli_num_rows($gal_result) > 0) {
     while ($row = mysqli_fetch_assoc($gal_result)) {
         $gallery_images[] = htmlspecialchars($row['image_url']);
     }
+}
+
+$is_wishlisted = false;
+if ($user['is_logged_in']) {
+    $is_wishlisted = (bool) getRow("SELECT wishlist_id FROM wishlist WHERE user_id = ? AND product_id = ?", [$user['user_id'], $product_id], 'ii');
 }
 ?>
 
@@ -119,11 +125,15 @@ if ($gal_result && mysqli_num_rows($gal_result) > 0) {
                             <button onclick="incrementQty(<?php echo $product['stock_quantity']; ?>)" class="w-1/3 h-full text-gray-500 hover:bg-gray-50 dark:hover:bg-slate-700 transition flex justify-center items-center font-bold text-lg focus:outline-none" <?php echo $product['stock_quantity'] == 0 ? 'disabled' : ''; ?>>+</button>
                         </div>
                         
-                        <button onclick="addToCart('<?php echo htmlspecialchars(addslashes($product['name'])); ?>', <?php echo $product['price']; ?>, <?php echo $product['stock_quantity']; ?>)" 
+                        <button id="add-to-cart-btn" onclick="addToCart('<?php echo htmlspecialchars(addslashes($product['name'])); ?>', <?php echo $product['price']; ?>, <?php echo $product['stock_quantity']; ?>)"
                                 class="flex-1 h-14 bg-imvidia hover:bg-imvidia-dark disabled:bg-gray-300 disabled:dark:bg-slate-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition transform hover:-translate-y-0.5 flex items-center justify-center space-x-2"
                                 <?php echo $product['stock_quantity'] == 0 ? 'disabled' : ''; ?>>
-                            <i class="fa-solid fa-cart-plus text-lg"></i>
-                            <span><?php echo $product['stock_quantity'] > 0 ? 'Add to Cart' : 'Out of Stock'; ?></span>
+                            <i id="add-to-cart-icon" class="fa-solid fa-cart-plus text-lg"></i>
+                            <span id="add-to-cart-label"><?php echo $product['stock_quantity'] > 0 ? 'Add to Cart' : 'Out of Stock'; ?></span>
+                        </button>
+
+                        <button onclick="toggleWishlist(<?php echo $product_id; ?>, this.querySelector('i'))" class="w-14 h-14 flex-shrink-0 flex items-center justify-center rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-md transition transform hover:-translate-y-0.5" title="Toggle wishlist">
+                            <i class="<?php echo $is_wishlisted ? 'fa-solid text-imvidia-light' : 'fa-regular text-gray-400'; ?> fa-heart text-xl"></i>
                         </button>
                     </div>
                 </div>
@@ -169,6 +179,26 @@ if ($gal_result && mysqli_num_rows($gal_result) > 0) {
             }
         }
 
+        const productStock = <?php echo (int) $product['stock_quantity']; ?>;
+
+        function refreshAddToCartButton(productName) {
+            const btn = document.getElementById('add-to-cart-btn');
+            const label = document.getElementById('add-to-cart-label');
+            const icon = document.getElementById('add-to-cart-icon');
+            if (!btn || !label || productStock === 0) return;
+
+            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            let existingItem = cart.find(item => item.name === productName);
+
+            if (existingItem && existingItem.quantity > 0) {
+                label.innerText = `In Cart: ${existingItem.quantity}`;
+                if (icon) icon.className = 'fa-solid fa-check text-lg';
+            } else {
+                label.innerText = 'Add to Cart';
+                if (icon) icon.className = 'fa-solid fa-cart-plus text-lg';
+            }
+        }
+
         function addToCart(productName, price, availableStock) {
             const qtyInput = document.getElementById('qty');
             const qty = parseInt(qtyInput.value) || 1;
@@ -178,10 +208,10 @@ if ($gal_result && mysqli_num_rows($gal_result) > 0) {
                 qtyInput.value = availableStock;
                 return;
             }
-            
+
             let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
             let existingItem = cart.find(item => item.name === productName);
-            
+
             if (existingItem) {
                 const newTotal = existingItem.quantity + qty;
                 if (newTotal > availableStock) {
@@ -192,13 +222,17 @@ if ($gal_result && mysqli_num_rows($gal_result) > 0) {
             } else {
                 cart.push({ name: productName, price: price, quantity: qty });
             }
-            
+
             localStorage.setItem('imvidia_cart', JSON.stringify(cart));
             updateCartBadge();
-            alert(`Added ${qty}x ${productName} to your cart!`);
+            refreshAddToCartButton(productName);
+            showToast('Added to cart!', 'fa-solid fa-cart-plus');
         }
 
-        document.addEventListener('DOMContentLoaded', updateCartBadge);
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCartBadge();
+            refreshAddToCartButton(<?php echo json_encode($product['name']); ?>);
+        });
     </script>
 </body>
 </html>
