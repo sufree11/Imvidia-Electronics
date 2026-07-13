@@ -1,6 +1,8 @@
 <?php
 require_once 'includes/auth.php';
 require_once 'includes/helpers.php';
+require_once 'includes/db-helpers.php';
+require_once 'includes/order-helpers.php';
 
 // Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
@@ -10,89 +12,77 @@ if (session_status() === PHP_SESSION_NONE) {
 // Get user data or guest status
 $user = checkCustomerOrGuest();
 
+ensureOrdersSchemaV2();
+
 // Initialize receipt data
 $receipt_data = null;
 $checkout_success = false;
 
 /**
- * Save checkout order items to the database using existing orders schema.
- *
- * This persists one row per purchased product item using the current
- * orders table columns: user_id, product_id, order_date, payment_method,
- * delivery_time, order_progress.
+ * Saves one checkout as a single order header row (with the shipping/contact
+ * details captured on the form) plus one order_items row per distinct cart
+ * line (preserving quantity), instead of one orders row per unit purchased.
  */
-function saveOrderItemsToDatabase(int $user_id, array $cart, string $payment_method): bool {
+function saveOrder(?int $user_id, array $cart, string $payment_method, array $shipping): bool {
     global $conn;
 
     if (empty($cart)) {
         return false;
     }
 
-    // Use a transaction so orders are either all saved or none are.
-    mysqli_begin_transaction($conn);
+    beginTransaction();
 
     $order_date = date('Y-m-d H:i:s');
-    $delivery_time = date('Y-m-d H:i:s', strtotime('+3 days')); // Estimated delivery time
+    $delivery_time = date('Y-m-d H:i:s', strtotime('+3 days'));
     $order_progress = 'Pending';
 
-    $product_stmt = mysqli_prepare($conn, "SELECT product_id FROM product WHERE name = ? LIMIT 1");
-    $order_stmt = mysqli_prepare($conn, "INSERT INTO orders (user_id, product_id, order_date, payment_method, delivery_time, order_progress) VALUES (?, ?, ?, ?, ?, ?)");
+    $header_saved = executeStatement(
+        "INSERT INTO orders (user_id, order_date, payment_method, delivery_time, order_progress, email, first_name, last_name, phone, address, city, state, postcode)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+            $user_id, $order_date, $payment_method, $delivery_time, $order_progress,
+            $shipping['email'], $shipping['first_name'], $shipping['last_name'], $shipping['phone'],
+            $shipping['address'], $shipping['city'], $shipping['state'], $shipping['postcode'],
+        ],
+        'issss' . str_repeat('s', 8)
+    );
 
-    if (!$product_stmt || !$order_stmt) {
-        mysqli_rollback($conn);
+    if (!$header_saved) {
+        rollbackTransaction();
         return false;
     }
+
+    $order_id = getLastInsertId();
 
     foreach ($cart as $item) {
         $product_name = trim((string) ($item['name'] ?? ''));
         $quantity = max(1, (int) ($item['quantity'] ?? 1));
+        $unit_price = (float) ($item['price'] ?? 0);
 
         if ($product_name === '') {
-            mysqli_stmt_close($product_stmt);
-            mysqli_stmt_close($order_stmt);
-            mysqli_rollback($conn);
+            rollbackTransaction();
             return false;
         }
 
-        mysqli_stmt_bind_param($product_stmt, 's', $product_name);
-        if (!mysqli_stmt_execute($product_stmt)) {
-            mysqli_stmt_close($product_stmt);
-            mysqli_stmt_close($order_stmt);
-            mysqli_rollback($conn);
+        $product = getRow("SELECT product_id FROM product WHERE name = ? LIMIT 1", [$product_name], 's');
+        if (!$product) {
+            rollbackTransaction();
             return false;
         }
 
-        mysqli_stmt_store_result($product_stmt);
-        if (mysqli_stmt_num_rows($product_stmt) === 0) {
-            mysqli_stmt_close($product_stmt);
-            mysqli_stmt_close($order_stmt);
-            mysqli_rollback($conn);
+        $item_saved = executeStatement(
+            "INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES (?, ?, ?, ?)",
+            [$order_id, (int) $product['product_id'], $quantity, $unit_price],
+            'iiid'
+        );
+
+        if (!$item_saved) {
+            rollbackTransaction();
             return false;
-        }
-
-        mysqli_stmt_bind_result($product_stmt, $product_id);
-        mysqli_stmt_fetch($product_stmt);
-        mysqli_stmt_free_result($product_stmt);
-
-        for ($i = 0; $i < $quantity; $i++) {
-            mysqli_stmt_bind_param($order_stmt, 'iissss', $user_id, $product_id, $order_date, $payment_method, $delivery_time, $order_progress);
-            if (!mysqli_stmt_execute($order_stmt)) {
-                mysqli_stmt_close($product_stmt);
-                mysqli_stmt_close($order_stmt);
-                mysqli_rollback($conn);
-                return false;
-            }
         }
     }
 
-    mysqli_stmt_close($product_stmt);
-    mysqli_stmt_close($order_stmt);
-
-    if (!mysqli_commit($conn)) {
-        mysqli_rollback($conn);
-        return false;
-    }
-
+    commitTransaction();
     return true;
 }
 
@@ -152,13 +142,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'total' => $total
             ];
 
-            if (!empty($user['is_logged_in']) && isset($user['user_id'])) {
-                $saved = saveOrderItemsToDatabase((int) $user['user_id'], $cart, $payment_method);
-                if (!$saved) {
-                    error_log('Checkout persistence failed for user_id=' . (int) $user['user_id'] . '.');
-                }
+            // Persist the order regardless of login status - guests are
+            // identified by the shipping details they just filled in, since
+            // there's no account to attach the order to.
+            $logged_in_user_id = (!empty($user['is_logged_in']) && isset($user['user_id'])) ? (int) $user['user_id'] : null;
+            $shipping_info = [
+                'email' => $email,
+                'first_name' => $first_name,
+                'last_name' => $last_name,
+                'phone' => $phone,
+                'address' => $address,
+                'city' => $city,
+                'state' => $state,
+                'postcode' => $postcode,
+            ];
+            $saved = saveOrder($logged_in_user_id, $cart, $payment_method, $shipping_info);
+            if (!$saved) {
+                error_log('Checkout persistence failed for user_id=' . ($logged_in_user_id ?? 'guest') . '.');
             }
-            
+
             $checkout_success = true;
         }
     }
@@ -397,7 +399,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <script>
             if (window.localStorage) {
-                localStorage.removeItem('imvidia_cart');
+                // Only the items the customer selected for this checkout were
+                // purchased - leave any deselected items sitting in the cart.
+                let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+                const remaining = cart.filter(item => item.selected === false);
+                localStorage.setItem('imvidia_cart', JSON.stringify(remaining));
             }
         </script>
 
@@ -796,17 +802,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const cartDataInput = document.getElementById('cart-data-input');
             const checkoutForm = document.getElementById('checkout-form');
 
-            // Attempt to load cart from localStorage
-            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            // Only the items the customer checked off in the cart get checked out here.
+            const fullCart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            let cart = fullCart.filter(item => item.selected !== false);
 
             function renderCart() {
                 if (cart.length === 0) {
-                    if (cartContainer) cartContainer.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400 text-center py-4">Your cart is empty.</p>';
+                    const emptyMessage = fullCart.length === 0
+                        ? 'Your cart is empty.'
+                        : 'No items selected. Go back to your cart and select at least one item.';
+                    if (cartContainer) cartContainer.innerHTML = `<p class="text-sm text-gray-500 dark:text-gray-400 text-center py-4">${emptyMessage}</p>`;
                     if (subtotalEl) subtotalEl.innerText = 'RM 0.00';
                     if (taxEl) taxEl.innerText = 'RM 0.00';
                     if (totalEl) totalEl.innerText = 'RM 0.00';
                     if (payBtn) {
-                        payBtn.innerHTML = '<i class="fa-solid fa-lock mr-2 text-imvidia-light"></i> Cart is Empty';
+                        payBtn.innerHTML = '<i class="fa-solid fa-lock mr-2 text-imvidia-light"></i> ' + (fullCart.length === 0 ? 'Cart is Empty' : 'No Items Selected');
                         payBtn.disabled = true;
                         payBtn.classList.add('opacity-50', 'cursor-not-allowed');
                     }

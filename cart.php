@@ -54,6 +54,10 @@ if ($product_result) {
                 </div>
 
                 <!-- FILLED STATE: Items Container -->
+                <div id="cart-select-all-row" class="hidden items-center mb-4 px-1">
+                    <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAll(this.checked)" class="w-4 h-4 rounded border-gray-300 dark:border-slate-600 text-imvidia focus:ring-imvidia cursor-pointer">
+                    <label for="select-all-checkbox" class="ml-2 text-sm font-medium text-gray-600 dark:text-gray-400 cursor-pointer">Select All</label>
+                </div>
                 <div id="cart-items-container" class="space-y-4">
                     <!-- Javascript will inject items here -->
                 </div>
@@ -113,7 +117,8 @@ if ($product_result) {
         }
 
         function loadCart() {
-            // Read the cart from localStorage
+            // Read the cart from localStorage. Items with no `selected` flag yet
+            // (carts saved before this feature existed) default to selected.
             let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
 
             const container = document.getElementById('cart-items-container');
@@ -121,11 +126,14 @@ if ($product_result) {
             const checkoutBtn = document.getElementById('checkout-btn');
             const subtotalEl = document.getElementById('summary-subtotal');
             const totalEl = document.getElementById('summary-total');
+            const selectAllRow = document.getElementById('cart-select-all-row');
+            const selectAllCheckbox = document.getElementById('select-all-checkbox');
 
             // If empty, show the Ghost!
             if (cart.length === 0) {
                 container.innerHTML = '';
                 container.classList.add('hidden');
+                selectAllRow.classList.add('hidden');
 
                 emptyState.classList.remove('hidden');
                 emptyState.classList.add('flex');
@@ -142,36 +150,44 @@ if ($product_result) {
 
             // If not empty, hide ghost and render items
             container.classList.remove('hidden');
+            selectAllRow.classList.remove('hidden');
+            selectAllRow.classList.add('flex');
             emptyState.classList.add('hidden');
             emptyState.classList.remove('flex');
-            checkoutBtn.classList.remove('opacity-50', 'pointer-events-none');
-            checkoutBtn.href = "checkout.php";
 
             let html = '';
             let totalCost = 0;
             let totalItems = 0;
+            let selectedCount = 0;
 
             cart.forEach((item, index) => {
+                const isSelected = item.selected !== false;
                 const itemQty = item.quantity || 1;
                 const itemTotal = item.price * itemQty;
 
-                totalCost += itemTotal;
                 totalItems += itemQty;
+                if (isSelected) {
+                    totalCost += itemTotal;
+                    selectedCount++;
+                }
 
                 const thumbnail = getProductImage(item.name);
                 const productNameArg = JSON.stringify(item.name).replace(/"/g, '&quot;');
                 const hasProductPage = Boolean(productIds[item.name]);
 
                 html += `
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-6 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl shadow-sm transition">
-                        <!-- Thumbnail & Info -->
-                        <div class="flex items-center space-x-4 mb-4 sm:mb-0 ${hasProductPage ? 'cursor-pointer' : ''}" ${hasProductPage ? `onclick="goToProduct(${productNameArg})"` : ''}>
-                            <div class="w-20 h-20 bg-gray-50 dark:bg-slate-800 rounded-xl flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-slate-700">
-                                <img src="${thumbnail}" alt="${item.name}" class="max-w-full max-h-full object-contain rounded-md">
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-gray-900 dark:text-white text-base sm:text-lg leading-tight mb-1 ${hasProductPage ? 'hover:text-imvidia transition' : ''}">${item.name}</h3>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Unit Price: RM ${parseFloat(item.price).toFixed(2)}</p>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-6 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl shadow-sm transition ${isSelected ? '' : 'opacity-60'}">
+                        <!-- Checkbox, Thumbnail & Info -->
+                        <div class="flex items-center space-x-4 mb-4 sm:mb-0">
+                            <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelect(${index}, this.checked)" class="w-4 h-4 rounded border-gray-300 dark:border-slate-600 text-imvidia focus:ring-imvidia cursor-pointer flex-shrink-0">
+                            <div class="flex items-center space-x-4 ${hasProductPage ? 'cursor-pointer' : ''}" ${hasProductPage ? `onclick="goToProduct(${productNameArg})"` : ''}>
+                                <div class="w-20 h-20 bg-gray-50 dark:bg-slate-800 rounded-xl flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-slate-700">
+                                    <img src="${thumbnail}" alt="${item.name}" class="max-w-full max-h-full object-contain rounded-md">
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-900 dark:text-white text-base sm:text-lg leading-tight mb-1 ${hasProductPage ? 'hover:text-imvidia transition' : ''}">${item.name}</h3>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Unit Price: RM ${parseFloat(item.price).toFixed(2)}</p>
+                                </div>
                             </div>
                         </div>
 
@@ -206,8 +222,35 @@ if ($product_result) {
             container.innerHTML = html;
             subtotalEl.innerText = 'RM ' + totalCost.toFixed(2);
             totalEl.innerText = 'RM ' + totalCost.toFixed(2);
+            selectAllCheckbox.checked = selectedCount === cart.length;
+
+            if (selectedCount === 0) {
+                checkoutBtn.classList.add('opacity-50', 'pointer-events-none');
+                checkoutBtn.href = "#";
+            } else {
+                checkoutBtn.classList.remove('opacity-50', 'pointer-events-none');
+                checkoutBtn.href = "checkout.php";
+            }
 
             updateCartBadge(totalItems);
+        }
+
+        // Toggle whether a single cart item is included in the next checkout
+        function toggleSelect(index, isSelected) {
+            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            if (cart[index]) {
+                cart[index].selected = isSelected;
+                localStorage.setItem('imvidia_cart', JSON.stringify(cart));
+                loadCart();
+            }
+        }
+
+        // Select or deselect every item in the cart at once
+        function toggleSelectAll(isSelected) {
+            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            cart.forEach(item => item.selected = isSelected);
+            localStorage.setItem('imvidia_cart', JSON.stringify(cart));
+            loadCart();
         }
 
         // Change quantity (if dropped to 0, it removes it)

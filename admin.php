@@ -1,56 +1,18 @@
 <?php
 require_once 'includes/auth.php';
 require_once 'includes/helpers.php';
+require_once 'includes/order-helpers.php';
 
 requireAdminLogin();
 
 $admin_data = getAdminUserData();
 
-function getOrderDateColumnExpression() {
-    global $conn;
+ensureOrdersSchemaV2();
 
-    $candidates = ['order_date', 'order date'];
-    foreach ($candidates as $column) {
-        $column_safe = mysqli_real_escape_string($conn, $column);
-        $result = mysqli_query($conn, "SHOW COLUMNS FROM orders LIKE '$column_safe'");
-        if ($result && mysqli_num_rows($result) > 0) {
-            return "o.`$column`";
-        }
-    }
-
-    return 'NULL';
-}
-
-function getOrderProgressClass($progress) {
-    $normalized = strtolower(trim((string) $progress));
-    if ($normalized === 'delivered' || $normalized === 'completed') {
-        return 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800';
-    }
-    if ($normalized === 'cancelled' || $normalized === 'failed') {
-        return 'bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800';
-    }
-    if ($normalized === 'processing' || $normalized === 'pending') {
-        return 'bg-yellow-50 text-yellow-700 border border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800';
-    }
-
-    return 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800';
-}
-
-$order_date_expr = getOrderDateColumnExpression();
-$total_revenue = 0;
-$total_orders = 0;
 $total_products = 0;
-$recent_orders = [];
 
-$stats_query = "SELECT COUNT(*) AS total_orders, COALESCE(SUM(p.price), 0) AS total_revenue
-                FROM orders o
-                LEFT JOIN product p ON p.product_id = o.product_id";
-$stats_result = mysqli_query($conn, $stats_query);
-if ($stats_result && mysqli_num_rows($stats_result) > 0) {
-    $stats = mysqli_fetch_assoc($stats_result);
-    $total_orders = (int) ($stats['total_orders'] ?? 0);
-    $total_revenue = (float) ($stats['total_revenue'] ?? 0);
-}
+$total_orders = (int) getValue("SELECT COUNT(*) FROM orders");
+$total_revenue = (float) getValue("SELECT COALESCE(SUM(quantity * unit_price), 0) FROM order_items");
 
 $products_result = mysqli_query($conn, "SELECT COUNT(*) AS total_products FROM product");
 if ($products_result && mysqli_num_rows($products_result) > 0) {
@@ -58,25 +20,8 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
     $total_products = (int) ($product_stats['total_products'] ?? 0);
 }
 
-$order_date_select = $order_date_expr . ' AS order_date';
-$order_by_clause = $order_date_expr !== 'NULL' ? 'order_date DESC, o.order_id DESC' : 'o.order_id DESC';
-
-$recent_orders_query = "SELECT o.order_id, o.user_id, o.product_id, o.payment_method, o.delivery_time, o.order_progress,
-                        $order_date_select,
-                        u.first_name, u.last_name,
-                        p.name AS product_name, p.price AS product_price
-                        FROM orders o
-                        LEFT JOIN users u ON u.id = o.user_id
-                        LEFT JOIN product p ON p.product_id = o.product_id
-                        ORDER BY $order_by_clause
-                        LIMIT 10";
-
-$recent_orders_result = mysqli_query($conn, $recent_orders_query);
-if ($recent_orders_result && mysqli_num_rows($recent_orders_result) > 0) {
-    while ($order = mysqli_fetch_assoc($recent_orders_result)) {
-        $recent_orders[] = $order;
-    }
-}
+$recent_orders = getOrdersForAdmin();
+$recent_orders = array_slice($recent_orders, 0, 10);
 
 $admin_order_count = $total_orders;
 ?>
@@ -166,21 +111,27 @@ $admin_order_count = $total_orders;
                                 <?php else: ?>
                                     <?php foreach ($recent_orders as $order): ?>
                                         <?php
-                                            $customer_name = trim(($order['first_name'] ?? '') . ' ' . ($order['last_name'] ?? ''));
+                                            $shipping_name = trim(($order['first_name'] ?? '') . ' ' . ($order['last_name'] ?? ''));
+                                            $customer_name = trim(($order['account_first_name'] ?? '') . ' ' . ($order['account_last_name'] ?? ''));
                                             if ($customer_name === '') {
-                                                $customer_name = 'User #' . (int) $order['user_id'];
+                                                $customer_name = empty($order['user_id'])
+                                                    ? ($shipping_name !== '' ? $shipping_name . ' (Guest)' : 'Guest')
+                                                    : 'User #' . (int) $order['user_id'];
                                             }
 
                                             $order_date = !empty($order['order_date']) ? date('d M Y, h:i A', strtotime($order['order_date'])) : 'N/A';
                                             $payment_method = !empty($order['payment_method']) ? $order['payment_method'] : 'N/A';
                                             $delivery_time = !empty($order['delivery_time']) ? $order['delivery_time'] : 'N/A';
                                             $order_progress = !empty($order['order_progress']) ? $order['order_progress'] : 'Pending';
-                                            $product_name = !empty($order['product_name']) ? $order['product_name'] : ('Product #' . (int) $order['product_id']);
+                                            $item_summary = count($order['items']) . ' item' . (count($order['items']) === 1 ? '' : 's');
+                                            if (count($order['items']) === 1) {
+                                                $item_summary = $order['items'][0]['product_name'] ?? $item_summary;
+                                            }
                                         ?>
                                         <tr class="border-b border-gray-100 dark:border-slate-800">
                                             <td class="px-6 py-4 font-semibold text-gray-900 dark:text-white">#<?php echo (int) $order['order_id']; ?></td>
                                             <td class="px-6 py-4"><?php echo htmlspecialchars($customer_name); ?></td>
-                                            <td class="px-6 py-4"><?php echo htmlspecialchars($product_name); ?></td>
+                                            <td class="px-6 py-4"><?php echo htmlspecialchars($item_summary); ?></td>
                                             <td class="px-6 py-4"><?php echo htmlspecialchars($order_date); ?></td>
                                             <td class="px-6 py-4"><?php echo htmlspecialchars($payment_method); ?></td>
                                             <td class="px-6 py-4"><?php echo htmlspecialchars($delivery_time); ?></td>
