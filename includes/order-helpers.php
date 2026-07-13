@@ -72,21 +72,24 @@ function ensureOrdersSchemaV2() {
     }
 
     // Guest checkouts have no account to attach to - allow a NULL user_id.
+    // Reuses the column's own reported type (rather than assuming INT) so
+    // this doesn't fail against a BIGINT/FK-constrained column.
     $user_id_col = safeSchemaQuery("SHOW COLUMNS FROM orders LIKE 'user_id'");
     if ($user_id_col && mysqli_num_rows($user_id_col) > 0) {
         $col_info = mysqli_fetch_assoc($user_id_col);
         if (strtoupper($col_info['Null']) === 'NO') {
-            safeSchemaQuery("ALTER TABLE orders MODIFY user_id INT(11) NULL");
+            safeSchemaQuery("ALTER TABLE orders MODIFY user_id {$col_info['Type']} NULL");
         }
     }
 
     // The legacy schema required product_id directly on `orders`. Orders are
     // now header-only, so relax that constraint if it's still NOT NULL.
+    // Same reasoning as above: preserve the existing type exactly.
     $product_id_col = safeSchemaQuery("SHOW COLUMNS FROM orders LIKE 'product_id'");
     if ($product_id_col && mysqli_num_rows($product_id_col) > 0) {
         $col_info = mysqli_fetch_assoc($product_id_col);
         if (strtoupper($col_info['Null']) === 'NO') {
-            safeSchemaQuery("ALTER TABLE orders MODIFY product_id INT(11) NULL");
+            safeSchemaQuery("ALTER TABLE orders MODIFY product_id {$col_info['Type']} NULL");
         }
 
         // Backfill: any orders row without order_items yet is a leftover

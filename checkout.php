@@ -17,6 +17,7 @@ ensureOrdersSchemaV2();
 // Initialize receipt data
 $receipt_data = null;
 $checkout_success = false;
+$error_message = '';
 
 /**
  * Saves one checkout as a single order header row (with the shipping/contact
@@ -159,10 +160,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $saved = saveOrder($logged_in_user_id, $cart, $payment_method, $shipping_info);
             if (!$saved) {
                 error_log('Checkout persistence failed for user_id=' . ($logged_in_user_id ?? 'guest') . '.');
+                $error_message = "We couldn't save your order due to a system error. You have not been charged - please try again, or contact support if this keeps happening.";
+            } else {
+                $checkout_success = true;
             }
-
-            $checkout_success = true;
+        } else {
+            $error_message = 'Your cart appears to be empty. Please add items to your cart before checking out.';
         }
+    } else {
+        $error_message = 'Please fill in all required fields before checking out.';
     }
 }
 ?>
@@ -415,6 +421,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Checkout</h1>
                 <p class="text-gray-500 dark:text-gray-400 mt-1">Complete your order securely.</p>
             </div>
+
+            <?php if (!empty($error_message)): ?>
+                <div class="mb-6 px-4 py-3 rounded-lg text-sm font-medium text-center bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800">
+                    <?php echo htmlspecialchars($error_message); ?>
+                </div>
+            <?php endif; ?>
 
             <form id="checkout-form" method="POST" class="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 
