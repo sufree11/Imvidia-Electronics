@@ -4,24 +4,32 @@ require_once __DIR__ . '/../db/database.php';
 
 function executeQuery($query, $params = [], $types = '') {
     global $conn;
-    
-    $stmt = $conn->prepare($query);
-    
-    if (!$stmt) {
-        error_log("Prepare failed: " . $conn->error);
+
+    try {
+        $stmt = $conn->prepare($query);
+
+        if (!$stmt) {
+            error_log("Prepare failed: " . $conn->error);
+            return false;
+        }
+
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+
+        if (!$stmt->execute()) {
+            error_log("Execute failed: " . $stmt->error);
+            return false;
+        }
+
+        return $stmt->get_result();
+    } catch (\mysqli_sql_exception $e) {
+        // PHP 8.1+ makes mysqli throw on SQL errors by default instead of
+        // returning false. Catch it here so every caller can keep using the
+        // simple "if (!executeQuery(...))" pattern instead of a raw 500.
+        error_log("Query failed: " . $e->getMessage());
         return false;
     }
-    
-    if (!empty($params)) {
-        $stmt->bind_param($types, ...$params);
-    }
-    
-    if (!$stmt->execute()) {
-        error_log("Execute failed: " . $stmt->error);
-        return false;
-    }
-    
-    return $stmt->get_result();
 }
 
 function getRow($query, $params = [], $types = '') {
@@ -62,25 +70,30 @@ function getValue($query, $params = [], $types = '') {
 
 function executeStatement($query, $params = [], $types = '') {
     global $conn;
-    
-    $stmt = $conn->prepare($query);
-    
-    if (!$stmt) {
-        error_log("Prepare failed: " . $conn->error);
+
+    try {
+        $stmt = $conn->prepare($query);
+
+        if (!$stmt) {
+            error_log("Prepare failed: " . $conn->error);
+            return false;
+        }
+
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+
+        if (!$stmt->execute()) {
+            error_log("Execute failed: " . $stmt->error);
+            return false;
+        }
+
+        $stmt->close();
+        return true;
+    } catch (\mysqli_sql_exception $e) {
+        error_log("Statement failed: " . $e->getMessage());
         return false;
     }
-    
-    if (!empty($params)) {
-        $stmt->bind_param($types, ...$params);
-    }
-    
-    if (!$stmt->execute()) {
-        error_log("Execute failed: " . $stmt->error);
-        return false;
-    }
-    
-    $stmt->close();
-    return true;
 }
 
 function getLastInsertId() {
