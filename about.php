@@ -130,17 +130,19 @@ $user = checkCustomerOrGuest();
                     <h3 class="text-lg font-semibold mb-3 text-imvidia-dark dark:text-imvidia-light">Contact</h3>
                     <p class="text-gray-600 dark:text-gray-300">
                         Support hotline:
-                        <span class="font-semibold text-gray-900 dark:text-white">+603 672 1511</span>
+                        <span class="font-semibold text-gray-900 dark:text-white">+603 672 1511</span> <br>
+                        Support email:
+                        <span class="font-semibold text-gray-900 dark:text-white">support@imvidia.systems</span>
                     </p>
                 </div>
 
                 <div class="bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-xl p-5">
                     <h3 class="text-lg font-semibold mb-3 text-imvidia-dark dark:text-imvidia-light">Social Media</h3>
                     <ul class="space-y-2 text-gray-600 dark:text-gray-300">
-                        <li><span class="font-semibold text-gray-900 dark:text-white">Instagram:</span> @imvidia_</li>
-                        <li><span class="font-semibold text-gray-900 dark:text-white">X:</span> @imvidia</li>
-                        <li><span class="font-semibold text-gray-900 dark:text-white">Facebook:</span> imvidia</li>
-                        <li><span class="font-semibold text-gray-900 dark:text-white">Twitter:</span> imvidia</li>
+                        <li><i class="fab fa-instagram w-4 h-auto"></i> : @imvidia_</li>
+                        <li><i class="fab fa-twitter w-4 h-auto"></i> / X : @imvidia</li>
+                        <li><i class="fab fa-facebook w-4 h-auto"></i> : imvidia</li>
+                        <li><i class="fab fa-tiktok w-4 h-auto"></i> : @imvidia</li>
                     </ul>
                 </div>
             </div>

@@ -171,39 +171,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error_message = 'Please fill in all required fields before checking out.';
     }
 }
+
+// Prefill contact/shipping fields: prefer resubmitted POST values (e.g. after
+// a validation error), then fall back to the logged-in user's saved details.
+$prefill = [
+    'email' => $_POST['email'] ?? ($user['email'] ?? ''),
+    'first_name' => $_POST['first_name'] ?? ($user['first_name'] ?? ''),
+    'last_name' => $_POST['last_name'] ?? ($user['last_name'] ?? ''),
+    'phone' => $_POST['phone'] ?? ($user['phone'] ?? ''),
+    'address' => $_POST['address'] ?? ($user['address_street'] ?? ''),
+    'city' => $_POST['city'] ?? ($user['address_city'] ?? ''),
+    'state' => $_POST['state'] ?? ($user['address_state'] ?? ''),
+    'postcode' => $_POST['postcode'] ?? ($user['address_zip'] ?? ''),
+];
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout - ImVidia</title>
-    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js"></script>
-
-    <!-- Tailwind Config for ImVidia Theme -->
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        imvidia: {
-                            light: '#8DFFFF',
-                            DEFAULT: '#49C2FA',
-                            dark: '#1F2468',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <?php include 'includes/head.php'; ?>
 
     <style>
         :root {
@@ -238,7 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-6">
             <div class="flex justify-between md:justify-start h-16 items-center w-full">
                 <a href="index.php" class="flex-shrink-0 flex items-center cursor-pointer hover:scale-105 transition transform duration-300">
-                    <img id="navbarLogo" src="assets/logo.svg" alt="ImVidia Logo" class="h-10 w-auto mr-2">
+                    <img class="theme-logo h-10 w-auto mr-2" data-light="assets/logo.svg" data-dark="assets/logo-light.svg" src="assets/logo.svg" alt="ImVidia Logo">
                     <span class="font-bold text-2xl tracking-tight text-gray-900 dark:text-white" >ImVidia<span class="text-imvidia">.</span></span>
                 </a>
                 <button id="dark-mode-toggle" type="button" class="p-2 rounded-full text-gray-600 hover:text-imvidia transition dark:text-gray-300" aria-label="Toggle dark mode" onclick="toggleDarkMode()">
@@ -433,6 +420,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- LEFT COLUMN: Forms (Takes up 7 out of 12 columns on large screens) -->
                 <div class="lg:col-span-7 space-y-8">
                     
+                    <?php if (!empty($user['is_logged_in'])): ?>
+                    <!-- Logged-in Banner -->
+                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-5 flex items-start shadow-sm">
+                        <i class="fa-solid fa-circle-user text-blue-500 text-xl mt-0.5 mr-3"></i>
+                        <div>
+                            <h3 class="text-sm font-bold text-gray-900 dark:text-white">Welcome back, <?php echo htmlspecialchars($user['first_name']); ?>!</h3>
+                            <p class="text-sm text-gray-600 dark:text-blue-200 mt-1">We've filled in your details below. Feel free to update them for this order.</p>
+                        </div>
+                    </div>
+                    <?php else: ?>
                     <!-- Login / Guest Prompt Banner -->
                     <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between shadow-sm">
                         <div class="flex items-start mb-4 sm:mb-0">
@@ -446,6 +443,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             Log In
                         </a>
                     </div>
+                    <?php endif; ?>
 
                     <!-- Section 1: Contact Information -->
                     <section class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
@@ -457,7 +455,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address <span class="text-red-500">*</span></label>
-                                <input type="email" name="email" required placeholder="jane.doe@example.com" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                                <input type="email" name="email" value="<?php echo htmlspecialchars($prefill['email']); ?>" required placeholder="jane.doe@example.com" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
                             </div>
                             <div class="flex items-center mt-2">
                                 <input type="checkbox" id="newsletter" name="newsletter" class="h-4 w-4 text-imvidia focus:ring-imvidia border-gray-300 rounded dark:border-slate-600 dark:bg-slate-800">
@@ -478,49 +476,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">First Name <span class="text-red-500">*</span></label>
-                                <input type="text" name="first_name" required class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                                <input type="text" name="first_name" value="<?php echo htmlspecialchars($prefill['first_name']); ?>" required class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Last Name <span class="text-red-500">*</span></label>
-                                <input type="text" name="last_name" required class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                                <input type="text" name="last_name" value="<?php echo htmlspecialchars($prefill['last_name']); ?>" required class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
                             </div>
                             <div class="sm:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Address <span class="text-red-500">*</span></label>
-                                <input type="text" name="address" required placeholder="Street address, apartment, suite, etc." class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                                <input type="text" name="address" value="<?php echo htmlspecialchars($prefill['address']); ?>" required placeholder="Street address, apartment, suite, etc." class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">City <span class="text-red-500">*</span></label>
-                                <input type="text" name="city" required class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                                <input type="text" name="city" value="<?php echo htmlspecialchars($prefill['city']); ?>" required class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">State <span class="text-red-500">*</span></label>
                                     <select name="state" required class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm appearance-none cursor-pointer">
-                                        <option value="" disabled selected>Select...</option>
-                                        <option value="JHR">Johor</option>
-                                        <option value="KDH">Kedah</option>
-                                        <option value="KEL">Kelantan</option>
-                                        <option value="KUL">Kuala Lumpur</option>
-                                        <option value="MLK">Melaka</option>
-                                        <option value="NSN">Negeri Sembilan</option>
-                                        <option value="PHG">Pahang</option>
-                                        <option value="PEN">Penang</option>
-                                        <option value="PRK">Perak</option>
-                                        <option value="PJY">Putrajaya</option>
-                                        <option value="SBH">Sabah</option>
-                                        <option value="SRW">Sarawak</option>
-                                        <option value="SGR">Selangor</option>
-                                        <option value="TRG">Terengganu</option>
+                                        <option value="" disabled <?php echo $prefill['state'] === '' ? 'selected' : ''; ?>>Select...</option>
+                                        <option value="JHR" <?php echo $prefill['state'] === 'JHR' ? 'selected' : ''; ?>>Johor</option>
+                                        <option value="KDH" <?php echo $prefill['state'] === 'KDH' ? 'selected' : ''; ?>>Kedah</option>
+                                        <option value="KEL" <?php echo $prefill['state'] === 'KEL' ? 'selected' : ''; ?>>Kelantan</option>
+                                        <option value="KUL" <?php echo $prefill['state'] === 'KUL' ? 'selected' : ''; ?>>Kuala Lumpur</option>
+                                        <option value="MLK" <?php echo $prefill['state'] === 'MLK' ? 'selected' : ''; ?>>Melaka</option>
+                                        <option value="NSN" <?php echo $prefill['state'] === 'NSN' ? 'selected' : ''; ?>>Negeri Sembilan</option>
+                                        <option value="PHG" <?php echo $prefill['state'] === 'PHG' ? 'selected' : ''; ?>>Pahang</option>
+                                        <option value="PEN" <?php echo $prefill['state'] === 'PEN' ? 'selected' : ''; ?>>Penang</option>
+                                        <option value="PRK" <?php echo $prefill['state'] === 'PRK' ? 'selected' : ''; ?>>Perak</option>
+                                        <option value="PJY" <?php echo $prefill['state'] === 'PJY' ? 'selected' : ''; ?>>Putrajaya</option>
+                                        <option value="SBH" <?php echo $prefill['state'] === 'SBH' ? 'selected' : ''; ?>>Sabah</option>
+                                        <option value="SRW" <?php echo $prefill['state'] === 'SRW' ? 'selected' : ''; ?>>Sarawak</option>
+                                        <option value="SGR" <?php echo $prefill['state'] === 'SGR' ? 'selected' : ''; ?>>Selangor</option>
+                                        <option value="TRG" <?php echo $prefill['state'] === 'TRG' ? 'selected' : ''; ?>>Terengganu</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ZIP / Postcode <span class="text-red-500">*</span></label>
-                                    <input type="text" name="postcode" required class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                                    <input type="text" name="postcode" value="<?php echo htmlspecialchars($prefill['postcode']); ?>" required class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
                                 </div>
                             </div>
                             <div class="sm:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number <span class="text-red-500">*</span></label>
-                                <input type="tel" name="phone" required placeholder="+60 12-345 6789" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                                <input type="tel" name="phone" value="<?php echo htmlspecialchars($prefill['phone']); ?>" required placeholder="+60 12-345 6789" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
                             </div>
                         </div>
                     </section>
@@ -880,38 +878,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             renderCart();
-        });
-    </script>
-
-    <!-- Dark mode logic -->
-    <script>
-        function updateLogoForMode() {
-            const logo = document.getElementById('navbarLogo');
-            if (!logo) return;
-            logo.src = document.documentElement.classList.contains('dark') ? 'assets/logo-light.svg' : 'assets/logo.svg';
-        }
-
-        function updateDarkToggleIcon() {
-            const icon = document.getElementById('dark-mode-icon');
-            if (!icon) return;
-            icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun text-lg' : 'fa-solid fa-moon text-lg';
-        }
-
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            localStorage.setItem('imvidiaDarkMode', document.documentElement.classList.contains('dark') ? 'true' : 'false');
-            
-            updateLogoForMode();
-            updateDarkToggleIcon();
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const stored = localStorage.getItem('imvidiaDarkMode');
-            if (stored === 'true') {
-                document.documentElement.classList.add('dark');
-            }
-            updateLogoForMode();
-            updateDarkToggleIcon();
         });
     </script>
 

@@ -40,7 +40,7 @@ function getSessionUser(array $fields, ?string $requiredRole = null): ?array {
 }
 
 function checkCustomerOrGuest() {
-    $user = getSessionUser(['id', 'first_name', 'last_name', 'email', 'profile_picture'], 'customer');
+    $user = getSessionUser(['id', 'first_name', 'last_name', 'email', 'profile_picture', 'phone', 'address_street', 'address_city', 'address_state', 'address_zip'], 'customer');
     if (!$user) {
         return [
             'is_logged_in' => false,
@@ -48,7 +48,12 @@ function checkCustomerOrGuest() {
             'first_name' => '',
             'last_name' => '',
             'email' => '',
-            'profile_picture' => ''
+            'profile_picture' => '',
+            'phone' => '',
+            'address_street' => '',
+            'address_city' => '',
+            'address_state' => '',
+            'address_zip' => ''
         ];
     }
 
@@ -58,7 +63,12 @@ function checkCustomerOrGuest() {
         'first_name' => $user['first_name'],
         'last_name' => $user['last_name'],
         'email' => $user['email'],
-        'profile_picture' => $user['profile_picture']
+        'profile_picture' => $user['profile_picture'],
+        'phone' => $user['phone'],
+        'address_street' => $user['address_street'],
+        'address_city' => $user['address_city'],
+        'address_state' => $user['address_state'],
+        'address_zip' => $user['address_zip']
     ];
 }
 
