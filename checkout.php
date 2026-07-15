@@ -394,9 +394,9 @@ $prefill = [
             if (window.localStorage) {
                 // Only the items the customer selected for this checkout were
                 // purchased - leave any deselected items sitting in the cart.
-                let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+                let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
                 const remaining = cart.filter(item => item.selected === false);
-                localStorage.setItem('imvidia_cart', JSON.stringify(remaining));
+                localStorage.setItem(window.IMVIDIA_CART_KEY, JSON.stringify(remaining));
             }
         </script>
 
@@ -813,7 +813,7 @@ $prefill = [
             const checkoutForm = document.getElementById('checkout-form');
 
             // Only the items the customer checked off in the cart get checked out here.
-            const fullCart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            const fullCart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
             let cart = fullCart.filter(item => item.selected !== false);
 
             function renderCart() {

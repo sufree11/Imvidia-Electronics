@@ -102,7 +102,7 @@ $wishlist_products = getRows(
         }
 
         function updateCartBadge() {
-            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
             const badge = document.getElementById('cart-badge');
@@ -114,7 +114,7 @@ $wishlist_products = getRows(
         }
 
         function addToCart(productName, price, availableStock) {
-            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
             let existingItem = cart.find(item => item.name === productName);
 
             if (existingItem) {
@@ -127,7 +127,7 @@ $wishlist_products = getRows(
                 cart.push({ name: productName, price: price, quantity: 1 });
             }
 
-            localStorage.setItem('imvidia_cart', JSON.stringify(cart));
+            localStorage.setItem(window.IMVIDIA_CART_KEY, JSON.stringify(cart));
             updateCartBadge();
             showToast('Added to cart!', 'fa-solid fa-cart-plus');
         }

@@ -2,6 +2,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script>
+        window.IMVIDIA_CART_KEY = <?php echo json_encode('imvidia_cart_' . (isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'guest')); ?>;
+
+        <?php if (isset($_SESSION['user_id'])): ?>
+        // Merge any items added while browsing as a guest into this account's cart, once.
+        (function() {
+            const guestKey = 'imvidia_cart_guest';
+            const guestCart = JSON.parse(localStorage.getItem(guestKey)) || [];
+
+            if (guestCart.length > 0) {
+                const userCart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
+                guestCart.forEach((item) => {
+                    const existing = userCart.find((i) => i.name === item.name);
+                    if (existing) {
+                        existing.quantity = (existing.quantity || 1) + (item.quantity || 1);
+                    } else {
+                        userCart.push(item);
+                    }
+                });
+                localStorage.setItem(window.IMVIDIA_CART_KEY, JSON.stringify(userCart));
+                localStorage.removeItem(guestKey);
+            }
+        })();
+        <?php endif; ?>
+    </script>
+    <script>
         (function() {
             const html = document.documentElement;
 

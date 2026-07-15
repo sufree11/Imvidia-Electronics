@@ -296,7 +296,7 @@ if ($customer['is_logged_in'] && !$admin['is_admin']) {
 
     <script>
         function updateCartBadge() {
-            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
             
             const badge = document.getElementById('cart-badge');
@@ -308,14 +308,14 @@ if ($customer['is_logged_in'] && !$admin['is_admin']) {
         }
 
         function addToCart(productName, price) {
-            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
             let existingItem = cart.find(item => item.name === productName);
             if (existingItem) {
                 existingItem.quantity += 1; 
             } else {
                 cart.push({ name: productName, price: price, quantity: 1 });
             }
-            localStorage.setItem('imvidia_cart', JSON.stringify(cart));
+            localStorage.setItem(window.IMVIDIA_CART_KEY, JSON.stringify(cart));
             updateCartBadge();
             showToast('Added to cart!', 'fa-solid fa-cart-plus');
         }

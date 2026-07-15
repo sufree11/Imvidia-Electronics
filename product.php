@@ -168,7 +168,7 @@ if ($user['is_logged_in']) {
         }
 
         function updateCartBadge() {
-            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
             
             const badge = document.getElementById('cart-badge');
@@ -187,7 +187,7 @@ if ($user['is_logged_in']) {
             const icon = document.getElementById('add-to-cart-icon');
             if (!btn || !label || productStock === 0) return;
 
-            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
             let existingItem = cart.find(item => item.name === productName);
 
             if (existingItem && existingItem.quantity > 0) {
@@ -209,7 +209,7 @@ if ($user['is_logged_in']) {
                 return;
             }
 
-            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
             let existingItem = cart.find(item => item.name === productName);
 
             if (existingItem) {
@@ -223,7 +223,7 @@ if ($user['is_logged_in']) {
                 cart.push({ name: productName, price: price, quantity: qty });
             }
 
-            localStorage.setItem('imvidia_cart', JSON.stringify(cart));
+            localStorage.setItem(window.IMVIDIA_CART_KEY, JSON.stringify(cart));
             updateCartBadge();
             refreshAddToCartButton(productName);
             showToast('Added to cart!', 'fa-solid fa-cart-plus');

@@ -357,7 +357,7 @@ $avatar_url = getAvatarUrl($user['first_name'] ?? '', $user['last_name'] ?? '', 
         }
 
         function updateCartBadge() {
-            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
             
             const badge = document.getElementById('cart-badge');

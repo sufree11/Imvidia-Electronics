@@ -119,7 +119,7 @@ if ($product_result) {
         function loadCart() {
             // Read the cart from localStorage. Items with no `selected` flag yet
             // (carts saved before this feature existed) default to selected.
-            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
 
             const container = document.getElementById('cart-items-container');
             const emptyState = document.getElementById('empty-cart-state');
@@ -237,25 +237,25 @@ if ($product_result) {
 
         // Toggle whether a single cart item is included in the next checkout
         function toggleSelect(index, isSelected) {
-            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
             if (cart[index]) {
                 cart[index].selected = isSelected;
-                localStorage.setItem('imvidia_cart', JSON.stringify(cart));
+                localStorage.setItem(window.IMVIDIA_CART_KEY, JSON.stringify(cart));
                 loadCart();
             }
         }
 
         // Select or deselect every item in the cart at once
         function toggleSelectAll(isSelected) {
-            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
             cart.forEach(item => item.selected = isSelected);
-            localStorage.setItem('imvidia_cart', JSON.stringify(cart));
+            localStorage.setItem(window.IMVIDIA_CART_KEY, JSON.stringify(cart));
             loadCart();
         }
 
         // Change quantity (if dropped to 0, it removes it)
         function updateQuantity(index, delta) {
-            let cart = JSON.parse(localStorage.getItem('imvidia_cart')) || [];
+            let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
 
             if (cart[index]) {
                 // Handle older cart arrays that might not have a quantity variable yet
@@ -267,7 +267,7 @@ if ($product_result) {
                     cart.splice(index, 1);
                 }
 
-                localStorage.setItem('imvidia_cart', JSON.stringify(cart));
+                localStorage.setItem(window.IMVIDIA_CART_KEY, JSON.stringify(cart));
                 loadCart();
             }
         }
