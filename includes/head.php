@@ -3,25 +3,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script>
         window.IMVIDIA_CART_KEY = <?php echo json_encode('imvidia_cart_' . (isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'guest')); ?>;
+        window.IMVIDIA_LOGGED_IN = <?php echo (($_SESSION['user_role'] ?? '') === 'customer' && isset($_SESSION['user_id'])) ? 'true' : 'false'; ?>;
 
-        <?php if (isset($_SESSION['user_id'])): ?>
-        // Merge any items added while browsing as a guest into this account's cart, once.
+        <?php if (($_SESSION['user_role'] ?? '') === 'customer' && isset($_SESSION['user_id'])): ?>
+        // Fold any items added while browsing as a guest into this account's
+        // DB-backed cart, once, then clear the guest-only localStorage cart.
         (function() {
             const guestKey = 'imvidia_cart_guest';
             const guestCart = JSON.parse(localStorage.getItem(guestKey)) || [];
 
             if (guestCart.length > 0) {
-                const userCart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
-                guestCart.forEach((item) => {
-                    const existing = userCart.find((i) => i.name === item.name);
-                    if (existing) {
-                        existing.quantity = (existing.quantity || 1) + (item.quantity || 1);
-                    } else {
-                        userCart.push(item);
-                    }
+                fetch('cart-action.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'action=merge_guest&items=' + encodeURIComponent(JSON.stringify(guestCart))
+                }).then(() => {
+                    localStorage.removeItem(guestKey);
+                }).catch(() => {
+                    // Leave the guest cart in place if the merge request failed,
+                    // so a retry on the next page load can pick it up.
                 });
-                localStorage.setItem(window.IMVIDIA_CART_KEY, JSON.stringify(userCart));
-                localStorage.removeItem(guestKey);
             }
         })();
         <?php endif; ?>

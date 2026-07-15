@@ -181,6 +181,10 @@ $orders = getOrdersForUser($user_id);
 
     <script>
         function updateCartBadge() {
+            // Logged-in users get their count server-rendered from the DB
+            // cart (includes/navbar-customer.php) - don't stomp it here.
+            if (window.IMVIDIA_LOGGED_IN) return;
+
             let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
             const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
 

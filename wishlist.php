@@ -69,7 +69,7 @@ $wishlist_products = getRows(
                             </div>
                             <div class="flex items-center justify-between mt-3">
                                 <p class="text-sm font-bold text-gray-900 dark:text-white whitespace-nowrap">RM <?php echo $prod_price; ?></p>
-                                <button onclick="addToCart('<?php echo htmlspecialchars(addslashes($prod['name'])); ?>', <?php echo (float) $prod['price']; ?>, <?php echo $prod_stock; ?>)"
+                                <button onclick="addToCart(<?php echo $prod_id; ?>, '<?php echo htmlspecialchars(addslashes($prod['name'])); ?>', <?php echo (float) $prod['price']; ?>, <?php echo $prod_stock; ?>)"
                                         class="px-3 py-2 bg-imvidia hover:bg-imvidia-dark disabled:bg-gray-300 disabled:dark:bg-slate-700 text-white font-bold rounded-lg shadow-sm hover:shadow-md transition text-xs flex items-center space-x-1.5"
                                         <?php echo $prod_stock == 0 ? 'disabled' : ''; ?>>
                                     <i class="fa-solid fa-cart-plus"></i>
@@ -101,38 +101,39 @@ $wishlist_products = getRows(
             });
         }
 
-        function updateCartBadge() {
-            let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
-            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-
+        function updateCartBadge(count) {
             const badge = document.getElementById('cart-badge');
-            if (badge) {
-                badge.innerText = totalItems;
+            if (badge && typeof count === 'number') {
+                badge.innerText = count;
                 badge.classList.add('scale-150');
                 setTimeout(() => badge.classList.remove('scale-150'), 200);
             }
         }
 
-        function addToCart(productName, price, availableStock) {
-            let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
-            let existingItem = cart.find(item => item.name === productName);
+        // This page requires a logged-in customer (requireCustomerLogin()),
+        // so the cart is always the DB-backed one - no guest/localStorage path.
+        async function addToCart(productId, productName, price, availableStock) {
+            const body = new URLSearchParams({ action: 'add', product_id: productId, quantity: 1 });
+            const response = await fetch('cart-action.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body
+            });
+            const data = await response.json();
 
-            if (existingItem) {
-                if (existingItem.quantity + 1 > availableStock) {
-                    showToast(`Only ${availableStock} in stock.`, 'fa-solid fa-triangle-exclamation');
-                    return;
-                }
-                existingItem.quantity += 1;
-            } else {
-                cart.push({ name: productName, price: price, quantity: 1 });
+            if (data.require_login) {
+                window.location.href = 'login.php';
+                return;
             }
 
-            localStorage.setItem(window.IMVIDIA_CART_KEY, JSON.stringify(cart));
-            updateCartBadge();
+            if (!data.success) {
+                showToast(data.message || 'Something went wrong.', 'fa-solid fa-triangle-exclamation');
+                return;
+            }
+
+            updateCartBadge(data.cart_count);
             showToast('Added to cart!', 'fa-solid fa-cart-plus');
         }
-
-        document.addEventListener('DOMContentLoaded', updateCartBadge);
     </script>
 
 </body>

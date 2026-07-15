@@ -3,6 +3,7 @@ require_once 'includes/auth.php';
 require_once 'includes/helpers.php';
 require_once 'includes/db-helpers.php';
 require_once 'includes/order-helpers.php';
+require_once 'includes/cart-helpers.php';
 
 // Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
@@ -13,6 +14,7 @@ if (session_status() === PHP_SESSION_NONE) {
 $user = checkCustomerOrGuest();
 
 ensureOrdersSchemaV2();
+ensureCartSchema();
 
 // Initialize receipt data
 $receipt_data = null;
@@ -163,6 +165,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error_message = "We couldn't save your order due to a system error. You have not been charged - please try again, or contact support if this keeps happening.";
             } else {
                 $checkout_success = true;
+
+                // Only the items the customer selected for this checkout were
+                // purchased - leave any deselected items sitting in the cart.
+                if ($logged_in_user_id !== null) {
+                    executeStatement("DELETE FROM cart_items WHERE user_id = ? AND selected = 1", [$logged_in_user_id], 'i');
+                }
             }
         } else {
             $error_message = 'Your cart appears to be empty. Please add items to your cart before checking out.';
@@ -184,6 +192,21 @@ $prefill = [
     'state' => $_POST['state'] ?? ($user['address_state'] ?? ''),
     'postcode' => $_POST['postcode'] ?? ($user['address_zip'] ?? ''),
 ];
+
+// For logged-in users the cart lives in the DB, so build the same
+// {name, price, quantity, selected} shape the guest localStorage cart uses,
+// letting the existing client-side rendering/filtering logic stay unchanged.
+$server_full_cart = [];
+if (!empty($user['is_logged_in'])) {
+    foreach (getCartItemsForUser($user['user_id']) as $row) {
+        $server_full_cart[] = [
+            'name' => $row['name'],
+            'price' => (float) $row['price'],
+            'quantity' => (int) $row['quantity'],
+            'selected' => (bool) $row['selected'],
+        ];
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -390,6 +413,7 @@ $prefill = [
             </div>
         </div>
 
+        <?php if (empty($user['is_logged_in'])): ?>
         <script>
             if (window.localStorage) {
                 // Only the items the customer selected for this checkout were
@@ -399,6 +423,8 @@ $prefill = [
                 localStorage.setItem(window.IMVIDIA_CART_KEY, JSON.stringify(remaining));
             }
         </script>
+        <?php endif; ?>
+        <!-- Logged-in users: the purchased (selected) rows were already deleted from cart_items server-side. -->
 
         <?php else: ?>
         <!-- CHECKOUT FORM (shown on initial page load) -->
@@ -813,7 +839,11 @@ $prefill = [
             const checkoutForm = document.getElementById('checkout-form');
 
             // Only the items the customer checked off in the cart get checked out here.
-            const fullCart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
+            // Logged-in users' cart lives in the DB and is rendered server-side into
+            // the same {name, price, quantity, selected} shape the guest cart uses.
+            const fullCart = window.IMVIDIA_LOGGED_IN
+                ? <?php echo json_encode($server_full_cart); ?>
+                : JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
             let cart = fullCart.filter(item => item.selected !== false);
 
             function renderCart() {

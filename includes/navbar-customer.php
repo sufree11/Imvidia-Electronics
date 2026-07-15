@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/db-helpers.php';
+require_once __DIR__ . '/cart-helpers.php';
 
 $admin_check = checkAdminOrGuest();
 
@@ -19,8 +20,11 @@ $avatar_url = !empty($user['profile_picture']) ? htmlspecialchars($user['profile
         'https://ui-avatars.com/api/?name=Guest&background=49C2FA&color=fff&size=128');
 
 $wishlist_count = 0;
+$cart_count = 0;
 if ($is_logged_in && !$is_admin && !empty($user['user_id'])) {
     $wishlist_count = (int) getValue("SELECT COUNT(*) FROM wishlist WHERE user_id = ?", [$user['user_id']], 'i');
+    ensureCartSchema();
+    $cart_count = getCartCountForUser($user['user_id']);
 }
 ?>
 
@@ -67,7 +71,7 @@ if ($is_logged_in && !$is_admin && !empty($user['user_id'])) {
                     <button class="relative p-2 text-gray-600 hover:text-imvidia transition dark:text-gray-300" onclick="viewCart()">
                         <i class="fa-solid fa-cart-shopping text-xl"></i>
                         <span id="cart-badge" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-imvidia rounded-full transition-transform duration-200">
-                            0
+                            <?php echo $cart_count; ?>
                         </span>
                     </button>
                 <?php else: ?>

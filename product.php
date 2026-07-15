@@ -3,6 +3,7 @@ require_once 'db/session.php';
 require_once 'includes/auth.php';
 require_once 'includes/db-helpers.php';
 require_once 'includes/helpers.php';
+require_once 'includes/cart-helpers.php';
 
 $user = checkCustomerOrGuest();
 
@@ -39,8 +40,11 @@ if ($gal_result && mysqli_num_rows($gal_result) > 0) {
 }
 
 $is_wishlisted = false;
+$cart_qty = 0;
 if ($user['is_logged_in']) {
     $is_wishlisted = (bool) getRow("SELECT wishlist_id FROM wishlist WHERE user_id = ? AND product_id = ?", [$user['user_id'], $product_id], 'ii');
+    ensureCartSchema();
+    $cart_qty = (int) getValue("SELECT quantity FROM cart_items WHERE user_id = ? AND product_id = ?", [$user['user_id'], $product_id], 'ii');
 }
 ?>
 
@@ -125,7 +129,7 @@ if ($user['is_logged_in']) {
                             <button onclick="incrementQty(<?php echo $product['stock_quantity']; ?>)" class="w-1/3 h-full text-gray-500 hover:bg-gray-50 dark:hover:bg-slate-700 transition flex justify-center items-center font-bold text-lg focus:outline-none" <?php echo $product['stock_quantity'] == 0 ? 'disabled' : ''; ?>>+</button>
                         </div>
                         
-                        <button id="add-to-cart-btn" onclick="addToCart('<?php echo htmlspecialchars(addslashes($product['name'])); ?>', <?php echo $product['price']; ?>, <?php echo $product['stock_quantity']; ?>)"
+                        <button id="add-to-cart-btn" onclick="addToCart(<?php echo (int) $product['product_id']; ?>, '<?php echo htmlspecialchars(addslashes($product['name'])); ?>', <?php echo $product['price']; ?>, <?php echo $product['stock_quantity']; ?>)"
                                 class="flex-1 h-14 bg-imvidia hover:bg-imvidia-dark disabled:bg-gray-300 disabled:dark:bg-slate-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition transform hover:-translate-y-0.5 flex items-center justify-center space-x-2"
                                 <?php echo $product['stock_quantity'] == 0 ? 'disabled' : ''; ?>>
                             <i id="add-to-cart-icon" class="fa-solid fa-cart-plus text-lg"></i>
@@ -167,16 +171,25 @@ if ($user['is_logged_in']) {
             }
         }
 
-        function updateCartBadge() {
-            let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
-            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-            
+        // Server-rendered quantity already in this account's DB cart for this
+        // product; kept in sync locally after each successful add.
+        let currentCartQty = <?php echo (int) $cart_qty; ?>;
+
+        function updateCartBadge(count) {
             const badge = document.getElementById('cart-badge');
-            if (badge) {
-                badge.innerText = totalItems;
-                badge.classList.add('scale-150');
-                setTimeout(() => badge.classList.remove('scale-150'), 200);
+            if (!badge) return;
+
+            if (window.IMVIDIA_LOGGED_IN) {
+                if (typeof count === 'number') {
+                    badge.innerText = count;
+                }
+            } else {
+                let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
+                badge.innerText = cart.reduce((sum, item) => sum + item.quantity, 0);
             }
+
+            badge.classList.add('scale-150');
+            setTimeout(() => badge.classList.remove('scale-150'), 200);
         }
 
         const productStock = <?php echo (int) $product['stock_quantity']; ?>;
@@ -187,11 +200,17 @@ if ($user['is_logged_in']) {
             const icon = document.getElementById('add-to-cart-icon');
             if (!btn || !label || productStock === 0) return;
 
-            let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
-            let existingItem = cart.find(item => item.name === productName);
+            let qtyInCart = 0;
+            if (window.IMVIDIA_LOGGED_IN) {
+                qtyInCart = currentCartQty;
+            } else {
+                let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
+                let existingItem = cart.find(item => item.name === productName);
+                qtyInCart = existingItem ? existingItem.quantity : 0;
+            }
 
-            if (existingItem && existingItem.quantity > 0) {
-                label.innerText = `In Cart: ${existingItem.quantity}`;
+            if (qtyInCart > 0) {
+                label.innerText = `In Cart: ${qtyInCart}`;
                 if (icon) icon.className = 'fa-solid fa-check text-lg';
             } else {
                 label.innerText = 'Add to Cart';
@@ -199,13 +218,40 @@ if ($user['is_logged_in']) {
             }
         }
 
-        function addToCart(productName, price, availableStock) {
+        async function addToCart(productId, productName, price, availableStock) {
             const qtyInput = document.getElementById('qty');
             const qty = parseInt(qtyInput.value) || 1;
 
             if (qty > availableStock) {
                 alert(`Only ${availableStock} item(s) available in stock. Please reduce quantity.`);
                 qtyInput.value = availableStock;
+                return;
+            }
+
+            if (window.IMVIDIA_LOGGED_IN) {
+                if (currentCartQty + qty > availableStock) {
+                    alert(`You already have ${currentCartQty} of this item in cart. Adding ${qty} more would exceed available stock of ${availableStock}.`);
+                    return;
+                }
+
+                const body = new URLSearchParams({ action: 'add', product_id: productId, quantity: qty });
+                const response = await fetch('cart-action.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body
+                });
+                const data = await response.json();
+
+                if (data.require_login) {
+                    window.location.href = 'login.php';
+                    return;
+                }
+
+                const updatedItem = (data.cart || []).find(item => parseInt(item.product_id, 10) === productId);
+                currentCartQty = updatedItem ? parseInt(updatedItem.quantity, 10) : currentCartQty + qty;
+                updateCartBadge(data.cart_count);
+                refreshAddToCartButton(productName);
+                showToast('Added to cart!', 'fa-solid fa-cart-plus');
                 return;
             }
 

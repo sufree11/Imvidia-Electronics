@@ -2,6 +2,7 @@
 require_once 'db/session.php';
 require_once 'includes/auth.php';
 require_once 'includes/helpers.php';
+require_once 'includes/cart-helpers.php';
 
 $user = checkCustomerOrGuest();
 
@@ -14,6 +15,20 @@ if ($product_result) {
     while ($row = mysqli_fetch_assoc($product_result)) {
         $product_images[$row['name']] = !empty($row['image_url']) ? $row['image_url'] : $placeholder_image;
         $product_ids[$row['name']] = (int) $row['product_id'];
+    }
+}
+
+$server_cart = [];
+if (!empty($user['is_logged_in'])) {
+    ensureCartSchema();
+    foreach (getCartItemsForUser($user['user_id']) as $row) {
+        $server_cart[] = [
+            'product_id' => (int) $row['product_id'],
+            'name' => $row['name'],
+            'price' => (float) $row['price'],
+            'quantity' => (int) $row['quantity'],
+            'selected' => (bool) $row['selected'],
+        ];
     }
 }
 ?>
@@ -98,12 +113,16 @@ if ($product_result) {
 
     <?php include 'includes/footer.php'; ?>
 
-    <!-- CART LOGIC: Reads from LocalStorage, updates totals and handles increment/decrement/delete -->
+    <!-- CART LOGIC: DB-backed when logged in, LocalStorage-backed for guests -->
     <script>
         // Product thumbnails and IDs keyed by product name, populated from the database.
         const productImages = <?php echo json_encode($product_images); ?>;
         const productIds = <?php echo json_encode($product_ids); ?>;
         const placeholderImage = <?php echo json_encode($placeholder_image); ?>;
+
+        // Server-rendered DB cart for logged-in users; kept in sync with each
+        // cart-action.php response so re-renders don't need another round trip.
+        let serverCart = <?php echo json_encode($server_cart); ?>;
 
         function getProductImage(name) {
             return productImages[name] || placeholderImage;
@@ -116,10 +135,42 @@ if ($product_result) {
             }
         }
 
-        function loadCart() {
+        async function cartActionRequest(action, params) {
+            const body = new URLSearchParams({ action, ...params });
+            const response = await fetch('cart-action.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body
+            });
+            const data = await response.json();
+
+            if (data.require_login) {
+                window.location.href = 'login.php';
+                return;
+            }
+
+            if (data.success) {
+                serverCart = data.cart.map(row => ({
+                    product_id: parseInt(row.product_id, 10),
+                    name: row.name,
+                    price: parseFloat(row.price),
+                    quantity: parseInt(row.quantity, 10),
+                    selected: !!parseInt(row.selected, 10)
+                }));
+            }
+        }
+
+        function getCurrentCart() {
+            if (window.IMVIDIA_LOGGED_IN) {
+                return serverCart;
+            }
             // Read the cart from localStorage. Items with no `selected` flag yet
             // (carts saved before this feature existed) default to selected.
-            let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
+            return JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
+        }
+
+        function loadCart() {
+            let cart = getCurrentCart();
 
             const container = document.getElementById('cart-items-container');
             const emptyState = document.getElementById('empty-cart-state');
@@ -165,6 +216,10 @@ if ($product_result) {
                 const itemQty = item.quantity || 1;
                 const itemTotal = item.price * itemQty;
 
+                // Logged-in mutations key off product_id (DB primary key);
+                // guest mutations key off the item's position in the localStorage array.
+                const key = window.IMVIDIA_LOGGED_IN ? item.product_id : index;
+
                 totalItems += itemQty;
                 if (isSelected) {
                     totalCost += itemTotal;
@@ -179,7 +234,7 @@ if ($product_result) {
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-6 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl shadow-sm transition ${isSelected ? '' : 'opacity-60'}">
                         <!-- Checkbox, Thumbnail & Info -->
                         <div class="flex items-center space-x-4 mb-4 sm:mb-0">
-                            <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelect(${index}, this.checked)" class="w-4 h-4 rounded border-gray-300 dark:border-slate-600 text-imvidia focus:ring-imvidia cursor-pointer flex-shrink-0">
+                            <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelect(${key}, this.checked)" class="w-4 h-4 rounded border-gray-300 dark:border-slate-600 text-imvidia focus:ring-imvidia cursor-pointer flex-shrink-0">
                             <div class="flex items-center space-x-4 ${hasProductPage ? 'cursor-pointer' : ''}" ${hasProductPage ? `onclick="goToProduct(${productNameArg})"` : ''}>
                                 <div class="w-20 h-20 bg-gray-50 dark:bg-slate-800 rounded-xl flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-slate-700">
                                     <img src="${thumbnail}" alt="${item.name}" class="max-w-full max-h-full object-contain rounded-md">
@@ -196,11 +251,11 @@ if ($product_result) {
 
                             <!-- Custom Qty Scroller -->
                             <div class="flex items-center justify-between border border-gray-300 dark:border-slate-700 rounded-full h-10 px-2 bg-gray-50 dark:bg-slate-800 w-24 flex-shrink-0">
-                                <button onclick="updateQuantity(${index}, -1)" class="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-imvidia transition rounded-full hover:bg-gray-200 dark:hover:bg-slate-700">
+                                <button onclick="updateQuantity(${key}, -1)" class="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-imvidia transition rounded-full hover:bg-gray-200 dark:hover:bg-slate-700">
                                     <i class="fa-solid fa-minus text-xs"></i>
                                 </button>
                                 <span class="font-semibold text-gray-900 dark:text-white text-sm select-none">${itemQty}</span>
-                                <button onclick="updateQuantity(${index}, 1)" class="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-imvidia transition rounded-full hover:bg-gray-200 dark:hover:bg-slate-700">
+                                <button onclick="updateQuantity(${key}, 1)" class="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-imvidia transition rounded-full hover:bg-gray-200 dark:hover:bg-slate-700">
                                     <i class="fa-solid fa-plus text-xs"></i>
                                 </button>
                             </div>
@@ -211,7 +266,7 @@ if ($product_result) {
                             </div>
 
                             <!-- Trash Button -->
-                            <button onclick="updateQuantity(${index}, -999)" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-500 rounded-full transition transform hover:scale-110 flex-shrink-0">
+                            <button onclick="updateQuantity(${key}, -999)" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-500 rounded-full transition transform hover:scale-110 flex-shrink-0">
                                 <i class="fa-solid fa-trash-can"></i>
                             </button>
                         </div>
@@ -236,10 +291,15 @@ if ($product_result) {
         }
 
         // Toggle whether a single cart item is included in the next checkout
-        function toggleSelect(index, isSelected) {
+        function toggleSelect(key, isSelected) {
+            if (window.IMVIDIA_LOGGED_IN) {
+                cartActionRequest('set_selected', { product_id: key, selected: isSelected ? '1' : '0' }).then(loadCart);
+                return;
+            }
+
             let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
-            if (cart[index]) {
-                cart[index].selected = isSelected;
+            if (cart[key]) {
+                cart[key].selected = isSelected;
                 localStorage.setItem(window.IMVIDIA_CART_KEY, JSON.stringify(cart));
                 loadCart();
             }
@@ -247,6 +307,11 @@ if ($product_result) {
 
         // Select or deselect every item in the cart at once
         function toggleSelectAll(isSelected) {
+            if (window.IMVIDIA_LOGGED_IN) {
+                cartActionRequest('set_all_selected', { selected: isSelected ? '1' : '0' }).then(loadCart);
+                return;
+            }
+
             let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
             cart.forEach(item => item.selected = isSelected);
             localStorage.setItem(window.IMVIDIA_CART_KEY, JSON.stringify(cart));
@@ -254,17 +319,25 @@ if ($product_result) {
         }
 
         // Change quantity (if dropped to 0, it removes it)
-        function updateQuantity(index, delta) {
+        function updateQuantity(key, delta) {
+            if (window.IMVIDIA_LOGGED_IN) {
+                const item = serverCart.find(i => i.product_id === key);
+                const currentQty = item ? item.quantity : 0;
+                const newQty = delta <= -999 ? 0 : currentQty + delta;
+                cartActionRequest('set_quantity', { product_id: key, quantity: newQty }).then(loadCart);
+                return;
+            }
+
             let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
 
-            if (cart[index]) {
+            if (cart[key]) {
                 // Handle older cart arrays that might not have a quantity variable yet
-                if(!cart[index].quantity) cart[index].quantity = 1;
+                if(!cart[key].quantity) cart[key].quantity = 1;
 
-                cart[index].quantity += delta;
+                cart[key].quantity += delta;
 
-                if (cart[index].quantity <= 0) {
-                    cart.splice(index, 1);
+                if (cart[key].quantity <= 0) {
+                    cart.splice(key, 1);
                 }
 
                 localStorage.setItem(window.IMVIDIA_CART_KEY, JSON.stringify(cart));
