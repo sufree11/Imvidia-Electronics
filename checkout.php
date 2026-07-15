@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $tax = $subtotal * 0.06; // 6% tax
             $shipping = 0; // Free shipping
-            $total = $subtotal; // Tax is included in subtotal
+            $total = $subtotal + $tax;
             
             // Generate receipt number (timestamp-based)
             $receipt_number = 'INV' . date('YmdHis');
@@ -206,6 +206,15 @@ if (!empty($user['is_logged_in'])) {
             'selected' => (bool) $row['selected'],
         ];
     }
+}
+
+// Product thumbnails aren't stored on cart items themselves (guest carts live
+// in localStorage with no image field), so look them up by name the same way
+// cart.php does.
+$placeholder_image = 'https://ui-avatars.com/api/?name=No+Image&background=f1f5f9&color=94a3b8';
+$product_images = [];
+foreach (getRows("SELECT name, image_url FROM product") as $row) {
+    $product_images[$row['name']] = !empty($row['image_url']) ? $row['image_url'] : $placeholder_image;
 }
 ?>
 
@@ -368,7 +377,7 @@ if (!empty($user['is_logged_in'])) {
                             <span class="text-base font-semibold text-gray-900 dark:text-white">RM <?php echo number_format($receipt_data['subtotal'], 2); ?></span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-base text-gray-600 dark:text-gray-400">Taxes (Included)</span>
+                            <span class="text-base text-gray-600 dark:text-gray-400">Tax (6%)</span>
                             <span class="text-base font-semibold text-gray-900 dark:text-white">RM <?php echo number_format($receipt_data['tax'], 2); ?></span>
                         </div>
                         <div class="flex justify-between items-center">
@@ -678,14 +687,6 @@ if (!empty($user['is_logged_in'])) {
                             <!-- Items will be injected here via JavaScript -->
                         </div>
 
-                        <div class="border-t border-gray-200 dark:border-slate-700/80 pt-4 mb-6">
-                            <!-- Discount Code -->
-                            <div class="flex space-x-2">
-                                <input type="text" placeholder="Discount code" class="flex-1 px-4 py-2.5 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-900 dark:text-white transition shadow-sm text-sm">
-                                <button type="button" class="px-4 py-2.5 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium text-sm hover:bg-gray-300 dark:hover:bg-slate-600 transition">Apply</button>
-                            </div>
-                        </div>
-
                         <!-- Subtotals -->
                         <div class="space-y-3 text-sm border-t border-gray-200 dark:border-slate-700/80 pt-4 mb-6">
                             <div class="flex justify-between text-gray-600 dark:text-gray-400">
@@ -697,7 +698,7 @@ if (!empty($user['is_logged_in'])) {
                                 <span class="font-medium text-green-600 dark:text-green-400">Free</span>
                             </div>
                             <div class="flex justify-between text-gray-600 dark:text-gray-400">
-                                <span>Taxes (Included)</span>
+                                <span>Tax (6%)</span>
                                 <span id="summary-tax" class="font-medium text-gray-900 dark:text-white">RM 0.00</span>
                             </div>
                         </div>
@@ -846,6 +847,12 @@ if (!empty($user['is_logged_in'])) {
                 : JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
             let cart = fullCart.filter(item => item.selected !== false);
 
+            const productImages = <?php echo json_encode($product_images); ?>;
+            const placeholderImage = <?php echo json_encode($placeholder_image); ?>;
+            function getProductImage(name) {
+                return productImages[name] || placeholderImage;
+            }
+
             function renderCart() {
                 if (cart.length === 0) {
                     const emptyMessage = fullCart.length === 0
@@ -870,11 +877,12 @@ if (!empty($user['is_logged_in'])) {
                     const itemQty = item.quantity || 1;
                     const itemTotal = item.price * itemQty;
                     subtotal += itemTotal;
-                    
+                    const thumbnail = getProductImage(item.name);
+
                     html += `
                         <div class="flex items-start space-x-4">
                             <div class="relative h-16 w-16 bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
-                                <i class="fa-solid fa-box text-2xl text-gray-400 dark:text-gray-500"></i>
+                                <img src="${thumbnail}" alt="${item.name}" class="max-w-full max-h-full object-contain rounded-md">
                                 <span class="absolute -top-2 -right-2 bg-gray-500 dark:bg-gray-600 text-white text-xs font-bold px-2 py-0.5 rounded-full z-10">${itemQty}</span>
                             </div>
                             <div class="flex-1 min-w-0">
@@ -888,9 +896,9 @@ if (!empty($user['is_logged_in'])) {
 
                 if (cartContainer) cartContainer.innerHTML = html;
 
-                // Calculate tax (assuming 6% inclusive for display)
-                const tax = subtotal * 0.06; 
-                const total = subtotal; 
+                // 6% tax added on top of subtotal
+                const tax = subtotal * 0.06;
+                const total = subtotal + tax;
                 
                 if (subtotalEl) subtotalEl.innerText = 'RM ' + subtotal.toFixed(2);
                 if (taxEl) taxEl.innerText = 'RM ' + tax.toFixed(2);
