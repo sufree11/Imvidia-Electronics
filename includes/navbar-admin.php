@@ -1,5 +1,6 @@
 <?php
 
+// resolve admin nav state
 if (!isset($admin_data) || !is_array($admin_data)) {
     $admin_data = [
         'id' => null,

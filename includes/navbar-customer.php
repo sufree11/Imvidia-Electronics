@@ -3,6 +3,7 @@
 require_once __DIR__ . '/db-helpers.php';
 require_once __DIR__ . '/cart-helpers.php';
 
+// resolve customer nav state
 $admin_check = checkAdminOrGuest();
 
 if ($admin_check['is_admin']) {
@@ -100,6 +101,7 @@ if ($is_logged_in && !$is_admin && !empty($user['user_id'])) {
 </nav>
 
 <script>
+    // navigate to cart or wishlist
     function viewCart() {
         window.location.href = 'cart.php';
     }
@@ -129,6 +131,7 @@ if ($is_logged_in && !$is_admin && !empty($user['user_id'])) {
         }, 2200);
     }
 
+    // bump wishlist badge count
     function updateWishlistBadge(count) {
         const badge = document.getElementById('wishlist-badge');
         if (badge) {
@@ -144,7 +147,7 @@ if ($is_logged_in && !$is_admin && !empty($user['user_id'])) {
         try {
             const response = await fetch('wishlist-action.php', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': window.IMVIDIA_CSRF },
                 body: 'product_id=' + encodeURIComponent(productId)
             });
             const data = await response.json();

@@ -118,6 +118,7 @@ function ensureOrdersSchemaV2() {
     }
 }
 
+// resolve order date column
 function getOrderDateColumnExpression() {
     global $conn;
 
@@ -136,6 +137,7 @@ function getOrderDateColumnExpression() {
     return 'NULL';
 }
 
+// fetch line items for order
 function getOrderItemsForOrder($order_id) {
     return getRows(
         "SELECT oi.quantity, oi.unit_price, p.product_id, p.name AS product_name, p.image_url
@@ -229,6 +231,7 @@ function getOrdersForAdmin($status_filter = 'all', $search = '') {
     return $orders;
 }
 
+// sum order line totals
 function getOrderTotal(array $order) {
     $total = 0.0;
     foreach ($order['items'] as $item) {

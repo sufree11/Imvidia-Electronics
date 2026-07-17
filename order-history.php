@@ -18,6 +18,7 @@ if ($db_user) {
 
 $placeholder_image = 'https://ui-avatars.com/api/?name=No+Image&background=f1f5f9&color=94a3b8';
 
+// load this customer's orders
 $orders = getOrdersForUser($user_id);
 ?>
 <!DOCTYPE html>
@@ -27,6 +28,7 @@ $orders = getOrdersForUser($user_id);
     <?php include 'includes/head.php'; ?>
 
     <style>
+        /* page specific theme overrides */
         :root {
             --bg: #f8fafc;
             --surface: #ffffff;
@@ -46,11 +48,11 @@ $orders = getOrdersForUser($user_id);
     </style>
 </head>
 
-<body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100">
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100">
 
     <?php include 'includes/navbar-customer.php'; ?>
 
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full relative z-10">
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full relative z-10 animate-fade-in-up">
 
         <nav class="flex text-xs font-medium text-gray-400 dark:text-slate-500 mb-8 uppercase tracking-widest" aria-label="Breadcrumb">
             <ol class="inline-flex items-center space-x-2">
@@ -157,6 +159,11 @@ $orders = getOrdersForUser($user_id);
                                             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
                                                 Qty: <?php echo (int) $item['quantity']; ?> &times; RM <?php echo number_format($item['unit_price'], 2); ?>
                                             </p>
+                                            <?php if (strtolower($order_progress) === 'delivered' && !empty($item['product_id'])): ?>
+                                                <a href="product.php?id=<?php echo (int) $item['product_id']; ?>#write-review" class="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold text-imvidia hover:text-imvidia-dark transition">
+                                                    <i class="fa-solid fa-star"></i> Write a review
+                                                </a>
+                                            <?php endif; ?>
                                         </div>
                                         <div class="text-right flex-shrink-0">
                                             <p class="font-bold text-gray-900 dark:text-white text-sm sm:text-base">RM <?php echo number_format($item['unit_price'] * $item['quantity'], 2); ?></p>

@@ -1,7 +1,12 @@
 <?php
 
 require_once __DIR__ . '/../db/session.php';
+require_once __DIR__ . '/security.php';
 
+// Route uncaught exceptions / fatal errors to error.php (once per request).
+initSecurity();
+
+// force customer login or redirect
 function requireCustomerLogin() {
     if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'customer') {
         header("Location: login.php");
@@ -9,6 +14,7 @@ function requireCustomerLogin() {
     }
 }
 
+// force admin login or redirect
 function requireAdminLogin() {
     if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
         header("Location: login.php");
@@ -16,6 +22,7 @@ function requireAdminLogin() {
     }
 }
 
+// fetch selected user fields from session
 function getSessionUser(array $fields, ?string $requiredRole = null): ?array {
     global $conn;
 
@@ -39,6 +46,7 @@ function getSessionUser(array $fields, ?string $requiredRole = null): ?array {
     return null;
 }
 
+// resolve customer or guest defaults
 function checkCustomerOrGuest() {
     $user = getSessionUser(['id', 'first_name', 'last_name', 'email', 'profile_picture', 'phone', 'address_street', 'address_city', 'address_state', 'address_zip'], 'customer');
     if (!$user) {
@@ -72,6 +80,7 @@ function checkCustomerOrGuest() {
     ];
 }
 
+// fetch admin display fields
 function getAdminUserData() {
     return getSessionUser(['id', 'first_name', 'last_name', 'profile_picture']) ?: [
         'id' => null,
@@ -81,6 +90,7 @@ function getAdminUserData() {
     ];
 }
 
+// resolve admin or guest defaults
 function checkAdminOrGuest() {
     $user = getSessionUser(['id', 'first_name', 'last_name', 'profile_picture'], 'admin');
     if (!$user) {
@@ -104,6 +114,7 @@ function checkAdminOrGuest() {
     ];
 }
 
+// disable caching on authed pages
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");

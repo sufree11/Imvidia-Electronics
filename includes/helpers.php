@@ -4,6 +4,7 @@ require_once 'vendor/autoload.php';
 use Aws\S3\S3Client;
 use Aws\Exception\AwsException;
 
+// build avatar url with fallback
 function getAvatarUrl($firstName, $lastName, $profilePicture = '', $isAdmin = false) {
     if (!empty($profilePicture)) {
         return htmlspecialchars($profilePicture);
@@ -15,6 +16,7 @@ function getAvatarUrl($firstName, $lastName, $profilePicture = '', $isAdmin = fa
     return "https://ui-avatars.com/api/?name={$name}&background={$bgColor}&color=fff&size=128";
 }
 
+// upload image to s3 storage
 function uploadToS3($file, $prefix, $fileId, $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp']) {
     $result = [
         'success' => false,
@@ -64,6 +66,7 @@ function uploadToS3($file, $prefix, $fileId, $allowedExts = ['jpg', 'jpeg', 'png
     return $result;
 }
 
+// fetch full user row
 function getUserData($userId) {
     global $conn;
     
@@ -78,10 +81,12 @@ function getUserData($userId) {
     return [];
 }
 
+// echo avatar image tag
 function displayAvatar($avatarUrl, $fullName, $classes = 'w-10 h-10 rounded-full') {
     echo '<img src="' . htmlspecialchars($avatarUrl) . '" alt="' . htmlspecialchars($fullName) . '" class="' . $classes . ' object-cover bg-white shadow-sm">';
 }
 
+// pick status badge classes
 function getOrderProgressClass($progress) {
     $normalized = strtolower(trim((string) $progress));
     if ($normalized === 'delivered' || $normalized === 'completed') {

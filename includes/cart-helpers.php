@@ -22,6 +22,7 @@ function ensureCartSchema() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 }
 
+// fetch cart items with product
 function getCartItemsForUser($user_id) {
     return getRows(
         "SELECT ci.product_id, ci.quantity, ci.selected, p.name, p.price, p.image_url, p.stock_quantity
@@ -34,10 +35,12 @@ function getCartItemsForUser($user_id) {
     );
 }
 
+// total quantity in cart
 function getCartCountForUser($user_id) {
     return (int) getValue("SELECT COALESCE(SUM(quantity), 0) FROM cart_items WHERE user_id = ?", [$user_id], 'i');
 }
 
+// add or bump cart item
 function addOrIncrementCartItem($user_id, $product_id, $qty = 1) {
     $existing = getRow("SELECT cart_item_id, quantity FROM cart_items WHERE user_id = ? AND product_id = ?", [$user_id, $product_id], 'ii');
     $stock = (int) getValue("SELECT stock_quantity FROM product WHERE product_id = ?", [$product_id], 'i');
@@ -51,6 +54,7 @@ function addOrIncrementCartItem($user_id, $product_id, $qty = 1) {
     return executeStatement("INSERT INTO cart_items (user_id, product_id, quantity) VALUES (?, ?, ?)", [$user_id, $product_id, $new_qty], 'iii');
 }
 
+// set cart item quantity
 function setCartItemQuantity($user_id, $product_id, $qty) {
     if ($qty <= 0) {
         return removeCartItem($user_id, $product_id);
@@ -62,14 +66,17 @@ function setCartItemQuantity($user_id, $product_id, $qty) {
     return executeStatement("UPDATE cart_items SET quantity = ? WHERE user_id = ? AND product_id = ?", [$qty, $user_id, $product_id], 'iii');
 }
 
+// remove item from cart
 function removeCartItem($user_id, $product_id) {
     return executeStatement("DELETE FROM cart_items WHERE user_id = ? AND product_id = ?", [$user_id, $product_id], 'ii');
 }
 
+// toggle single item selection
 function setCartItemSelected($user_id, $product_id, $selected) {
     return executeStatement("UPDATE cart_items SET selected = ? WHERE user_id = ? AND product_id = ?", [$selected ? 1 : 0, $user_id, $product_id], 'iii');
 }
 
+// toggle all item selections
 function setAllCartItemsSelected($user_id, $selected) {
     return executeStatement("UPDATE cart_items SET selected = ? WHERE user_id = ?", [$selected ? 1 : 0, $user_id], 'ii');
 }

@@ -8,6 +8,7 @@ $user = checkCustomerOrGuest();
 
 $placeholder_image = 'https://ui-avatars.com/api/?name=No+Image&background=f1f5f9&color=94a3b8';
 
+// build product image and id maps
 $product_images = [];
 $product_ids = [];
 $product_result = mysqli_query($conn, "SELECT product_id, name, image_url FROM product");
@@ -18,6 +19,7 @@ if ($product_result) {
     }
 }
 
+// load db cart for logged in user
 $server_cart = [];
 if (!empty($user['is_logged_in'])) {
     ensureCartSchema();
@@ -39,12 +41,12 @@ if (!empty($user['is_logged_in'])) {
     <?php include 'includes/head.php'; ?>
 </head>
 
-<body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100">
 
     <?php include 'includes/navbar-customer.php'; ?>
 
     <!-- Main Cart Content -->
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 w-full relative z-10">
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 w-full relative z-10 animate-fade-in-up">
 
         <div class="mb-10">
             <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">Your Cart</h1>
@@ -124,10 +126,12 @@ if (!empty($user['is_logged_in'])) {
         // cart-action.php response so re-renders don't need another round trip.
         let serverCart = <?php echo json_encode($server_cart); ?>;
 
+        // product image or placeholder
         function getProductImage(name) {
             return productImages[name] || placeholderImage;
         }
 
+        // open product page
         function goToProduct(name) {
             const productId = productIds[name];
             if (productId) {
@@ -135,11 +139,12 @@ if (!empty($user['is_logged_in'])) {
             }
         }
 
+        // send cart action to server
         async function cartActionRequest(action, params) {
             const body = new URLSearchParams({ action, ...params });
             const response = await fetch('cart-action.php', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': window.IMVIDIA_CSRF },
                 body
             });
             const data = await response.json();
@@ -160,6 +165,7 @@ if (!empty($user['is_logged_in'])) {
             }
         }
 
+        // current cart data source
         function getCurrentCart() {
             if (window.IMVIDIA_LOGGED_IN) {
                 return serverCart;
@@ -169,6 +175,7 @@ if (!empty($user['is_logged_in'])) {
             return JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
         }
 
+        // render cart contents
         function loadCart() {
             let cart = getCurrentCart();
 
@@ -291,6 +298,7 @@ if (!empty($user['is_logged_in'])) {
         }
 
         // Toggle whether a single cart item is included in the next checkout
+        // toggle one item selected
         function toggleSelect(key, isSelected) {
             if (window.IMVIDIA_LOGGED_IN) {
                 cartActionRequest('set_selected', { product_id: key, selected: isSelected ? '1' : '0' }).then(loadCart);
@@ -306,6 +314,7 @@ if (!empty($user['is_logged_in'])) {
         }
 
         // Select or deselect every item in the cart at once
+        // toggle all items selected
         function toggleSelectAll(isSelected) {
             if (window.IMVIDIA_LOGGED_IN) {
                 cartActionRequest('set_all_selected', { selected: isSelected ? '1' : '0' }).then(loadCart);
@@ -319,6 +328,7 @@ if (!empty($user['is_logged_in'])) {
         }
 
         // Change quantity (if dropped to 0, it removes it)
+        // change item quantity
         function updateQuantity(key, delta) {
             if (window.IMVIDIA_LOGGED_IN) {
                 const item = serverCart.find(i => i.product_id === key);
@@ -345,6 +355,7 @@ if (!empty($user['is_logged_in'])) {
             }
         }
 
+        // update cart badge count
         function updateCartBadge(count) {
             const badge = document.getElementById('cart-badge');
             if(badge) {

@@ -4,6 +4,7 @@
     <script>
         window.IMVIDIA_CART_KEY = <?php echo json_encode('imvidia_cart_' . (isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'guest')); ?>;
         window.IMVIDIA_LOGGED_IN = <?php echo (($_SESSION['user_role'] ?? '') === 'customer' && isset($_SESSION['user_id'])) ? 'true' : 'false'; ?>;
+        window.IMVIDIA_CSRF = <?php echo json_encode(csrfToken()); ?>;
 
         <?php if (($_SESSION['user_role'] ?? '') === 'customer' && isset($_SESSION['user_id'])): ?>
         // Fold any items added while browsing as a guest into this account's
@@ -15,7 +16,7 @@
             if (guestCart.length > 0) {
                 fetch('cart-action.php', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': window.IMVIDIA_CSRF },
                     body: 'action=merge_guest&items=' + encodeURIComponent(JSON.stringify(guestCart))
                 }).then(() => {
                     localStorage.removeItem(guestKey);
@@ -28,6 +29,7 @@
         <?php endif; ?>
     </script>
     <script>
+        // dark mode bootstrap and toggles
         (function() {
             const html = document.documentElement;
 
@@ -110,6 +112,34 @@
     </script>
     <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
 
+    <style>
+        /* Custom password visibility toggle (see includes/password-toggle.php) */
+        /* Hide the browser's built-in reveal/clear icons (Edge/Chrome on Windows)
+           so only our custom eye shows. */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear { display: none; }
+        .pw-eye-off { display: none; }
+        [data-password-toggle].is-visible .pw-eye-open { display: none; }
+        [data-password-toggle].is-visible .pw-eye-off { display: block; }
+    </style>
+    <script>
+        (function() {
+            // Delegated handler so every password field on the page shares one
+            // toggle. The button lives in a `.relative` wrapper next to its input.
+            document.addEventListener('click', function(e) {
+                const btn = e.target.closest('[data-password-toggle]');
+                if (!btn) return;
+                const wrap = btn.closest('.relative') || btn.parentElement;
+                const input = wrap && wrap.querySelector('input');
+                if (!input) return;
+                const reveal = input.type === 'password';
+                input.type = reveal ? 'text' : 'password';
+                btn.classList.toggle('is-visible', reveal);
+                btn.setAttribute('aria-label', reveal ? 'Hide password' : 'Show password');
+            });
+        })();
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -121,6 +151,7 @@
     <link rel="stylesheet" href="includes/styles.css">
 
     <script>
+        // tailwind theme configuration
         tailwind.config = {
             darkMode: 'class',
             theme: {

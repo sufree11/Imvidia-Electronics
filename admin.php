@@ -9,6 +9,7 @@ $admin_data = getAdminUserData();
 
 ensureOrdersSchemaV2();
 
+// load dashboard stat totals
 $total_products = 0;
 
 $total_orders = (int) getValue("SELECT COUNT(*) FROM orders");
@@ -34,11 +35,11 @@ $admin_order_count = $total_orders;
     <?php include 'includes/head.php'; ?>
 </head>
 
-<body class="bg-fixed bg-gray-50 text-gray-800 flex h-screen overflow-hidden dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
+<body class="bg-gray-50 text-gray-800 flex h-screen overflow-hidden dark:bg-slate-950 dark:text-gray-100">
 
     <?php include 'includes/navbar-admin.php'; ?>
 
-        <main class="flex-1 overflow-y-auto p-6 lg:p-8">
+        <main class="flex-1 overflow-y-auto p-6 lg:p-8 animate-fade-in-up">
             <div class="max-w-7xl mx-auto">
                 
                 <div class="mb-8">

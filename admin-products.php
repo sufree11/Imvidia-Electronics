@@ -83,6 +83,8 @@ if (isset($_GET['edit'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    requireCsrfOrFail();
+
     if (isset($_POST['action']) && $_POST['action'] === 'delete' && isset($_POST['product_id'])) {
         $product_id = intval($_POST['product_id']);
         $delete_query = "DELETE FROM product WHERE product_id = $product_id";
@@ -136,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             } else {
                 $insert_query = "INSERT INTO product (name, description, price, category, stock_quantity, image_url, admin_id, created_at) 
-                                 VALUES ('$name', '$desc', '$price', '$category', '$stock', '" . mysqli_real_escape_string($conn, $image_url) . "', " . $_SESSION['user_id'] . ", NOW())";
+                                 VALUES ('$name', '$desc', '$price', '$category', '$stock', '" . mysqli_real_escape_string($conn, $image_url) . "', " . (int) $_SESSION['user_id'] . ", NOW())";
                 
                 if (mysqli_query($conn, $insert_query)) {
                     $new_product_id = mysqli_insert_id($conn);
@@ -201,7 +203,7 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
     <script src="https://cdn.tiny.cloud/1/be8dfp6y9j7hrwecamdcd0qll0us7grftmz5xjf4sb32mcqg/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
 </head>
 
-<body class="bg-fixed bg-gray-50 text-gray-800 flex h-screen overflow-hidden dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
+<body class="bg-gray-50 text-gray-800 flex h-screen overflow-hidden dark:bg-slate-950 dark:text-gray-100">
 
     <?php include 'includes/navbar-admin.php'; ?>
 
@@ -333,6 +335,7 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
                     <?php endif; ?>
 
                     <form id="addProductForm" method="POST" enctype="multipart/form-data" onsubmit="handleFormSubmit(event)" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <?php echo csrfField(); ?>
                         <?php if ($edit_mode && $product_to_edit): ?>
                             <input type="hidden" name="product_id" value="<?php echo $product_to_edit['product_id']; ?>">
                             <input type="hidden" id="existing-image-url" value="<?php echo !empty($product_to_edit['image_url']) ? htmlspecialchars($product_to_edit['image_url']) : ''; ?>">
@@ -939,6 +942,7 @@ function renderGalleryPreviews() {
             const form = document.createElement('form');
             form.method = 'POST';
             form.innerHTML = `
+                <input type="hidden" name="csrf_token" value="${window.IMVIDIA_CSRF || ''}">
                 <input type="hidden" name="action" value="delete">
                 <input type="hidden" name="product_id" value="${productId}">
             `;

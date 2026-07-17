@@ -21,11 +21,11 @@ $wishlist_products = getRows(
     <?php include 'includes/head.php'; ?>
 </head>
 
-<body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100">
 
     <?php include 'includes/navbar-customer.php'; ?>
 
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 w-full relative z-10">
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 w-full relative z-10 animate-fade-in-up">
 
         <div class="mb-10">
             <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">Your Wishlist</h1>
@@ -116,7 +116,7 @@ $wishlist_products = getRows(
             const body = new URLSearchParams({ action: 'add', product_id: productId, quantity: 1 });
             const response = await fetch('cart-action.php', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': window.IMVIDIA_CSRF },
                 body
             });
             const data = await response.json();

@@ -1,4 +1,5 @@
 <?php
+define('AJAX_ENDPOINT', true);
 require_once 'db/session.php';
 require_once 'includes/auth.php';
 require_once 'includes/db-helpers.php';
@@ -11,6 +12,8 @@ if (($_SESSION['user_role'] ?? '') !== 'customer' || !isset($_SESSION['user_id']
     exit();
 }
 
+requireCsrfOrFail();
+
 $user_id = (int) $_SESSION['user_id'];
 $product_id = isset($_POST['product_id']) ? (int) $_POST['product_id'] : 0;
 
@@ -19,6 +22,7 @@ if ($product_id <= 0) {
     exit();
 }
 
+// toggle product in wishlist
 $existing = getRow("SELECT wishlist_id FROM wishlist WHERE user_id = ? AND product_id = ?", [$user_id, $product_id], 'ii');
 
 if ($existing) {
@@ -34,6 +38,7 @@ if (!$ok) {
     exit();
 }
 
+// return updated wishlist state
 $wishlist_count = (int) getValue("SELECT COUNT(*) FROM wishlist WHERE user_id = ?", [$user_id], 'i');
 
 echo json_encode([

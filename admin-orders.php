@@ -15,7 +15,10 @@ $msg_type = '';
 
 $allowed_statuses = ['Pending', 'Processing', 'Shipped', 'Delivered'];
 
+// handle order cancel and status updates
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    requireCsrfOrFail();
+
     $action = $_POST['action'] ?? '';
     $order_id = isset($_POST['order_id']) ? (int) $_POST['order_id'] : 0;
 
@@ -57,6 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// load filtered order list
 $status_filter = $_GET['status'] ?? 'all';
 $allowed_filters = ['all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'];
 if (!in_array($status_filter, $allowed_filters, true)) {
@@ -75,10 +79,10 @@ $admin_order_count = (int) getValue("SELECT COUNT(*) FROM orders");
     <title>Orders - AdminPanel</title>
     <?php include 'includes/head.php'; ?>
 </head>
-<body class="bg-fixed bg-gray-50 text-gray-800 flex h-screen overflow-hidden dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
+<body class="bg-gray-50 text-gray-800 flex h-screen overflow-hidden dark:bg-slate-950 dark:text-gray-100">
     <?php include 'includes/navbar-admin.php'; ?>
 
-        <main class="flex-1 overflow-y-auto p-6 lg:p-8">
+        <main class="flex-1 overflow-y-auto p-6 lg:p-8 animate-fade-in-up">
             <div class="max-w-7xl mx-auto">
 
                 <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -177,6 +181,7 @@ $admin_order_count = (int) getValue("SELECT COUNT(*) FROM orders");
                                         </span>
                                         <?php if (!$is_cancelled): ?>
                                             <form method="POST" class="flex items-center gap-1">
+                                                <?php echo csrfField(); ?>
                                                 <input type="hidden" name="action" value="update_status">
                                                 <input type="hidden" name="order_id" value="<?php echo (int) $order['order_id']; ?>">
                                                 <select name="order_progress" class="px-2 py-1.5 border border-gray-300 dark:border-slate-700 rounded-lg text-xs dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia">
@@ -230,6 +235,7 @@ $admin_order_count = (int) getValue("SELECT COUNT(*) FROM orders");
             <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Cancel Order</h3>
             <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Please provide a reason for cancelling this order. This will be visible in the customer's order history.</p>
             <form method="POST" id="cancel-form">
+                <?php echo csrfField(); ?>
                 <input type="hidden" name="action" value="cancel">
                 <input type="hidden" name="order_id" id="cancel-order-id" value="">
                 <textarea name="reason" required rows="3" placeholder="e.g. Out of stock, customer requested cancellation..." class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm text-sm"></textarea>

@@ -16,8 +16,9 @@ http_response_code($error_code);
 
 $error_title = "Unknown Error";
 $error_message = "Something went wrong on our end. Please try again later.";
-$icon = "fa-triangle-exclamation"; 
+$icon = "fa-triangle-exclamation";
 
+// map code to error copy
 switch ($error_code) {
     case 400:
         $error_title = "Bad Request";
@@ -31,7 +32,7 @@ switch ($error_code) {
         break;
     case 403:
         $error_title = "Access Forbidden";
-        $error_message = "You don't have the necessary administrative permissions to view this directory or page.";
+        $error_message = "You don't have the necessary permissions to view this directory or page.";
         $icon = "fa-shield-halved";
         break;
     case 404:
@@ -41,7 +42,7 @@ switch ($error_code) {
         break;
     case 500:
         $error_title = "Internal Server Error";
-        $error_message = "Our servers encountered an unexpected condition. The technical team has been notified.";
+        $error_message = "Our servers encountered an unexpected condition.";
         $icon = "fa-server";
         break;
     case 502:
@@ -51,7 +52,7 @@ switch ($error_code) {
         break;
     case 503:
         $error_title = "Service Unavailable";
-        $error_message = "The ImVidia platform is currently down for routine maintenance or is overloaded. Please try again shortly.";
+        $error_message = "The ImVidia platform is currently down for routine maintenance or is overloaded. Please try again later.";
         $icon = "fa-tools";
         break;
 }
@@ -64,11 +65,11 @@ switch ($error_code) {
     <?php include 'includes/head.php'; ?>
 </head>
 
-<body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100">
 
     <?php include 'includes/navbar-customer.php'; ?>
 
-    <main class="flex-grow flex items-center justify-center py-20 px-4 sm:px-6 lg:px-8 w-full z-10">
+    <main class="flex-grow flex items-center justify-center py-20 px-4 sm:px-6 lg:px-8 w-full z-10 animate-fade-in-up">
         
         <div class="max-w-2xl w-full text-center bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-xl border border-gray-100 dark:border-slate-800 p-10 sm:p-16 relative overflow-hidden">
             

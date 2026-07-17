@@ -31,6 +31,10 @@
 body {
     background-color: var(--bg) !important;
     color: var(--text-primary) !important;
+    /* shared dotted grid backdrop */
+    background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px);
+    background-size: 40px 40px;
+    background-attachment: fixed;
 }
 
 .dark .bg-white { 
@@ -61,8 +65,19 @@ body {
 
 .dark .text-gray-600,
 .dark .text-gray-500,
-.dark .text-gray-400 { 
-    color: var(--text-secondary) !important; 
+.dark .text-gray-400 {
+    color: var(--text-secondary) !important;
+}
+
+/* standardized clickable text hover
+   light mode goes imvidia dark mode goes imvidia-light
+   the hover rules override the grey block above */
+[class~="hover:text-imvidia"]:hover {
+    color: var(--imvidia-primary) !important;
+}
+.dark [class~="hover:text-imvidia"]:hover,
+.dark [class~="hover:text-imvidia-dark"]:hover {
+    color: var(--imvidia-light) !important;
 }
 
 .dark .border-gray-100,
@@ -233,37 +248,7 @@ body {
     transform: translateY(0); 
 }
 
-/* Smooth Fade In */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
-.fade-in {
-    animation: fadeIn 0.3s ease-in;
-}
-
-/* Slide Down */
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.slide-down {
-    animation: slideDown 0.3s ease-out;
-}
-
-/* 
+/*
    5. UTILITY CLASSES
  */
 
@@ -433,22 +418,7 @@ body {
     }
 }
 
-.fade-in-up {
-    animation: fadeInUp 0.3s ease-out;
-}
-
-.fade-in {
-    animation: fadeIn 0.2s ease-in-out;
-}
-
-.fade-out {
-    animation: fadeOut 0.2s ease-in-out;
-}
-
-.slide-up {
-    animation: slideUp 0.3s ease-out;
-}
-
+/* page load and interaction animations */
 .animate-fade-in-up {
     animation: fadeInUp 0.3s ease-out;
 }

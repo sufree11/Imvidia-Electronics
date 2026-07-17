@@ -2,6 +2,9 @@
 require_once 'includes/auth.php';
 require_once 'includes/db-helpers.php';
 require_once 'includes/helpers.php';
+require_once 'includes/review-helpers.php';
+
+ensureReviewSchema();
 
 $customer = checkCustomerOrGuest();
 $admin = checkAdminOrGuest();
@@ -21,11 +24,11 @@ if ($customer['is_logged_in'] && !$admin['is_admin']) {
     <?php include 'includes/head.php'; ?>
 </head>
 
-<body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100">
    
     <?php include 'includes/navbar-customer.php'; ?>
 
-    <header class="bg-gray-900 text-white">
+    <header class="bg-gray-900 text-white animate-fade-in-up">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28 flex flex-col md:flex-row items-center">
             <div class="md:w-1/2 mb-10 md:mb-0">
                 <h1 class="text-4xl md:text-5xl font-extrabold leading-tight mb-4">
@@ -67,14 +70,19 @@ if ($customer['is_logged_in'] && !$admin['is_admin']) {
     $catalog_query = "SELECT * FROM product ORDER BY product_id DESC";
     $catalog_result = mysqli_query($conn, $catalog_query);
 
+    $catalog_product_ids = [];
     if ($catalog_result && mysqli_num_rows($catalog_result) > 0) {
         while ($prod = mysqli_fetch_assoc($catalog_result)) {
             $cat = strtolower($prod['category']);
             if (isset($products_by_category[$cat])) {
                 $products_by_category[$cat][] = $prod;
+                $catalog_product_ids[] = (int) $prod['product_id'];
             }
         }
     }
+
+    // One batched query for every card's star rating (avoids a query per card).
+    $rating_map = getRatingSummariesForProducts($catalog_product_ids);
     ?>
 
     <div id="catalog" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 w-full">
@@ -153,6 +161,13 @@ if ($customer['is_logged_in'] && !$admin['is_admin']) {
                                                         </a>
                                                     </h3>
                                                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider"><?php echo $prod_cat; ?></p>
+                                                    <?php $prod_rating = $rating_map[$prod_id] ?? ['total' => 0, 'average' => 0]; ?>
+                                                    <?php if ($prod_rating['total'] > 0): ?>
+                                                        <div class="flex items-center gap-1 mt-1.5 relative z-10">
+                                                            <span class="space-x-0.5 leading-none"><?php echo renderStars($prod_rating['average'], 'text-xs'); ?></span>
+                                                            <span class="text-xs text-gray-400">(<?php echo $prod_rating['total']; ?>)</span>
+                                                        </div>
+                                                    <?php endif; ?>
                                                 </div>
                                                 <p class="text-sm font-bold text-gray-900 dark:text-white whitespace-nowrap mt-auto">RM <?php echo $prod_price; ?></p>
                                             </div>
@@ -190,6 +205,7 @@ if ($customer['is_logged_in'] && !$admin['is_admin']) {
             let intervalId;
             let timeoutId;
 
+            // position carousel images
             function updateCarousel() {
                 images.forEach((img, index) => {
                     let baseClasses = 'carousel-image absolute top-1/2 rounded-xl shadow-2xl object-cover aspect-video';
@@ -210,6 +226,7 @@ if ($customer['is_logged_in'] && !$admin['is_admin']) {
                 });
             }
 
+            // auto advance the carousel
             function startCarousel() {
                 if (intervalId) clearInterval(intervalId);
                 intervalId = setInterval(() => {
@@ -224,6 +241,7 @@ if ($customer['is_logged_in'] && !$admin['is_admin']) {
                 }, 3000);
             }
 
+            // pause the carousel
             function stopCarousel() {
                 clearInterval(intervalId);
                 clearTimeout(timeoutId);
@@ -244,6 +262,7 @@ if ($customer['is_logged_in'] && !$admin['is_admin']) {
     <script>
         let activeCategoryId = null;
 
+        // expand category product grid
         function toggleCategory(categoryName, btnId) {
             const container = document.getElementById('productContainer');
             const clickedBtn = document.getElementById(btnId);
@@ -295,6 +314,7 @@ if ($customer['is_logged_in'] && !$admin['is_admin']) {
     </script>
 
     <script>
+        // refresh guest cart badge
         function updateCartBadge() {
             // Logged-in users get their count server-rendered from the DB
             // cart (includes/navbar-customer.php) - don't stomp it here.
@@ -311,6 +331,7 @@ if ($customer['is_logged_in'] && !$admin['is_admin']) {
             }
         }
 
+        // add item to guest cart
         function addToCart(productName, price) {
             let cart = JSON.parse(localStorage.getItem(window.IMVIDIA_CART_KEY)) || [];
             let existingItem = cart.find(item => item.name === productName);

@@ -5,11 +5,14 @@ require_once 'includes/helpers.php';
 requireCustomerLogin();
 
 $user = checkCustomerOrGuest();
-$user_id = $_SESSION['user_id'];
+$user_id = (int) $_SESSION['user_id'];
 $message = '';
 $msg_type = '';
 
+// handle profile update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    requireCsrfOrFail();
+
     $fname = mysqli_real_escape_string($conn, $_POST['fname'] ?? '');
     $lname = mysqli_real_escape_string($conn, $_POST['lname'] ?? '');
     $email = mysqli_real_escape_string($conn, $_POST['email'] ?? '');
@@ -26,12 +29,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $avatar_query_part = "";
     $password_query_part = "";
     
+    // optional password change
     if (!empty($current_password) || !empty($new_password) || !empty($confirm_new_password)) {
-        $pass_check_query = "SELECT password_hash FROM users WHERE id = '$user_id' LIMIT 1";
-        $pass_check_result = mysqli_query($conn, $pass_check_query);
-        $user_data = mysqli_fetch_assoc($pass_check_result);
-        
-        if ($current_password !== $user_data['password_hash'] && !password_verify($current_password, $user_data['password_hash'])) {
+        $stored_hash = getValue("SELECT password_hash FROM users WHERE id = ? LIMIT 1", [$user_id], 'i');
+
+        if (!verifyUserPassword($current_password, $stored_hash)) {
             $message = "Current password is incorrect.";
             $msg_type = "error";
         } else if ($new_password !== $confirm_new_password) {
@@ -46,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
+    // optional avatar upload
     if ($msg_type !== "error" && isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
         $upload_dir_absolute = __DIR__ . '/uploads/avatars/';
         $upload_dir_relative = 'uploads/avatars/';
@@ -56,8 +59,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $file_ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
         $allowed_exts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-        
-        if (in_array($file_ext, $allowed_exts)) {
+
+        // image verif
+        //else out error
+        $image_info = @getimagesize($_FILES['avatar']['tmp_name']);
+        $is_real_image = $image_info !== false && in_array($image_info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_GIF, IMAGETYPE_WEBP], true);
+
+        if (in_array($file_ext, $allowed_exts) && $is_real_image) {
             $new_filename = 'user_' . $user_id . '_' . time() . '.' . $file_ext;
             
             $target_path_absolute = $upload_dir_absolute . $new_filename;
@@ -100,15 +108,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// fetch latest profile data
 $query = "SELECT * FROM users WHERE id = '$user_id' LIMIT 1";
 $result = mysqli_query($conn, $query);
-
 
 $db_user = mysqli_fetch_assoc($result);
 if ($db_user) {
     $user = array_merge($user, $db_user);
 }
 
+// malaysian state options
 $states = [
     'JHR' => 'Johor', 'KDH' => 'Kedah', 'KEL' => 'Kelantan', 'KUL' => 'Kuala Lumpur',
     'MLK' => 'Melaka', 'NSN' => 'Negeri Sembilan', 'PHG' => 'Pahang', 'PEN' => 'Penang',
@@ -125,6 +134,7 @@ $avatar_url = getAvatarUrl($user['first_name'] ?? '', $user['last_name'] ?? '', 
     <?php include 'includes/head.php'; ?>
 
     <style>
+        /* page specific theme overrides */
         :root {
             --bg: #f8fafc;
             --surface: #ffffff;
@@ -151,11 +161,11 @@ $avatar_url = getAvatarUrl($user['first_name'] ?? '', $user['last_name'] ?? '', 
     </style>
 </head>
 
-<body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100">
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100">
     
     <?php include 'includes/navbar-customer.php'; ?>
 
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full relative z-10">
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full relative z-10 animate-fade-in-up">
         
         <nav class="flex text-xs font-medium text-gray-400 dark:text-slate-500 mb-8 uppercase tracking-widest" aria-label="Breadcrumb">
             <ol class="inline-flex items-center space-x-2">
@@ -177,7 +187,7 @@ $avatar_url = getAvatarUrl($user['first_name'] ?? '', $user['last_name'] ?? '', 
         <?php endif; ?>
 
         <form action="profile.php" method="POST" enctype="multipart/form-data" class="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            
+            <?php echo csrfField(); ?>
             <div class="lg:col-span-4 xl:col-span-3 space-y-6">
                 <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 text-center">
                     
@@ -242,7 +252,7 @@ $avatar_url = getAvatarUrl($user['first_name'] ?? '', $user['last_name'] ?? '', 
                 </section>
 
                 <section class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-5 border-b border-gray-100 dark:border-slate-800 pb-3">Default Shipping Address</h3>
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-5 border-b border-gray-100 dark:border-slate-800 pb-3">Shipping Address</h3>
                     
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div class="sm:col-span-2">
@@ -278,15 +288,24 @@ $avatar_url = getAvatarUrl($user['first_name'] ?? '', $user['last_name'] ?? '', 
                     <div class="grid grid-cols-1 gap-6 max-w-md">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Current Password</label>
-                            <input type="password" name="current_password" placeholder="••••••••" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                            <div class="relative">
+                                <input type="password" name="current_password" class="w-full px-4 pr-11 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                                <?php include 'includes/password-toggle.php'; ?>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
-                            <input type="password" name="new_password" minlength="8" placeholder="••••••••" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                            <div class="relative">
+                                <input type="password" name="new_password" minlength="8" class="w-full px-4 pr-11 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                                <?php include 'includes/password-toggle.php'; ?>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm New Password</label>
-                            <input type="password" name="confirm_new_password" minlength="8" placeholder="••••••••" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                            <div class="relative">
+                                <input type="password" name="confirm_new_password" minlength="8" class="w-full px-4 pr-11 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                                <?php include 'includes/password-toggle.php'; ?>
+                            </div>
                         </div>
                     </div>
                 </section>

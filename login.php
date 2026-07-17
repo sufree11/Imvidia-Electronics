@@ -4,26 +4,36 @@ require_once 'includes/db-helpers.php';
 
 $error_message = '';
 
+// authenticate login submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $role = $_POST['role'] ?? 'customer';
-    $identity = trim($_POST['identity'] ?? ''); 
-    $password = $_POST['password'] ?? '';
-    
-    if (!empty($identity) && !empty($password)) {
-        $safe_identity = mysqli_real_escape_string($conn, $identity);
+    requireCsrfOrFail();
 
+    $role = $_POST['role'] ?? 'customer';
+    $identity = trim($_POST['identity'] ?? '');
+    $password = $_POST['password'] ?? '';
+
+    if (!empty($identity) && !empty($password)) {
         $identity_field = $role === 'admin' ? 'admin_id' : 'email';
-        $query = "SELECT id, role, password_hash FROM users WHERE $identity_field = '$safe_identity' LIMIT 1";
-        
-        $result = mysqli_query($conn, $query);
-        
-        if ($result && mysqli_num_rows($result) > 0) {
-            $user_row = mysqli_fetch_assoc($result);
-            
-            if (password_verify($password, $user_row['password_hash']) || $password === $user_row['password_hash']) {
+        $user_row = getRow(
+            "SELECT id, role, password_hash FROM users WHERE $identity_field = ? LIMIT 1",
+            [$identity],
+            's'
+        );
+
+        if ($user_row) {
+            if (verifyUserPassword($password, $user_row['password_hash'])) {
+                // Transparently upgrade any legacy plaintext row to a hash.
+                if (passwordNeedsUpgrade($user_row['password_hash'])) {
+                    executeStatement(
+                        "UPDATE users SET password_hash = ? WHERE id = ?",
+                        [hashPassword($password), (int) $user_row['id']],
+                        'si'
+                    );
+                }
+
                 $_SESSION['user_id'] = $user_row['id'];
                 $_SESSION['user_role'] = $user_row['role'];
-                
+
                 if ($user_row['role'] === 'admin') {
                     header("Location: admin.php");
                 } else {
@@ -47,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Log In - ImVidia</title>
     <?php include 'includes/head.php'; ?>
 </head>
-<body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100">
     
     <nav class="bg-white shadow-sm sticky top-0 z-50 dark:bg-slate-950">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-6">
@@ -63,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </nav> 
 
-    <main class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <main class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 animate-fade-in-up">
 
         <div class="max-w-md w-full bg-white dark:bg-slate-900 px-8 pb-8 pt-14 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-700 relative mt-8 z-10">
             
@@ -92,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <form id="loginForm" method="POST" action="login.php" class="space-y-6">
-                
+                <?php echo csrfField(); ?>
                 <input type="hidden" name="role" id="role-input" value="customer">
 
                 <div>
@@ -118,7 +128,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <i class="fa-solid fa-lock text-gray-400"></i>
                         </div>
                         <input type="password" id="password" name="password" required
-                               class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-imvidia focus:border-imvidia outline-none transition bg-white dark:bg-slate-800 text-gray-900 dark:text-white">
+                               class="w-full pl-10 pr-11 py-2 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-imvidia focus:border-imvidia outline-none transition bg-white dark:bg-slate-800 text-gray-900 dark:text-white">
+                        <?php include 'includes/password-toggle.php'; ?>
                     </div>
                 </div>
 
@@ -131,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
 
                     <div class="text-sm">
-                        <a href="#" class="font-medium text-imvidia hover:text-imvidia-dark transition">
+                        <a href="forgot-password.php" class="font-medium text-imvidia hover:text-imvidia-dark transition">
                             Forgot your password?
                         </a>
                     </div>

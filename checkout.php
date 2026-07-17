@@ -60,18 +60,20 @@ function saveOrder(?int $user_id, array $cart, string $payment_method, array $sh
     foreach ($cart as $item) {
         $product_name = trim((string) ($item['name'] ?? ''));
         $quantity = max(1, (int) ($item['quantity'] ?? 1));
-        $unit_price = (float) ($item['price'] ?? 0);
 
         if ($product_name === '') {
             rollbackTransaction();
             return false;
         }
 
-        $product = getRow("SELECT product_id FROM product WHERE name = ? LIMIT 1", [$product_name], 's');
+        // Never trust the client-submitted price: resolve the product and use
+        // the current DB price as the authoritative unit_price.
+        $product = getRow("SELECT product_id, price FROM product WHERE name = ? LIMIT 1", [$product_name], 's');
         if (!$product) {
             rollbackTransaction();
             return false;
         }
+        $unit_price = (float) $product['price'];
 
         $item_saved = executeStatement(
             "INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES (?, ?, ?, ?)",
@@ -91,6 +93,7 @@ function saveOrder(?int $user_id, array $cart, string $payment_method, array $sh
 
 // Handle POST request (order submission)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    requireCsrfOrFail();
     // Validate and collect customer information from form
     $email = isset($_POST['email']) ? trim($_POST['email']) : '';
     $first_name = isset($_POST['first_name']) ? trim($_POST['first_name']) : '';
@@ -109,12 +112,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $cart = json_decode($cart_json, true);
         
         if (is_array($cart) && count($cart) > 0) {
-            // Calculate totals
-            $subtotal = 0;
-            foreach ($cart as $item) {
-                $qty = $item['quantity'] ?? 1;
-                $subtotal += ($item['price'] * $qty);
+            // Calculate totals from authoritative DB prices, never the prices
+            // the client submitted in cart_data.
+            $db_price_map = [];
+            foreach (getRows("SELECT name, price FROM product") as $price_row) {
+                $db_price_map[$price_row['name']] = (float) $price_row['price'];
             }
+
+            $subtotal = 0;
+            foreach ($cart as &$item) {
+                $qty = max(1, (int) ($item['quantity'] ?? 1));
+                $price = $db_price_map[$item['name'] ?? ''] ?? 0;
+                $item['price'] = $price; // overwrite client price for the receipt
+                $subtotal += ($price * $qty);
+            }
+            unset($item);
             
             $tax = $subtotal * 0.06; // 6% tax
             $shipping = 0; // Free shipping
@@ -250,7 +262,7 @@ foreach (getRows("SELECT name, image_url FROM product") as $row) {
     </style>
 </head>
 
-<body class="bg-fixedbg-gray-50 text-gray-800 antialiased dark:bg-slate-950 dark:text-gray-100 selection:bg-imvidia selection:text-white" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
+<body class="bg-gray-50 text-gray-800 antialiased dark:bg-slate-950 dark:text-gray-100 selection:bg-imvidia selection:text-white">
 
     <!-- Minimal Navbar for Checkout (Distraction Free) -->
     <nav class="bg-white shadow-sm sticky top-0 z-50 dark:bg-slate-950">
@@ -267,7 +279,7 @@ foreach (getRows("SELECT name, image_url FROM product") as $row) {
         </div>
     </nav> 
 
-    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-fade-in-up">
         
         <!-- RECEIPT DISPLAY (shown after successful checkout) -->
         <?php if ($checkout_success && $receipt_data): ?>
@@ -451,7 +463,7 @@ foreach (getRows("SELECT name, image_url FROM product") as $row) {
             <?php endif; ?>
 
             <form id="checkout-form" method="POST" class="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                
+                <?php echo csrfField(); ?>
                 <!-- LEFT COLUMN: Forms (Takes up 7 out of 12 columns on large screens) -->
                 <div class="lg:col-span-7 space-y-8">
                     
@@ -849,10 +861,12 @@ foreach (getRows("SELECT name, image_url FROM product") as $row) {
 
             const productImages = <?php echo json_encode($product_images); ?>;
             const placeholderImage = <?php echo json_encode($placeholder_image); ?>;
+            // product image or placeholder
             function getProductImage(name) {
                 return productImages[name] || placeholderImage;
             }
 
+            // render checkout order summary
             function renderCart() {
                 if (cart.length === 0) {
                     const emptyMessage = fullCart.length === 0

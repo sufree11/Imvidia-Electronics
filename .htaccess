@@ -1,3 +1,10 @@
+# Route Apache-level HTTP errors (missing files, forbidden, server errors) to
+# the shared error page. Paths are domain-root-relative, matching production
+# (DigitalOcean App Platform serves the app at the root, not a subdirectory).
+# On the XAMPP localhost install under /Imvidia-Electronics/, Apache-level
+# errors won't hit these (there's no vhost root rewrite) - app-level errors
+# (bad input, exceptions) still route correctly via includes/security.php
+# regardless of this file, since that uses a relative require, not a redirect.
 ErrorDocument 400 /error.php?code=400
 ErrorDocument 401 /error.php?code=401
 ErrorDocument 403 /error.php?code=403
@@ -5,3 +12,8 @@ ErrorDocument 404 /error.php?code=404
 ErrorDocument 500 /error.php?code=500
 ErrorDocument 502 /error.php?code=502
 ErrorDocument 503 /error.php?code=503
+
+# Don't expose the raw source of the password migration or env files.
+<FilesMatch "^(migrate-passwords\.php|\.env)$">
+    Require all denied
+</FilesMatch>

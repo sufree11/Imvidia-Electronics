@@ -5,19 +5,22 @@ require_once 'includes/helpers.php';
 
 $error_message = '';
 
+// validate and create customer account
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $fname = mysqli_real_escape_string($conn, trim($_POST['fname'] ?? ''));
-    $lname = mysqli_real_escape_string($conn, trim($_POST['lname'] ?? ''));
-    $email = mysqli_real_escape_string($conn, trim($_POST['email'] ?? ''));
-    $phone = mysqli_real_escape_string($conn, trim($_POST['phone'] ?? ''));
-    $address_street = mysqli_real_escape_string($conn, trim($_POST['address_street'] ?? ''));
-    $address_city = mysqli_real_escape_string($conn, trim($_POST['address_city'] ?? ''));
-    $address_state = mysqli_real_escape_string($conn, trim($_POST['address_state'] ?? ''));
-    $address_zip = mysqli_real_escape_string($conn, trim($_POST['address_zip'] ?? ''));
+    requireCsrfOrFail();
+
+    $fname = trim($_POST['fname'] ?? '');
+    $lname = trim($_POST['lname'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $phone = trim($_POST['phone'] ?? '');
+    $address_street = trim($_POST['address_street'] ?? '');
+    $address_city = trim($_POST['address_city'] ?? '');
+    $address_state = trim($_POST['address_state'] ?? '');
+    $address_zip = trim($_POST['address_zip'] ?? '');
     $password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
     $required = [$fname, $lname, $email, $phone, $address_street, $address_city, $address_state, $address_zip, $password];
-    
+
     if (in_array('', $required, true)) {
         $error_message = "All fields are required.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -27,22 +30,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($password !== $confirm_password) {
         $error_message = "Passwords do not match.";
     } else {
-        $check_email = "SELECT id FROM users WHERE email = '$email' LIMIT 1";
-        $check_result = mysqli_query($conn, $check_email);
-        
-        if (mysqli_num_rows($check_result) > 0) {
+        $existing = getRow("SELECT id FROM users WHERE email = ? LIMIT 1", [$email], 's');
+
+        if ($existing) {
             $error_message = "This email address is already registered.";
         } else {
-            $password_hash = mysqli_real_escape_string($conn, $password);
-            
-            $insert_query = "INSERT INTO users 
-                            (first_name, last_name, email, phone, password_hash, 
-                             address_street, address_city, address_state, address_zip, role) 
-                            VALUES 
-                            ('$fname', '$lname', '$email', '$phone', '$password_hash', 
-                             '$address_street', '$address_city', '$address_state', '$address_zip', 'customer')";
-            
-            if (mysqli_query($conn, $insert_query)) {
+            $password_hash = hashPassword($password);
+
+            $inserted = executeStatement(
+                "INSERT INTO users
+                    (first_name, last_name, email, phone, password_hash,
+                     address_street, address_city, address_state, address_zip, role)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'customer')",
+                [$fname, $lname, $email, $phone, $password_hash, $address_street, $address_city, $address_state, $address_zip],
+                'sssssssss'
+            );
+
+            if ($inserted) {
                 header("Location: login.php");
                 exit();
             } else {
@@ -58,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Register - ImVidia</title>
     <?php include 'includes/head.php'; ?>
 </head>
-<body class="bg-fixed bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen dark:bg-slate-950 dark:text-gray-100">
     
     <nav class="bg-white shadow-sm sticky top-0 z-50 dark:bg-slate-950">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-6">
@@ -92,6 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endif; ?>
 
                 <form action="register.php" method="POST" class="space-y-4">
+                    <?php echo csrfField(); ?>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">First Name</label>
@@ -150,11 +155,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
-                            <input type="password" id="reg-password" name="password" required minlength="8" maxlength="20" class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm transition">
+                            <div class="relative">
+                                <input type="password" id="reg-password" name="password" required minlength="8" maxlength="20" class="w-full pr-11 dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm transition">
+                                <?php include 'includes/password-toggle.php'; ?>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm Password</label>
-                            <input type="password" id="reg-confirm" name="confirm_password" required minlength="8" maxlength="20" class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm transition">
+                            <div class="relative">
+                                <input type="password" id="reg-confirm" name="confirm_password" required minlength="8" maxlength="20" class="w-full pr-11 dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm transition">
+                                <?php include 'includes/password-toggle.php'; ?>
+                            </div>
                             <p id="password-error" class="text-red-500 text-xs mt-1 font-medium hidden">Passwords do not match!</p>
                         </div>
                     </div>

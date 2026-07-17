@@ -3,20 +3,22 @@ require_once 'includes/auth.php';
 require_once 'includes/helpers.php';
 require_once 'includes/db-helpers.php';
 
-// Require admin login
+// require admin login
 requireAdminLogin();
 
-$user_id = $_SESSION['user_id'];
+$user_id = (int) $_SESSION['user_id'];
 $message = '';
 $msg_type = '';
 
-// Handle Profile Update
+// handle profile update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    requireCsrfOrFail();
+
     $fname = mysqli_real_escape_string($conn, $_POST['fname'] ?? '');
     $lname = mysqli_real_escape_string($conn, $_POST['lname'] ?? '');
     $phone = mysqli_real_escape_string($conn, $_POST['phone'] ?? '');
     
-    // Password Logic
+    // optional password change
     $new_password = $_POST['new_password'] ?? '';
     $password_query_part = "";
     if (!empty($new_password)) {
@@ -29,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // DigitalOcean Spaces Image Upload Logic
+    // optional avatar upload
     $avatar_query_part = "";
     if ($msg_type !== "error" && isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
         $upload_result = uploadToS3($_FILES['avatar'], 'avatars/admin_', $user_id);
@@ -42,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Database Update
+    // persist profile changes
     if ($msg_type !== "error") {
         $update_query = "UPDATE users SET 
                             first_name='$fname', 
@@ -63,15 +65,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch Latest Data
+// fetch latest profile data
 $query = "SELECT * FROM users WHERE id = '$user_id' LIMIT 1";
 $result = mysqli_query($conn, $query);
 $user = mysqli_fetch_assoc($result);
 
-// Generate Avatar URL (admin color for default)
+// build admin avatar url
 $avatar_url = getAvatarUrl($user['first_name'], $user['last_name'], $user['profile_picture'], true);
 
-// Prepare admin data for navbar
+// prepare navbar admin data
 $admin_data = [
     'id' => $user['id'],
     'first_name' => $user['first_name'],
@@ -86,7 +88,7 @@ $admin_data = [
     <?php include 'includes/head.php'; ?>
 </head>
 
-<body class="bg-fixed bg-gray-50 text-gray-800 flex h-screen overflow-hidden dark:bg-slate-950 dark:text-gray-100" style="background-image: radial-gradient(circle, rgba(156, 163, 175, 0.2) 2.5px, transparent 2.5px); background-size: 40px 40px;">
+<body class="bg-gray-50 text-gray-800 flex h-screen overflow-hidden dark:bg-slate-950 dark:text-gray-100">
 
     <?php include 'includes/navbar-admin.php'; ?>
 
@@ -131,6 +133,7 @@ $admin_data = [
                                 </div>
                                 
                                 <form id="admin-profile-form" action="admin-profile.php" method="POST" enctype="multipart/form-data">
+                                    <?php echo csrfField(); ?>
                                     <input type="file" name="avatar" id="avatar-upload" accept="image/*" class="hidden" onchange="previewAvatar(event)">
                             </div>
 
@@ -149,6 +152,7 @@ $admin_data = [
 
                     <div class="lg:col-span-8 xl:col-span-9 space-y-8">
                         <form id="admin-profile-form" action="admin-profile.php" method="POST" enctype="multipart/form-data">
+                            <?php echo csrfField(); ?>
                             <section class="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
                                 <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-5 border-b border-gray-100 dark:border-slate-800 pb-3">
                                     Personal Information
@@ -193,9 +197,7 @@ $admin_data = [
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Update Password</label>
                                         <div class="relative">
                                             <input type="password" name="new_password" id="admin-password" placeholder="Leave blank to keep current" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm tracking-wider pr-12">
-                                            <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 px-4 flex items-center text-gray-400 hover:text-imvidia transition" title="Show/Hide Password">
-                                                <i id="password-eye" class="fa-solid fa-eye"></i>
-                                            </button>
+                                            <?php include 'includes/password-toggle.php'; ?>
                                         </div>
                                     </div>
                                 </div>
@@ -268,18 +270,6 @@ $admin_data = [
                     if (defaultIcon) defaultIcon.classList.add('hidden');
                 }
                 reader.readAsDataURL(file);
-            }
-        }
-
-        function togglePassword() {
-            const passInput = document.getElementById('admin-password');
-            const eyeIcon = document.getElementById('password-eye');
-            if (passInput.type === 'password') {
-                passInput.type = 'text';
-                eyeIcon.classList.replace('fa-eye', 'fa-eye-slash');
-            } else {
-                passInput.type = 'password';
-                eyeIcon.classList.replace('fa-eye-slash', 'fa-eye');
             }
         }
 
