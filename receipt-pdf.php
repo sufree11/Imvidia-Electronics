@@ -28,9 +28,21 @@ if (!canAccessOrderReceipt($order, $viewer)) {
 
 $html = renderReceiptHtml($order);
 
+// DigitalOcean App Platform serves the app from a read-only filesystem at
+// runtime (only /tmp is writable), so Dompdf's default font cache location
+// inside vendor/ isn't usable there - it has to be redirected to /tmp or
+// every render fatals trying to write font metrics.
+$dompdfTempDir = sys_get_temp_dir() . '/dompdf';
+if (!is_dir($dompdfTempDir)) {
+    mkdir($dompdfTempDir, 0700, true);
+}
+
 $options = new Options();
 $options->set('isRemoteEnabled', false);
 $options->set('defaultFont', 'Helvetica');
+$options->set('tempDir', $dompdfTempDir);
+$options->set('fontDir', $dompdfTempDir);
+$options->set('fontCache', $dompdfTempDir);
 
 $dompdf = new Dompdf($options);
 $dompdf->loadHtml($html);
