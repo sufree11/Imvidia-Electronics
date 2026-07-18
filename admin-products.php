@@ -36,9 +36,29 @@ function saveGalleryUploads($product_id) {
         return $errors;
     }
 
+    // PHP upload error codes -> human readable reasons. Anything other than a
+    // genuinely empty slot (UPLOAD_ERR_NO_FILE) must be surfaced, not silently
+    // dropped, otherwise an oversized image looks like a successful save.
+    $uploadErrorMessages = [
+        UPLOAD_ERR_INI_SIZE   => 'File exceeds the server upload size limit.',
+        UPLOAD_ERR_FORM_SIZE  => 'File exceeds the allowed size.',
+        UPLOAD_ERR_PARTIAL    => 'File was only partially uploaded, please retry.',
+        UPLOAD_ERR_NO_TMP_DIR => 'Server is missing a temporary folder.',
+        UPLOAD_ERR_CANT_WRITE => 'Server failed to write the file to disk.',
+        UPLOAD_ERR_EXTENSION  => 'Upload blocked by a server extension.',
+    ];
+
     $file_count = count($_FILES['gallery_images']['name']);
     for ($i = 0; $i < $file_count; $i++) {
-        if ($_FILES['gallery_images']['error'][$i] !== UPLOAD_ERR_OK) {
+        $upload_error = $_FILES['gallery_images']['error'][$i];
+
+        if ($upload_error === UPLOAD_ERR_NO_FILE) {
+            continue; // empty slot, nothing selected here
+        }
+
+        if ($upload_error !== UPLOAD_ERR_OK) {
+            $name = $_FILES['gallery_images']['name'][$i] ?: 'Image ' . ($i + 1);
+            $errors[] = $name . ': ' . ($uploadErrorMessages[$upload_error] ?? 'Upload failed.');
             continue;
         }
 

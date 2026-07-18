@@ -48,38 +48,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
-    // optional avatar upload
+    // optional avatar upload (cloud storage, same as admin profile/products)
     if ($msg_type !== "error" && isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
-        $upload_dir_absolute = __DIR__ . '/uploads/avatars/';
-        $upload_dir_relative = 'uploads/avatars/';
-        
-        if (!is_dir($upload_dir_absolute)) {
-            mkdir($upload_dir_absolute, 0777, true);
-        }
-        
-        $file_ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
-        $allowed_exts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-
-        // image verif
-        //else out error
+        // verify it's a real image before shipping it to the bucket
         $image_info = @getimagesize($_FILES['avatar']['tmp_name']);
         $is_real_image = $image_info !== false && in_array($image_info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_GIF, IMAGETYPE_WEBP], true);
 
-        if (in_array($file_ext, $allowed_exts) && $is_real_image) {
-            $new_filename = 'user_' . $user_id . '_' . time() . '.' . $file_ext;
-            
-            $target_path_absolute = $upload_dir_absolute . $new_filename;
-            $target_path_relative = $upload_dir_relative . $new_filename;
-            
-            if (move_uploaded_file($_FILES['avatar']['tmp_name'], $target_path_absolute)) {
-                $avatar_query_part = ", profile_picture='$target_path_relative'";
-            } else {
-                $message = "Failed to upload image.";
-                $msg_type = "error";
-            }
-        } else {
+        if (!$is_real_image) {
             $message = "Invalid image format. Allowed: JPG, PNG, GIF, WEBP.";
             $msg_type = "error";
+        } else {
+            $upload_result = uploadToS3($_FILES['avatar'], 'avatars/user_', $user_id);
+
+            if ($upload_result['success']) {
+                $avatar_query_part = ", profile_picture='" . mysqli_real_escape_string($conn, $upload_result['url']) . "'";
+            } else {
+                $message = $upload_result['error'];
+                $msg_type = "error";
+            }
         }
     }
 
