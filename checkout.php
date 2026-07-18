@@ -620,7 +620,7 @@ foreach (getRows("SELECT name, image_url FROM product") as $row) {
 
             <!-- Actions -->
             <div class="flex flex-col sm:flex-row justify-center gap-3">
-                <a href="receipt-pdf.php?order_id=<?php echo (int) $receipt_data['order_id']; ?>" class="px-6 py-4 bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm font-bold text-base transition transform hover:-translate-y-0.5 hover:border-imvidia flex items-center justify-center">
+                <a href="receipt-pdf.php?order_id=<?php echo (int) $receipt_data['order_id']; ?>" target="_blank" rel="noopener noreferrer" class="px-6 py-4 bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm font-bold text-base transition transform hover:-translate-y-0.5 hover:border-imvidia flex items-center justify-center">
                     <i class="fa-solid fa-file-pdf mr-2 text-red-500"></i> Download PDF
                 </a>
                 <button onclick="window.location.href='index.php'" class="px-8 py-4 bg-imvidia hover:bg-imvidia-dark text-white rounded-xl shadow-lg shadow-imvidia/30 font-bold text-lg transition transform hover:-translate-y-0.5 flex items-center justify-center">

@@ -142,10 +142,10 @@ $user = checkCustomerOrGuest();
                 <div class="bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-xl p-5">
                     <h3 class="text-lg font-semibold mb-3 text-imvidia-dark dark:text-imvidia-light">Social Media</h3>
                     <ul class="space-y-2 text-gray-600 dark:text-gray-300">
-                        <li><a href="https://www.instagram.com/imvidia.social" class="text-gray-600 dark:text-gray-300 hover:text-imvidia transition-colors"><i class="fab fa-instagram w-4 h-auto"></i> : @imvidia.social</a></li>
-                        <li><a href="https://x.com/imvidia_" class="text-gray-600 dark:text-gray-300 hover:text-imvidia transition-colors"><i class="fab fa-twitter w-4 h-auto"></i> / X : @imvidia_</a></li>
-                        <li><a href="https://web.facebook.com/profile.php?id=61591858356667" class="text-gray-600 dark:text-gray-300 hover:text-imvidia transition-colors"><i class="fab fa-facebook w-4 h-auto"></i> : Imvidia Electronics</a></li>
-                        <li><a href="https://www.tiktok.com/@imvidia.social" class="text-gray-600 dark:text-gray-300 hover:text-imvidia transition-colors"><i class="fab fa-tiktok w-4 h-auto"></i> : @imvidia.social</a></li>
+                        <li><a href="https://www.instagram.com/imvidia.social" target="_blank" rel="noopener noreferrer" class="text-gray-600 dark:text-gray-300 hover:text-imvidia transition-colors"><i class="fab fa-instagram w-4 h-auto"></i> : @imvidia.social</a></li>
+                        <li><a href="https://x.com/imvidia_" target="_blank" rel="noopener noreferrer" class="text-gray-600 dark:text-gray-300 hover:text-imvidia transition-colors"><i class="fab fa-twitter w-4 h-auto"></i> / X : @imvidia_</a></li>
+                        <li><a href="https://web.facebook.com/profile.php?id=61591858356667" target="_blank" rel="noopener noreferrer" class="text-gray-600 dark:text-gray-300 hover:text-imvidia transition-colors"><i class="fab fa-facebook w-4 h-auto"></i> : Imvidia Electronics</a></li>
+                        <li><a href="https://www.tiktok.com/@imvidia.social" target="_blank" rel="noopener noreferrer" class="text-gray-600 dark:text-gray-300 hover:text-imvidia transition-colors"><i class="fab fa-tiktok w-4 h-auto"></i> : @imvidia.social</a></li>
                     </ul>
                 </div>
             </div>
