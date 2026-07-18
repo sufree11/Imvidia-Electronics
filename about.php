@@ -130,7 +130,7 @@ $user = checkCustomerOrGuest();
                     <h3 class="text-lg font-semibold mb-3 text-imvidia-dark dark:text-imvidia-light">Contact</h3>
                     <p class="text-gray-600 dark:text-gray-300">
                         Support hotline:
-                        <span class="font-semibold text-gray-900 dark:text-white">+60 17-346 6427</span> <br>
+                        <span class="font-semibold text-gray-900 dark:text-white">+60 17 3466427</span> <br>
                         Support email:
                         <span class="font-semibold text-gray-900 dark:text-white">imvidia.social@gmail.com</span>
                     </p>

@@ -33,7 +33,7 @@ function sendPasswordResetEmail($toEmail, $toName, $resetUrl) {
         $mail->addEmbeddedImage(__DIR__ . '/../assets/logo-email.png', 'imvidialogo', 'imvidia-logo.png');
 
         $mail->isHTML(true);
-        $mail->Subject = 'Reset your ImVidia password';
+        $mail->Subject = 'Password Reset Request';
         $mail->Body = renderResetEmailHtml($toName, $resetUrl);
         $mail->AltBody = "Hi $toName,\n\nWe received a request to reset your ImVidia password.\n"
             . "Open this link to choose a new one (valid for 30 minutes):\n$resetUrl\n\n"
@@ -67,11 +67,11 @@ function renderResetEmailHtml($toName, $resetUrl) {
               <a href="' . $safeUrl . '" style="display:inline-block;background:#49C2FA;color:#ffffff;text-decoration:none;font-weight:bold;font-size:15px;padding:14px 32px;border-radius:10px;">Reset Password</a>
             </div>
             <p style="margin:0 0 8px;font-size:13px;color:#64748b;">This link expires in <strong>30 minutes</strong> and can only be used once.</p>
-            <p style="margin:0 0 20px;font-size:13px;color:#64748b;">If you didn\'t request a password reset you can safely ignore this email &mdash; your password won\'t change.</p>
+            <p style="margin:0 0 20px;font-size:13px;color:#64748b;">If you didn\'t request a password reset you can safely ignore this email.</p>
             <p style="margin:0;font-size:12px;color:#94a3b8;word-break:break-all;">Button not working? Paste this link into your browser:<br>' . $safeUrl . '</p>
           </div>
         </div>
-        <p style="text-align:center;font-size:11px;color:#94a3b8;margin:16px 0 0;">&copy; ImVidia Electronics</p>
+        <p style="text-align:center;font-size:11px;color:#94a3b8;margin:16px 0 0;">&copy; 2015 ImVidia Electronics</p>
       </div>
     </div>';
 }

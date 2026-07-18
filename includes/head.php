@@ -29,6 +29,41 @@
         <?php endif; ?>
     </script>
     <script>
+        // Live phone formatter: normalizes any typed/prefilled value into
+        // "+60 XX XXXXXXX" as the user types. Mirrors formatMalaysianPhone()
+        // in includes/helpers.php so the display always matches what's saved.
+        // Applies to any <input class="phone-input">.
+        function formatPhoneValue(raw) {
+            let digits = (raw || '').replace(/\D/g, '');
+            if (!digits) return '';
+
+            if (digits.startsWith('60')) {
+                digits = digits.slice(2);
+            } else if (digits.startsWith('0')) {
+                digits = digits.slice(1);
+            }
+
+            if (digits.length < 3) return digits;
+
+            const prefix = digits.slice(0, 2);
+            const rest = digits.slice(2);
+            return '+60 ' + prefix + (rest ? ' ' + rest : '');
+        }
+
+        function attachPhoneFormatting() {
+            document.querySelectorAll('.phone-input').forEach((el) => {
+                if (el.value) {
+                    el.value = formatPhoneValue(el.value);
+                }
+                el.addEventListener('input', () => {
+                    el.value = formatPhoneValue(el.value);
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', attachPhoneFormatting);
+    </script>
+    <script>
         // dark mode bootstrap and toggles
         (function() {
             const html = document.documentElement;

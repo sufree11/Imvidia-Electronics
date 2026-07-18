@@ -62,6 +62,9 @@ function ensureOrdersSchemaV2() {
         'city' => 'VARCHAR(100) NULL DEFAULT NULL',
         'state' => 'VARCHAR(50) NULL DEFAULT NULL',
         'postcode' => 'VARCHAR(20) NULL DEFAULT NULL',
+        // Extra context alongside the payment_method code ('card'/'fpx'/'ewallet'):
+        // masked card last 4, or the chosen bank/e-wallet provider name.
+        'payment_detail' => 'VARCHAR(100) NULL DEFAULT NULL',
     ];
     foreach ($new_columns as $column => $definition) {
         $safe = mysqli_real_escape_string($conn, $column);
@@ -238,4 +241,124 @@ function getOrderTotal(array $order) {
         $total += (float) $item['unit_price'] * (int) $item['quantity'];
     }
     return $total;
+}
+
+/**
+ * Fetches a single order (all columns, for receipt/PDF reconstruction) with
+ * its line items attached, or null if it doesn't exist.
+ */
+function getOrderById($order_id) {
+    $order_date_expr = getOrderDateColumnExpression();
+
+    $order = getRow(
+        "SELECT o.*, $order_date_expr AS order_date
+         FROM orders o
+         WHERE o.order_id = ?
+         LIMIT 1",
+        [$order_id],
+        'i'
+    );
+
+    if (!$order) {
+        return null;
+    }
+
+    $order['items'] = getOrderItemsForOrder((int) $order['order_id']);
+
+    return $order;
+}
+
+/**
+ * A stable, deterministic receipt/invoice number derived from the order's own
+ * date and id - so it's identical every time it's regenerated (e.g. for a PDF
+ * re-download), without needing a separate stored column.
+ */
+function getOrderReceiptNumber(array $order) {
+    $timestamp = strtotime($order['order_date'] ?? 'now') ?: time();
+    return 'INV' . date('YmdHis', $timestamp) . '-' . (int) $order['order_id'];
+}
+
+/**
+ * Whether the current session is allowed to view/download this order's
+ * receipt: the order's own account owner, an admin, or - for guest checkouts
+ * with no account - the same session that just completed that checkout
+ * (tracked in $_SESSION['receipt_access'], set at checkout success time).
+ */
+function canAccessOrderReceipt(?array $order, array $viewer) {
+    if (!$order) {
+        return false;
+    }
+
+    if (!empty($viewer['is_admin'])) {
+        return true;
+    }
+
+    if (!empty($viewer['is_logged_in']) && $order['user_id'] !== null && (int) $order['user_id'] === (int) $viewer['user_id']) {
+        return true;
+    }
+
+    $granted = $_SESSION['receipt_access'] ?? [];
+    return in_array((int) $order['order_id'], $granted, true);
+}
+
+/**
+ * Marks an order's receipt as viewable by the current session - used right
+ * after checkout so a guest (no account) can still open/download their own
+ * receipt without being logged in. Capped so the session array can't grow
+ * unbounded over a long browsing session.
+ */
+function grantReceiptAccess($order_id) {
+    $granted = $_SESSION['receipt_access'] ?? [];
+    $granted[] = (int) $order_id;
+    $_SESSION['receipt_access'] = array_slice(array_unique($granted), -20);
+}
+
+/**
+ * FPX bank and e-wallet provider codes -> display labels. Kept as the single
+ * source of truth on the PHP side; checkout.php's inline JS mirrors these
+ * same codes/labels for the client-side loading screen.
+ */
+function getFpxBankOptions() {
+    return [
+        'maybank' => 'Maybank2U',
+        'cimb' => 'CIMB Clicks',
+        'public' => 'Public Bank',
+        'rhb' => 'RHB Now',
+        'hongleong' => 'Hong Leong Connect',
+        'bankislam' => 'Bank Islam',
+        'ambank' => 'AmBank',
+    ];
+}
+
+function getEwalletOptions() {
+    return [
+        'tng' => "Touch 'n Go eWallet",
+        'shopee' => 'ShopeePay',
+        'boost' => 'Boost',
+        'grab' => 'GrabPay',
+        'alipay' => 'Alipay+',
+    ];
+}
+
+/**
+ * Human-readable "Payment Method" line for the receipt (page + PDF), e.g.
+ * "Credit / Debit Card" / "**** 4242", or "FPX Online Banking" / "Maybank2U".
+ * Returns [label, detail] - detail is '' when there's nothing to show.
+ * Uses plain ASCII asterisks (not a Unicode bullet) for the card mask so it
+ * renders correctly in the PDF's non-embedded base font, not just in HTML.
+ */
+function formatPaymentMethodDisplay($payment_method, $payment_detail) {
+    switch ($payment_method) {
+        case 'card':
+            $detail = $payment_detail !== '' ? '**** ' . $payment_detail : '';
+            return ['Credit / Debit Card', $detail];
+        case 'fpx':
+            $banks = getFpxBankOptions();
+            return ['FPX Online Banking', $banks[$payment_detail] ?? $payment_detail];
+        case 'ewallet':
+            $wallets = getEwalletOptions();
+            return ['E-Wallet', $wallets[$payment_detail] ?? $payment_detail];
+        default:
+            return [ucfirst((string) $payment_method), (string) $payment_detail];
+    }
 }

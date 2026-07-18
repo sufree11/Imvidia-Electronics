@@ -24,8 +24,8 @@
             <div>
                 <h4 class="text-white font-bold mb-4 uppercase tracking-wider text-sm">Connect</h4>
                 <ul class="space-y-2 text-sm mb-6">
-                    <li><i class="fa-solid fa-envelope mr-2 text-imvidia"></i> support@imvidia.systems</li>
-                    <li><i class="fa-solid fa-phone mr-2 text-imvidia"></i> +603 672 1511</li>
+                    <li><i class="fa-solid fa-envelope mr-2 text-imvidia"></i> imvidia.social@gmail.com</li>
+                    <li><i class="fa-solid fa-phone mr-2 text-imvidia"></i> +60 17 3466427</li>
                 </ul>
                 <div class="flex space-x-4">
                     <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center"><i class="fa-brands fa-facebook-f"></i></a>

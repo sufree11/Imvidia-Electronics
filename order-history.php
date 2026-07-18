@@ -138,6 +138,9 @@ $orders = getOrdersForUser($user_id);
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold <?php echo getOrderProgressClass($order_progress); ?>">
                                         <?php echo htmlspecialchars($order_progress); ?>
                                     </span>
+                                    <a href="receipt-pdf.php?order_id=<?php echo (int) $order['order_id']; ?>" class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-imvidia dark:hover:text-imvidia transition" title="Download PDF receipt">
+                                        <i class="fa-solid fa-file-pdf text-red-500"></i> Receipt
+                                    </a>
                                 </div>
                             </div>
 

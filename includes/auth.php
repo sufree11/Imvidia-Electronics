@@ -3,7 +3,6 @@
 require_once __DIR__ . '/../db/session.php';
 require_once __DIR__ . '/security.php';
 
-// Route uncaught exceptions / fatal errors to error.php (once per request).
 initSecurity();
 
 // force customer login or redirect

@@ -26,7 +26,7 @@ $error_message = '';
  * details captured on the form) plus one order_items row per distinct cart
  * line (preserving quantity), instead of one orders row per unit purchased.
  */
-function saveOrder(?int $user_id, array $cart, string $payment_method, array $shipping): bool {
+function saveOrder(?int $user_id, array $cart, string $payment_method, string $payment_detail, array $shipping, string $order_date): int|false {
     global $conn;
 
     if (empty($cart)) {
@@ -35,19 +35,18 @@ function saveOrder(?int $user_id, array $cart, string $payment_method, array $sh
 
     beginTransaction();
 
-    $order_date = date('Y-m-d H:i:s');
-    $delivery_time = date('Y-m-d H:i:s', strtotime('+3 days'));
+    $delivery_time = date('Y-m-d H:i:s', strtotime($order_date . ' +3 days'));
     $order_progress = 'Pending';
 
     $header_saved = executeStatement(
-        "INSERT INTO orders (user_id, order_date, payment_method, delivery_time, order_progress, email, first_name, last_name, phone, address, city, state, postcode)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO orders (user_id, order_date, payment_method, payment_detail, delivery_time, order_progress, email, first_name, last_name, phone, address, city, state, postcode)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
-            $user_id, $order_date, $payment_method, $delivery_time, $order_progress,
+            $user_id, $order_date, $payment_method, $payment_detail, $delivery_time, $order_progress,
             $shipping['email'], $shipping['first_name'], $shipping['last_name'], $shipping['phone'],
             $shipping['address'], $shipping['city'], $shipping['state'], $shipping['postcode'],
         ],
-        'issss' . str_repeat('s', 8)
+        'isssss' . str_repeat('s', 8)
     );
 
     if (!$header_saved) {
@@ -88,7 +87,7 @@ function saveOrder(?int $user_id, array $cart, string $payment_method, array $sh
     }
 
     commitTransaction();
-    return true;
+    return $order_id;
 }
 
 // Handle POST request (order submission)
@@ -102,15 +101,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $city = isset($_POST['city']) ? trim($_POST['city']) : '';
     $state = isset($_POST['state']) ? trim($_POST['state']) : '';
     $postcode = isset($_POST['postcode']) ? trim($_POST['postcode']) : '';
-    $phone = isset($_POST['phone']) ? trim($_POST['phone']) : '';
+    $phone = isset($_POST['phone']) ? formatMalaysianPhone(trim($_POST['phone'])) : '';
     $payment_method = isset($_POST['payment_method']) ? trim($_POST['payment_method']) : '';
     $cart_json = isset($_POST['cart_data']) ? $_POST['cart_data'] : '[]';
-    
+
+    // Never trust the client to have actually filled in payment details - the
+    // "loading" screen is client-side theatre, so this is the one check that
+    // actually gates a purchase. Only a masked card last-4 / bank code / wallet
+    // code crosses the wire (never a full card number or CVC).
+    $allowed_payment_methods = ['card', 'fpx', 'ewallet'];
+    $payment_detail = '';
+    $payment_valid = in_array($payment_method, $allowed_payment_methods, true);
+
+    if ($payment_valid) {
+        switch ($payment_method) {
+            case 'card':
+                $card_last4 = preg_replace('/\D/', '', (string) ($_POST['card_last4'] ?? ''));
+                $payment_valid = strlen($card_last4) === 4;
+                $payment_detail = $card_last4;
+                break;
+            case 'fpx':
+                $fpx_bank = trim((string) ($_POST['fpx_bank'] ?? ''));
+                $payment_valid = array_key_exists($fpx_bank, getFpxBankOptions());
+                $payment_detail = $fpx_bank;
+                break;
+            case 'ewallet':
+                $ewallet_provider = trim((string) ($_POST['ewallet_provider'] ?? ''));
+                $payment_valid = array_key_exists($ewallet_provider, getEwalletOptions());
+                $payment_detail = $ewallet_provider;
+                break;
+        }
+    }
+
     // Validate required fields
-    if ($email && $first_name && $last_name && $address && $city && $state && $postcode && $phone && $payment_method) {
+    if ($email && $first_name && $last_name && $address && $city && $state && $postcode && $phone && $payment_valid) {
         // Parse cart data from form
         $cart = json_decode($cart_json, true);
-        
+
         if (is_array($cart) && count($cart) > 0) {
             // Calculate totals from authoritative DB prices, never the prices
             // the client submitted in cart_data.
@@ -127,35 +154,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $subtotal += ($price * $qty);
             }
             unset($item);
-            
+
             $tax = $subtotal * 0.06; // 6% tax
             $shipping = 0; // Free shipping
             $total = $subtotal + $tax;
-            
-            // Generate receipt number (timestamp-based)
-            $receipt_number = 'INV' . date('YmdHis');
-            $purchase_date = date('Y-m-d');
-            $purchase_time = date('H:i:s');
-            
-            // Prepare receipt data
-            $receipt_data = [
-                'receipt_number' => $receipt_number,
-                'purchase_date' => $purchase_date,
-                'purchase_time' => $purchase_time,
-                'customer_name' => $first_name . ' ' . $last_name,
-                'email' => $email,
-                'address' => $address,
-                'city' => $city,
-                'state' => $state,
-                'postcode' => $postcode,
-                'phone' => $phone,
-                'payment_method' => $payment_method,
-                'items' => $cart,
-                'subtotal' => $subtotal,
-                'tax' => $tax,
-                'shipping' => $shipping,
-                'total' => $total
-            ];
+
+            // One timestamp shared by the order row and the receipt, so a
+            // later PDF re-download derives the exact same receipt number.
+            $now = date('Y-m-d H:i:s');
+            $purchase_date = date('Y-m-d', strtotime($now));
+            $purchase_time = date('H:i:s', strtotime($now));
+
+            [$payment_method_label, $payment_detail_label] = formatPaymentMethodDisplay($payment_method, $payment_detail);
 
             // Persist the order regardless of login status - guests are
             // identified by the shipping details they just filled in, since
@@ -171,12 +181,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'state' => $state,
                 'postcode' => $postcode,
             ];
-            $saved = saveOrder($logged_in_user_id, $cart, $payment_method, $shipping_info);
-            if (!$saved) {
+            $order_id = saveOrder($logged_in_user_id, $cart, $payment_method, $payment_detail, $shipping_info, $now);
+            if ($order_id === false) {
                 error_log('Checkout persistence failed for user_id=' . ($logged_in_user_id ?? 'guest') . '.');
                 $error_message = "We couldn't save your order due to a system error. You have not been charged - please try again, or contact support if this keeps happening.";
             } else {
                 $checkout_success = true;
+
+                // Guests get PDF/receipt access via this session only; logged-in
+                // users can also always reach their own orders via ownership.
+                grantReceiptAccess($order_id);
+
+                // Prepare receipt data
+                $receipt_data = [
+                    'order_id' => $order_id,
+                    'receipt_number' => getOrderReceiptNumber(['order_date' => $now, 'order_id' => $order_id]),
+                    'purchase_date' => $purchase_date,
+                    'purchase_time' => $purchase_time,
+                    'customer_name' => $first_name . ' ' . $last_name,
+                    'email' => $email,
+                    'address' => $address,
+                    'city' => $city,
+                    'state' => $state,
+                    'postcode' => $postcode,
+                    'phone' => $phone,
+                    'payment_method' => $payment_method,
+                    'payment_method_label' => $payment_method_label,
+                    'payment_detail_label' => $payment_detail_label,
+                    'items' => $cart,
+                    'subtotal' => $subtotal,
+                    'tax' => $tax,
+                    'shipping' => $shipping,
+                    'total' => $total
+                ];
 
                 // Only the items the customer selected for this checkout were
                 // purchased - leave any deselected items sitting in the cart.
@@ -187,6 +224,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $error_message = 'Your cart appears to be empty. Please add items to your cart before checking out.';
         }
+    } elseif (!$payment_valid) {
+        $error_message = 'Please complete your payment details before checking out.';
     } else {
         $error_message = 'Please fill in all required fields before checking out.';
     }
@@ -258,6 +297,156 @@ foreach (getRows("SELECT name, image_url FROM product") as $row) {
         input[type="radio"]:checked {
             background-color: #49C2FA !important;
             border-color: #49C2FA !important;
+        }
+
+        /* Payment field error state (set/cleared by the checkout JS) */
+        .field-error {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+        }
+
+        /* ===== 3D tower loader (fake payment-processing screen) =====
+           Original by csozi (www.csozi.hu), recolored to ImVidia's palette:
+           top face = imvidia-dark, right face = imvidia, left face = imvidia-light.
+           Extra top margin keeps it clear of the payment-method badge above it. */
+        .loader {
+            scale: 3;
+            height: 50px;
+            width: 40px;
+            margin-top: 46px;
+        }
+
+        .box {
+            position: relative;
+            opacity: 0;
+            left: 10px;
+        }
+
+        .side-left {
+            position: absolute;
+            background-color: #8DFFFF;
+            width: 19px;
+            height: 5px;
+            transform: skew(0deg, -25deg);
+            top: 14px;
+            left: 10px;
+        }
+
+        .side-right {
+            position: absolute;
+            background-color: #49C2FA;
+            width: 19px;
+            height: 5px;
+            transform: skew(0deg, 25deg);
+            top: 14px;
+            left: -9px;
+        }
+
+        .side-top {
+            position: absolute;
+            background-color: #1F2468;
+            width: 20px;
+            height: 20px;
+            rotate: 45deg;
+            transform: skew(-20deg, -20deg);
+        }
+
+        .box-1 {
+            animation: from-left 4s infinite;
+        }
+
+        .box-2 {
+            animation: from-right 4s infinite;
+            animation-delay: 1s;
+        }
+
+        .box-3 {
+            animation: from-left 4s infinite;
+            animation-delay: 2s;
+        }
+
+        .box-4 {
+            animation: from-right 4s infinite;
+            animation-delay: 3s;
+        }
+
+        @keyframes from-left {
+            0% {
+                z-index: 20;
+                opacity: 0;
+                translate: -20px -6px;
+            }
+            20% {
+                z-index: 10;
+                opacity: 1;
+                translate: 0px 0px;
+            }
+            40% {
+                z-index: 9;
+                translate: 0px 4px;
+            }
+            60% {
+                z-index: 8;
+                translate: 0px 8px;
+            }
+            80% {
+                z-index: 7;
+                opacity: 1;
+                translate: 0px 12px;
+            }
+            100% {
+                z-index: 5;
+                translate: 0px 30px;
+                opacity: 0;
+            }
+        }
+
+        @keyframes from-right {
+            0% {
+                z-index: 20;
+                opacity: 0;
+                translate: 20px -6px;
+            }
+            20% {
+                z-index: 10;
+                opacity: 1;
+                translate: 0px 0px;
+            }
+            40% {
+                z-index: 9;
+                translate: 0px 4px;
+            }
+            60% {
+                z-index: 8;
+                translate: 0px 8px;
+            }
+            80% {
+                z-index: 7;
+                opacity: 1;
+                translate: 0px 12px;
+            }
+            100% {
+                z-index: 5;
+                translate: 0px 30px;
+                opacity: 0;
+            }
+        }
+
+        /* Printing the on-page receipt (or "Save as PDF" from the browser's
+           print dialog): hide everything except the receipt card itself. */
+        @media print {
+            nav, footer, .print\:hidden {
+                display: none !important;
+            }
+            body {
+                background: #fff !important;
+            }
+            #receipt-container {
+                max-width: 100% !important;
+            }
+            .shadow-lg, .shadow-xl, .shadow-2xl, .shadow-sm {
+                box-shadow: none !important;
+            }
         }
     </style>
 </head>
@@ -346,7 +535,10 @@ foreach (getRows("SELECT name, image_url FROM product") as $row) {
                         </div>
                         <div>
                             <p class="text-xs text-gray-500 dark:text-gray-400">Payment Method</p>
-                            <p class="text-base font-semibold text-gray-900 dark:text-white mt-1 capitalize"><?php echo htmlspecialchars($receipt_data['payment_method']); ?></p>
+                            <p class="text-base font-semibold text-gray-900 dark:text-white mt-1"><?php echo htmlspecialchars($receipt_data['payment_method_label']); ?></p>
+                            <?php if (!empty($receipt_data['payment_detail_label'])): ?>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 font-mono mt-0.5"><?php echo htmlspecialchars($receipt_data['payment_detail_label']); ?></p>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -426,9 +618,12 @@ foreach (getRows("SELECT name, image_url FROM product") as $row) {
                 </div>
             </div>
 
-            <!-- OK Button -->
-            <div class="flex justify-center">
-                <button onclick="window.location.href='index.php'" class="px-8 py-4 bg-imvidia hover:bg-imvidia-dark text-white rounded-xl shadow-lg shadow-imvidia/30 font-bold text-lg transition transform hover:-translate-y-0.5">
+            <!-- Actions -->
+            <div class="flex flex-col sm:flex-row justify-center gap-3">
+                <a href="receipt-pdf.php?order_id=<?php echo (int) $receipt_data['order_id']; ?>" class="px-6 py-4 bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm font-bold text-base transition transform hover:-translate-y-0.5 hover:border-imvidia flex items-center justify-center">
+                    <i class="fa-solid fa-file-pdf mr-2 text-red-500"></i> Download PDF
+                </a>
+                <button onclick="window.location.href='index.php'" class="px-8 py-4 bg-imvidia hover:bg-imvidia-dark text-white rounded-xl shadow-lg shadow-imvidia/30 font-bold text-lg transition transform hover:-translate-y-0.5 flex items-center justify-center">
                     <i class="fa-solid fa-check mr-2"></i> OK
                 </button>
             </div>
@@ -565,7 +760,7 @@ foreach (getRows("SELECT name, image_url FROM product") as $row) {
                             </div>
                             <div class="sm:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number <span class="text-red-500">*</span></label>
-                                <input type="tel" name="phone" value="<?php echo htmlspecialchars($prefill['phone']); ?>" required placeholder="+60 12-345 6789" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                                <input type="tel" name="phone" value="<?php echo htmlspecialchars(formatMalaysianPhone($prefill['phone'])); ?>" required placeholder="+60 12 3456789" class="phone-input w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
                             </div>
                         </div>
                     </section>
@@ -577,7 +772,12 @@ foreach (getRows("SELECT name, image_url FROM product") as $row) {
                             Payment
                         </h2>
                         <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">All transactions are secure and encrypted.</p>
-                        
+
+                        <div id="payment-error-banner" class="hidden mb-5 px-4 py-3 rounded-lg text-sm font-medium bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800 flex items-center">
+                            <i class="fa-solid fa-triangle-exclamation mr-2"></i>
+                            <span id="payment-error-text"></span>
+                        </div>
+
                         <div class="space-y-4">
                             <!-- Credit Card Option -->
                             <div id="card-wrapper" class="border border-imvidia bg-imvidia/5 dark:bg-imvidia/10 rounded-xl p-4 transition">
@@ -637,7 +837,7 @@ foreach (getRows("SELECT name, image_url FROM product") as $row) {
                                 <div id="fpx-details" class="hidden mt-4 pt-4 border-t border-gray-200 dark:border-slate-700/50">
                                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Select Your Bank</label>
                                     <div class="relative">
-                                        <select class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm appearance-none cursor-pointer">
+                                        <select id="fpx_bank" name="fpx_bank" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm appearance-none cursor-pointer">
                                             <option value="" disabled selected>Select Bank...</option>
                                             <option value="maybank">Maybank2U</option>
                                             <option value="cimb">CIMB Clicks</option>
@@ -670,7 +870,7 @@ foreach (getRows("SELECT name, image_url FROM product") as $row) {
                                 <div id="ewallet-details" class="hidden mt-4 pt-4 border-t border-gray-200 dark:border-slate-700/50">
                                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Select Provider</label>
                                     <div class="relative">
-                                        <select class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm appearance-none cursor-pointer">
+                                        <select id="ewallet_provider" name="ewallet_provider" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm appearance-none cursor-pointer">
                                             <option value="" disabled selected>Select E-Wallet...</option>
                                             <option value="tng">Touch 'n Go eWallet</option>
                                             <option value="shopee">ShopeePay</option>
@@ -726,6 +926,8 @@ foreach (getRows("SELECT name, image_url FROM product") as $row) {
 
                         <!-- Hidden input to store cart data -->
                         <input type="hidden" id="cart-data-input" name="cart_data" value="[]">
+                        <!-- Only the last 4 digits ever leave the browser - never the full card number/CVC. -->
+                        <input type="hidden" id="card_last4" name="card_last4" value="">
 
                         <!-- Submit Button -->
                         <button type="submit" id="pay-button" class="w-full py-4 px-4 bg-imvidia hover:bg-imvidia-dark text-white rounded-xl shadow-lg shadow-imvidia/30 font-bold text-lg transition transform hover:-translate-y-0.5 flex items-center justify-center group opacity-50 cursor-not-allowed" disabled>
@@ -738,8 +940,34 @@ foreach (getRows("SELECT name, image_url FROM product") as $row) {
                         </p>
                     </div>
                 </div>
-                
+
             </form>
+
+            <!-- ===================== FAKE PAYMENT PROCESSING OVERLAY ===================== -->
+            <!-- Shown after client-side validation passes, before the (real) form
+                 submission fires. Purely cosmetic delay - the actual charge/order
+                 is still validated and saved server-side once this finishes. -->
+            <div id="payment-loading-overlay" class="hidden fixed inset-0 z-[999] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm px-4">
+                <div class="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-gray-100 dark:border-slate-800 p-8 sm:p-10 text-center">
+                    <div id="payment-method-badge" class="mx-auto h-16 w-16 rounded-2xl bg-white flex items-center justify-center text-xl font-black shadow-md overflow-hidden p-2"></div>
+
+                    <div class="loader-wrap flex items-center justify-center">
+                        <div class="loader">
+                            <div class="box box-1"><div class="side-left"></div><div class="side-right"></div><div class="side-top"></div></div>
+                            <div class="box box-2"><div class="side-left"></div><div class="side-right"></div><div class="side-top"></div></div>
+                            <div class="box box-3"><div class="side-left"></div><div class="side-right"></div><div class="side-top"></div></div>
+                            <div class="box box-4"><div class="side-left"></div><div class="side-right"></div><div class="side-top"></div></div>
+                        </div>
+                    </div>
+
+                    <p id="payment-status-title" class="text-lg font-bold text-gray-900 dark:text-white mb-1">Processing Payment</p>
+                    <p id="payment-status-detail" class="text-sm text-gray-500 dark:text-gray-400 font-mono"></p>
+
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-6 flex items-center justify-center">
+                        <i class="fa-solid fa-lock mr-1.5"></i> Please don't close or refresh this page
+                    </p>
+                </div>
+            </div>
         </div>
         <?php endif; ?>
     </main>
@@ -930,6 +1158,191 @@ foreach (getRows("SELECT name, image_url FROM product") as $row) {
             }
 
             renderCart();
+
+            // --- 4. Payment validation + fake processing overlay ---
+            const PAYMENT_LABELS = {
+                fpx: {
+                    maybank: 'Maybank2U', cimb: 'CIMB Clicks', public: 'Public Bank',
+                    rhb: 'RHB Now', hongleong: 'Hong Leong Connect', bankislam: 'Bank Islam', ambank: 'AmBank'
+                },
+                ewallet: {
+                    tng: "Touch 'n Go eWallet", shopee: 'ShopeePay', boost: 'Boost', grab: 'GrabPay', alipay: 'Alipay+'
+                }
+            };
+
+            // Real provider logos, shown on the fake "contacting portal" loading
+            // screen. Drop matching image files into assets/payment/ - if a file
+            // is missing, the badge falls back to a generic bank/wallet icon
+            // (see setBadgeLogo() below) instead of a broken image.
+            const PROVIDER_LOGOS = {
+                maybank: 'assets/payment/maybank.png',
+                cimb: 'assets/payment/cimb.png',
+                public: 'assets/payment/public.png',
+                rhb: 'assets/payment/rhb.png',
+                hongleong: 'assets/payment/hongleong.png',
+                bankislam: 'assets/payment/bankislam.png',
+                ambank: 'assets/payment/ambank.png',
+                tng: 'assets/payment/tng.png',
+                shopee: 'assets/payment/shopee.png',
+                boost: 'assets/payment/boost.png',
+                grab: 'assets/payment/grab.png',
+                alipay: 'assets/payment/alipay.png'
+            };
+
+            const paymentErrorBanner = document.getElementById('payment-error-banner');
+            const paymentErrorText = document.getElementById('payment-error-text');
+
+            function showPaymentError(message, focusEl) {
+                if (paymentErrorText) paymentErrorText.textContent = message;
+                if (paymentErrorBanner) {
+                    paymentErrorBanner.classList.remove('hidden');
+                    paymentErrorBanner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                if (focusEl) focusEl.focus();
+            }
+
+            function clearPaymentError() {
+                if (paymentErrorBanner) paymentErrorBanner.classList.add('hidden');
+                document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+            }
+
+            // Validates the currently-selected payment method's own detail fields
+            // (the shared shipping/contact fields are already covered by the
+            // form's native `required` attributes via reportValidity()).
+            // Returns the info needed to populate the loading screen, or null.
+            function validatePaymentDetails() {
+                clearPaymentError();
+                const checkedRadio = document.querySelector('input[name="payment_method"]:checked');
+                const method = checkedRadio ? checkedRadio.value : '';
+
+                if (method === 'card') {
+                    const number = (ccNumber?.value || '').replace(/\D/g, '');
+                    const expiry = ccExpiry?.value || '';
+                    const cvc = ccCvc?.value || '';
+                    const name = (ccName?.value || '').trim();
+                    let firstInvalid = null;
+
+                    if (number.length !== 16) { ccNumber.classList.add('field-error'); firstInvalid = firstInvalid || ccNumber; }
+                    if (!/^\d{2} \/ \d{2}$/.test(expiry)) { ccExpiry.classList.add('field-error'); firstInvalid = firstInvalid || ccExpiry; }
+                    if (cvc.length !== 3) { ccCvc.classList.add('field-error'); firstInvalid = firstInvalid || ccCvc; }
+                    if (name.length < 2) { ccName.classList.add('field-error'); firstInvalid = firstInvalid || ccName; }
+
+                    if (firstInvalid) {
+                        showPaymentError('Please complete your card number, expiry, CVC and name before continuing.', firstInvalid);
+                        return null;
+                    }
+
+                    const last4 = number.slice(-4);
+                    document.getElementById('card_last4').value = last4;
+                    return {
+                        method,
+                        badgeType: 'icon',
+                        badgeIcon: 'fa-credit-card',
+                        title: 'Processing Card Payment',
+                        detail: 'Card •••• •••• •••• ' + last4
+                    };
+                }
+
+                if (method === 'fpx') {
+                    const select = document.getElementById('fpx_bank');
+                    const bank = select ? select.value : '';
+                    if (!bank) {
+                        select.classList.add('field-error');
+                        showPaymentError('Please select your bank to continue with FPX Online Banking.', select);
+                        return null;
+                    }
+                    return {
+                        method,
+                        badgeType: 'logo',
+                        badgeSrc: PROVIDER_LOGOS[bank],
+                        badgeFallbackIcon: 'fa-building-columns',
+                        title: 'Contacting Bank Portal',
+                        detail: 'Redirecting to ' + (PAYMENT_LABELS.fpx[bank] || bank) + '...'
+                    };
+                }
+
+                if (method === 'ewallet') {
+                    const select = document.getElementById('ewallet_provider');
+                    const provider = select ? select.value : '';
+                    if (!provider) {
+                        select.classList.add('field-error');
+                        showPaymentError('Please select an e-wallet provider to continue.', select);
+                        return null;
+                    }
+                    return {
+                        method,
+                        badgeType: 'logo',
+                        badgeSrc: PROVIDER_LOGOS[provider],
+                        badgeFallbackIcon: 'fa-wallet',
+                        title: 'Contacting E-Wallet',
+                        detail: 'Contacting ' + (PAYMENT_LABELS.ewallet[provider] || provider) + ' portal...'
+                    };
+                }
+
+                showPaymentError('Please select a payment method to continue.', null);
+                return null;
+            }
+
+            // Renders a plain icon badge (used for the card payment method).
+            function setBadgeIcon(badge, iconClass) {
+                badge.innerHTML = `<i class="fa-solid ${iconClass} text-2xl text-imvidia"></i>`;
+            }
+
+            // Renders a provider logo image; if it fails to load (e.g. the file
+            // hasn't been added to assets/payment/ yet), falls back to a generic
+            // icon instead of showing a broken image.
+            function setBadgeLogo(badge, src, fallbackIconClass) {
+                badge.innerHTML = `<img src="${src}" alt="" class="max-w-full max-h-full object-contain">`;
+                const img = badge.querySelector('img');
+                if (img) {
+                    img.onerror = () => setBadgeIcon(badge, fallbackIconClass);
+                }
+            }
+
+            function showPaymentOverlay(info) {
+                const overlay = document.getElementById('payment-loading-overlay');
+                const badge = document.getElementById('payment-method-badge');
+                const title = document.getElementById('payment-status-title');
+                const detail = document.getElementById('payment-status-detail');
+                if (!overlay || !badge || !title || !detail) return;
+
+                if (info.badgeType === 'logo') {
+                    setBadgeLogo(badge, info.badgeSrc, info.badgeFallbackIcon);
+                } else {
+                    setBadgeIcon(badge, info.badgeIcon);
+                }
+
+                title.textContent = info.title;
+                detail.textContent = info.detail;
+
+                overlay.classList.remove('hidden');
+            }
+
+            if (checkoutForm) {
+                checkoutForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+
+                    // Covers all the plain `required` shipping/contact fields;
+                    // shows the browser's own inline bubble on the first invalid one.
+                    if (!checkoutForm.reportValidity()) {
+                        return;
+                    }
+
+                    const info = validatePaymentDetails();
+                    if (!info) {
+                        return;
+                    }
+
+                    if (payBtn) payBtn.disabled = true;
+                    showPaymentOverlay(info);
+
+                    // Fake gateway delay - purely cosmetic. The order is only ever
+                    // actually created after real server-side validation on submit.
+                    setTimeout(() => {
+                        checkoutForm.submit();
+                    }, 2200);
+                });
+            }
         });
     </script>
 

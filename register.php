@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fname = trim($_POST['fname'] ?? '');
     $lname = trim($_POST['lname'] ?? '');
     $email = trim($_POST['email'] ?? '');
-    $phone = trim($_POST['phone'] ?? '');
+    $phone = formatMalaysianPhone(trim($_POST['phone'] ?? ''));
     $address_street = trim($_POST['address_street'] ?? '');
     $address_city = trim($_POST['address_city'] ?? '');
     $address_state = trim($_POST['address_state'] ?? '');
@@ -114,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
-                        <input type="tel" name="phone" required class="w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm transition" placeholder="+60 12-XXX XXXX">
+                        <input type="tel" name="phone" required class="phone-input w-full dark:bg-slate-800 dark:border-slate-600 dark:placeholder:text-slate-400 dark:text-white px-3 py-2 border border-gray-300 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm transition" placeholder="+60 12 3456789">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Street Address</label>

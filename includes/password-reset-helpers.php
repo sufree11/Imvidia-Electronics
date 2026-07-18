@@ -2,7 +2,6 @@
 
 require_once __DIR__ . '/db-helpers.php';
 
-// create password_resets table if missing
 function ensurePasswordResetSchema() {
     global $conn;
 

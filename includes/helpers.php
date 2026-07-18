@@ -86,6 +86,36 @@ function displayAvatar($avatarUrl, $fullName, $classes = 'w-10 h-10 rounded-full
     echo '<img src="' . htmlspecialchars($avatarUrl) . '" alt="' . htmlspecialchars($fullName) . '" class="' . $classes . ' object-cover bg-white shadow-sm">';
 }
 
+/**
+ * Normalizes any phone number (Malaysian local "012-3456789", already
+ * international "+60123456789", with/without spaces or dashes, etc.) into the
+ * site-wide display format "+60 XX XXXXXXX". Mirrors the JS live-formatter in
+ * includes/head.php so what a user sees while typing matches what's stored.
+ * Falls back to the trimmed original if there aren't enough digits to format.
+ */
+function formatMalaysianPhone($raw) {
+    $digits = preg_replace('/\D/', '', (string) $raw);
+
+    if ($digits === '') {
+        return trim((string) $raw);
+    }
+
+    if (substr($digits, 0, 2) === '60') {
+        $digits = substr($digits, 2);
+    } elseif (substr($digits, 0, 1) === '0') {
+        $digits = substr($digits, 1);
+    }
+
+    if (strlen($digits) < 3) {
+        return trim((string) $raw);
+    }
+
+    $prefix = substr($digits, 0, 2);
+    $rest = substr($digits, 2);
+
+    return '+60 ' . $prefix . ' ' . $rest;
+}
+
 // pick status badge classes
 function getOrderProgressClass($progress) {
     $normalized = strtolower(trim((string) $progress));

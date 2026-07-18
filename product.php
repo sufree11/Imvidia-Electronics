@@ -135,7 +135,7 @@ function renderReplyNode($reply, $by_parent, $viewer, $review_id, $depth) {
                         <?php if ($is_admin_reply): ?>
                             <span class="text-xs px-2 py-0.5 rounded-full bg-imvidia text-white font-bold flex items-center gap-1"><i class="fa-solid fa-shield-halved"></i> ImVidia</span>
                         <?php endif; ?>
-                        <span class="text-xs text-gray-400"><?php echo date('d M Y', strtotime($reply['created_at'])); ?></span>
+                        <span class="text-xs text-gray-400"><?php echo date('d M Y, h:i A', strtotime($reply['created_at'])); ?></span>
                         <?php if ($can_delete): ?>
                             <button type="button" onclick="deleteReply(<?php echo $reply_id; ?>)" class="ml-auto text-xs text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-trash-can"></i></button>
                         <?php endif; ?>
@@ -464,7 +464,7 @@ function renderReplyThread($replies, $viewer, $review_id) {
                                         </div>
                                         <div class="flex items-center gap-2 mt-1">
                                             <span class="space-x-0.5"><?php echo renderStars((int) $rev['rating'], 'text-sm'); ?></span>
-                                            <span class="text-xs text-gray-400 dark:text-gray-500"><?php echo date('d M Y', strtotime($rev['created_at'])); ?></span>
+                                            <span class="text-xs text-gray-400 dark:text-gray-500"><?php echo date('d M Y, h:i A', strtotime($rev['created_at'])); ?></span>
                                         </div>
 
                                         <?php if (!empty($rev['title'])): ?>

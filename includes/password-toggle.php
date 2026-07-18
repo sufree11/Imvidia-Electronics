@@ -1,13 +1,5 @@
 <?php
-/**
- * Custom password show/hide toggle button.
- *
- * Drop this inside a `.relative` wrapper that also contains the password
- * <input> (give the input right padding, e.g. `pr-11`, so text clears the
- * icon). The toggle behaviour and icon-state styling live in includes/head.php.
- *
- * Uses a bespoke ImVidia eye glyph instead of Font Awesome's fa-eye.
- */
+
 ?>
 <button type="button" data-password-toggle aria-label="Show password" tabindex="-1"
         class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-imvidia focus:text-imvidia focus:outline-none transition-colors">

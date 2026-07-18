@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $fname = mysqli_real_escape_string($conn, $_POST['fname'] ?? '');
     $lname = mysqli_real_escape_string($conn, $_POST['lname'] ?? '');
-    $phone = mysqli_real_escape_string($conn, $_POST['phone'] ?? '');
+    $phone = mysqli_real_escape_string($conn, formatMalaysianPhone($_POST['phone'] ?? ''));
     
     // optional password change
     $new_password = $_POST['new_password'] ?? '';
@@ -191,7 +191,7 @@ $admin_data = [
                                     
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contact Number</label>
-                                        <input type="tel" name="phone" value="<?php echo htmlspecialchars($user['phone']); ?>" required class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                                        <input type="tel" name="phone" value="<?php echo htmlspecialchars(formatMalaysianPhone($user['phone'])); ?>" required class="phone-input w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Update Password</label>

@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fname = mysqli_real_escape_string($conn, $_POST['fname'] ?? '');
     $lname = mysqli_real_escape_string($conn, $_POST['lname'] ?? '');
     $email = mysqli_real_escape_string($conn, $_POST['email'] ?? '');
-    $phone = mysqli_real_escape_string($conn, $_POST['phone'] ?? '');
+    $phone = mysqli_real_escape_string($conn, formatMalaysianPhone($_POST['phone'] ?? ''));
     $address_street = mysqli_real_escape_string($conn, $_POST['address_street'] ?? '');
     $address_city = mysqli_real_escape_string($conn, $_POST['address_city'] ?? '');
     $address_state = mysqli_real_escape_string($conn, $_POST['address_state'] ?? '');
@@ -246,7 +246,7 @@ $avatar_url = getAvatarUrl($user['first_name'] ?? '', $user['last_name'] ?? '', 
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
-                            <input type="tel" name="phone" value="<?php echo htmlspecialchars($user['phone'] ?? ''); ?>" class="w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
+                            <input type="tel" name="phone" value="<?php echo htmlspecialchars(formatMalaysianPhone($user['phone'] ?? '')); ?>" class="phone-input w-full px-4 py-3 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition shadow-sm">
                         </div>
                     </div>
                 </section>
