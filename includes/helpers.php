@@ -1,6 +1,7 @@
 <?php
 
 require_once 'vendor/autoload.php';
+require_once __DIR__ . '/config.php';
 use Aws\S3\S3Client;
 use Aws\Exception\AwsException;
 
@@ -35,34 +36,40 @@ function uploadToS3($file, $prefix, $fileId, $allowedExts = ['jpg', 'jpeg', 'png
         return $result;
     }
     
-    $s3 = new S3Client([
-        'version' => 'latest',
-        'region'  => getenv('SPACES_REGION'),
-        'endpoint' => getenv('SPACES_ENDPOINT'),
-        'credentials' => [
-            'key'    => getenv('SPACES_KEY'),
-            'secret' => getenv('SPACES_SECRET'),
-        ],
-    ]);
-    
     $newFilename = $prefix . $fileId . '_' . time() . '.' . $fileExt;
-    
+
     try {
+        $s3 = new S3Client([
+            'version' => 'latest',
+            'region'  => appConfig('SPACES_REGION'),
+            'endpoint' => appConfig('SPACES_ENDPOINT'),
+            'credentials' => [
+                'key'    => appConfig('SPACES_KEY'),
+                'secret' => appConfig('SPACES_SECRET'),
+            ],
+        ]);
+
         $uploadResult = $s3->putObject([
-            'Bucket'      => getenv('SPACES_BUCKET'),
+            'Bucket'      => appConfig('SPACES_BUCKET'),
             'Key'         => $newFilename,
             'SourceFile'  => $file['tmp_name'],
             'ACL'         => 'public-read',
             'ContentType' => mime_content_type($file['tmp_name'])
         ]);
-        
+
         $result['success'] = true;
         $result['url'] = $uploadResult['ObjectURL'];
-        
+
     } catch (AwsException $e) {
         $result['error'] = 'Failed to upload to cloud storage.';
+    } catch (\Throwable $e) {
+        // Misconfigured/missing SPACES_* credentials (S3Client constructor
+        // throws InvalidArgumentException, not AwsException) - surface this
+        // as a normal upload failure instead of a fatal 500.
+        error_log('uploadToS3 config error: ' . $e->getMessage());
+        $result['error'] = 'Cloud storage is not configured correctly.';
     }
-    
+
     return $result;
 }
 

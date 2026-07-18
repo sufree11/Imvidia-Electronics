@@ -13,7 +13,16 @@ if (!isset($admin_data) || !is_array($admin_data)) {
 $full_name = htmlspecialchars(($admin_data['first_name'] ?? 'Admin') . ' ' . ($admin_data['last_name'] ?? 'User'));
 $profile_pic = !empty($admin_data['profile_picture']) ? htmlspecialchars($admin_data['profile_picture']) : '';
 $admin_avatar = !empty($profile_pic) ? $profile_pic : getAvatarUrl($admin_data['first_name'] ?? 'Admin', $admin_data['last_name'] ?? 'User', '', true);
-$order_count_badge = isset($admin_order_count) ? (int) $admin_order_count : 0;
+// Pages that already fetch the order count (admin.php, admin-orders.php) pass
+// it in via $admin_order_count; other pages (e.g. admin-products.php) don't,
+// so fall back to querying it directly rather than silently showing 0.
+if (isset($admin_order_count)) {
+    $order_count_badge = (int) $admin_order_count;
+} else {
+    global $conn;
+    $order_count_result = mysqli_query($conn, "SELECT COUNT(*) AS c FROM orders");
+    $order_count_badge = $order_count_result ? (int) mysqli_fetch_assoc($order_count_result)['c'] : 0;
+}
 
 $current_page = basename($_SERVER['PHP_SELF']);
 $admin_page_title_map = [

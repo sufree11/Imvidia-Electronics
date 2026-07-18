@@ -198,7 +198,7 @@ function renderReplyList($replies, $by_parent, $viewer, $review_id, $group_key, 
  * A hidden inline reply box. $parent_reply_id 0 = reply to the review itself.
  */
 function renderReplyForm($form_id, $review_id, $parent_reply_id, $viewer) {
-    $placeholder = $viewer['is_admin'] ? 'Write an official response...' : 'Write a reply...';
+    $placeholder = $viewer['is_admin'] ? 'Write a response...' : 'Write a reply...';
     ?>
     <form id="<?php echo $form_id; ?>" class="hidden mt-2 flex items-start gap-2" onsubmit="submitReply(event, <?php echo (int) $review_id; ?>, <?php echo (int) $parent_reply_id; ?>)">
         <input type="text" name="body" required placeholder="<?php echo htmlspecialchars($placeholder); ?>" class="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-full focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition text-sm">
@@ -382,7 +382,7 @@ function renderReplyThread($replies, $viewer, $review_id) {
                     <?php elseif ($review_viewer['is_admin']): ?>
                         <div class="flex items-center gap-3 px-4 py-3 bg-imvidia/5 dark:bg-imvidia/10 border border-imvidia/20 rounded-xl text-sm text-gray-600 dark:text-gray-300">
                             <i class="fa-solid fa-circle-info text-imvidia"></i>
-                            You're signed in as an admin. You can reply to customer reviews below with an official response.
+                            You're signed in as an admin. No making comments, but you can reply to users.
                         </div>
                     <?php else: ?>
                         <div class="flex items-center justify-between mb-4">
@@ -414,12 +414,12 @@ function renderReplyThread($replies, $viewer, $review_id) {
 
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Title <span class="text-gray-400 font-normal">(optional)</span></label>
-                                <input type="text" name="title" maxlength="150" value="<?php echo $viewer_review ? htmlspecialchars($viewer_review['title']) : ''; ?>" placeholder="Sum it up in a few words" class="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition text-sm">
+                                <input type="text" name="title" maxlength="150" value="<?php echo $viewer_review ? htmlspecialchars($viewer_review['title']) : ''; ?>" placeholder="What's the topic?" class="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition text-sm">
                             </div>
 
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Your review</label>
-                                <textarea name="body" rows="4" required placeholder="What did you like or dislike? How did it perform?" class="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition text-sm resize-y"><?php echo $viewer_review ? htmlspecialchars($viewer_review['body']) : ''; ?></textarea>
+                                <textarea name="body" rows="4" required placeholder="What's your opinion?" class="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-imvidia/50 focus:border-imvidia dark:bg-slate-800 dark:text-white transition text-sm resize-y"><?php echo $viewer_review ? htmlspecialchars($viewer_review['body']) : ''; ?></textarea>
                             </div>
 
                             <div class="flex items-center gap-3">
@@ -439,7 +439,7 @@ function renderReplyThread($replies, $viewer, $review_id) {
                     <?php if (empty($reviews)): ?>
                         <div class="text-center py-12">
                             <i class="fa-regular fa-comment-dots text-5xl text-gray-300 dark:text-slate-600 mb-4"></i>
-                            <p class="text-gray-500 dark:text-gray-400 font-medium">No reviews yet. Be the first to review this product!</p>
+                            <p class="text-gray-500 dark:text-gray-400 font-medium">No reviews yet. Be the first to review this product.</p>
                         </div>
                     <?php else: ?>
                         <?php foreach ($reviews as $rev):

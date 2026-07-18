@@ -28,10 +28,10 @@
                     <li><i class="fa-solid fa-phone mr-2 text-imvidia"></i> +60 17 3466427</li>
                 </ul>
                 <div class="flex space-x-4">
-                    <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center"><i class="fa-brands fa-facebook-f"></i></a>
-                    <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center"><i class="fa-brands fa-twitter"></i></a>
-                    <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center"><i class="fa-brands fa-instagram"></i></a>
-                    <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center"><i class="fa-brands fa-tiktok"></i></a>
+                    <a href="https://web.facebook.com/profile.php?id=61591858356667" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="https://x.com/imvidia_" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center"><i class="fa-brands fa-twitter"></i></a>
+                    <a href="https://www.instagram.com/imvidia.social" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="https://www.tiktok.com/@imvidia.social" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center"><i class="fa-brands fa-tiktok"></i></a>
                     <a href="https://github.com/sufree11/Imvidia-Electronics" class="bg-gray-800 p-2 rounded-full hover:bg-imvidia hover:text-white transition w-10 h-10 flex items-center justify-center"><i class="fa-brands fa-github"></i></a>
                 </div>
             </div>

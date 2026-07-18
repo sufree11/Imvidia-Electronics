@@ -668,7 +668,7 @@ foreach (getRows("SELECT name, image_url FROM product") as $row) {
                         <i class="fa-solid fa-circle-user text-blue-500 text-xl mt-0.5 mr-3"></i>
                         <div>
                             <h3 class="text-sm font-bold text-gray-900 dark:text-white">Welcome back, <?php echo htmlspecialchars($user['first_name']); ?>!</h3>
-                            <p class="text-sm text-gray-600 dark:text-blue-200 mt-1">We've filled in your details below. Feel free to update them for this order.</p>
+                            <p class="text-sm text-gray-600 dark:text-blue-200 mt-1">Details below are from your account, you can update them for this order.</p>
                         </div>
                     </div>
                     <?php else: ?>
@@ -678,7 +678,7 @@ foreach (getRows("SELECT name, image_url FROM product") as $row) {
                             <i class="fa-solid fa-circle-user text-blue-500 text-xl mt-0.5 mr-3"></i>
                             <div>
                                 <h3 class="text-sm font-bold text-gray-900 dark:text-white">Already have an account?</h3>
-                                <p class="text-sm text-gray-600 dark:text-blue-200 mt-1">Login to save yourself the hassle! Or just continue as a guest.</p>
+                                <p class="text-sm text-gray-600 dark:text-blue-200 mt-1">Login to save time, Or just continue as a guest.</p>
                             </div>
                         </div>
                         <a href="login.php" class="px-5 py-2 bg-white dark:bg-slate-800 text-sm font-bold text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-700 rounded-xl shadow-sm hover:bg-blue-100 dark:hover:bg-slate-700 transition flex-shrink-0 text-center">
@@ -943,13 +943,10 @@ foreach (getRows("SELECT name, image_url FROM product") as $row) {
 
             </form>
 
-            <!-- ===================== FAKE PAYMENT PROCESSING OVERLAY ===================== -->
-            <!-- Shown after client-side validation passes, before the (real) form
-                 submission fires. Purely cosmetic delay - the actual charge/order
-                 is still validated and saved server-side once this finishes. -->
+            <<!-- fake payment loader -->
             <div id="payment-loading-overlay" class="hidden fixed inset-0 z-[999] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm px-4">
                 <div class="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-gray-100 dark:border-slate-800 p-8 sm:p-10 text-center">
-                    <div id="payment-method-badge" class="mx-auto h-16 w-16 rounded-2xl bg-white flex items-center justify-center text-xl font-black shadow-md overflow-hidden p-2"></div>
+                    <div id="payment-method-badge" class="mx-auto h-16 w-16 rounded-2xl bg-white flex items-center justify-center text-xl font-black shadow-md overflow-hidden p-2 mb-6"></div>
 
                     <div class="loader-wrap flex items-center justify-center">
                         <div class="loader">

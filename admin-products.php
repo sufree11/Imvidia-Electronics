@@ -24,11 +24,16 @@ function fetchGalleryImages($product_id) {
     return $images;
 }
 
+// Returns a list of "filename: reason" strings for any gallery image that
+// failed to upload, so the caller can surface it instead of reporting a
+// blanket success while images silently never made it into the gallery.
 function saveGalleryUploads($product_id) {
     global $conn;
 
+    $errors = [];
+
     if (!isset($_FILES['gallery_images']) || !is_array($_FILES['gallery_images']['name'])) {
-        return;
+        return $errors;
     }
 
     $file_count = count($_FILES['gallery_images']['name']);
@@ -49,8 +54,12 @@ function saveGalleryUploads($product_id) {
         if ($upload_result['success']) {
             $gallery_image_url = mysqli_real_escape_string($conn, $upload_result['url']);
             mysqli_query($conn, "INSERT INTO product_gallery (product_id, image_url, created_at) VALUES ($product_id, '$gallery_image_url', NOW())");
+        } else {
+            $errors[] = $file['name'] . ': ' . $upload_result['error'];
         }
     }
+
+    return $errors;
 }
 
 function deleteMarkedGalleryImages($product_id, $deleted_ids_csv) {
@@ -127,10 +136,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 if (mysqli_query($conn, $update_query)) {
                     deleteMarkedGalleryImages($product_id, $_POST['deleted_gallery_ids'] ?? '');
-                    saveGalleryUploads($product_id);
-                    
-                    $message = "Product updated successfully!";
-                    $msg_type = "success";
+                    $gallery_errors = saveGalleryUploads($product_id);
+
+                    if (empty($gallery_errors)) {
+                        $message = "Product updated successfully!";
+                        $msg_type = "success";
+                    } else {
+                        $message = "Product updated, but some gallery images failed to upload: " . implode('; ', $gallery_errors);
+                        $msg_type = "error";
+                    }
                     $edit_mode = false;
                 } else {
                     $message = "Database error: " . mysqli_error($conn);
@@ -142,10 +156,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 if (mysqli_query($conn, $insert_query)) {
                     $new_product_id = mysqli_insert_id($conn);
-                    saveGalleryUploads($new_product_id);
-                    
-                    $message = "Product added successfully!";
-                    $msg_type = "success";
+                    $gallery_errors = saveGalleryUploads($new_product_id);
+
+                    if (empty($gallery_errors)) {
+                        $message = "Product added successfully!";
+                        $msg_type = "success";
+                    } else {
+                        $message = "Product added, but some gallery images failed to upload: " . implode('; ', $gallery_errors);
+                        $msg_type = "error";
+                    }
                 } else {
                     $message = "Database error: " . mysqli_error($conn);
                     $msg_type = "error";
@@ -157,6 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $sort = $_GET['sort'] ?? 'newest';
 $selected_category = $_GET['category'] ?? 'all';
+$search = trim($_GET['search'] ?? '');
 $allowed_filters = ['all', 'kitchen', 'home', 'portable', 'personal', 'audio'];
 if (!in_array($selected_category, $allowed_filters, true)) {
     $selected_category = 'all';
@@ -164,11 +184,16 @@ if (!in_array($selected_category, $allowed_filters, true)) {
 
 $products = [];
 
-$where_clause = '';
+$where_parts = [];
 if ($selected_category !== 'all') {
     $category_sql = mysqli_real_escape_string($conn, $selected_category);
-    $where_clause = " WHERE LOWER(category) = '$category_sql'";
+    $where_parts[] = "LOWER(category) = '$category_sql'";
 }
+if ($search !== '') {
+    $search_sql = mysqli_real_escape_string($conn, $search);
+    $where_parts[] = "(name LIKE '%$search_sql%' OR category LIKE '%$search_sql%')";
+}
+$where_clause = $where_parts ? ' WHERE ' . implode(' AND ', $where_parts) : '';
 
 switch ($sort) {
     case 'price_low':
@@ -226,6 +251,13 @@ if ($products_result && mysqli_num_rows($products_result) > 0) {
                             <?php echo $message; ?>
                         </div>
                     <?php endif; ?>
+
+                    <div class="mb-4">
+                        <div class="relative max-w-md">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                            <input type="text" id="productSearchInput" value="<?php echo htmlspecialchars($search); ?>" onkeydown="if (event.key === 'Enter') updateSort();" placeholder="Search products by name or category..." class="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg focus:ring-imvidia focus:border-imvidia sm:text-sm dark:bg-slate-800 dark:text-white transition">
+                        </div>
+                    </div>
 
                     <div class="mb-6 flex items-center justify-between">
                         <div class="flex items-center flex-wrap gap-3">
@@ -882,7 +914,10 @@ function renderGalleryPreviews() {
         function updateSort() {
             const sortValue = document.getElementById('sortSelect').value;
             const categoryValue = document.getElementById('categoryFilter').value;
-            window.location.href = `?sort=${encodeURIComponent(sortValue)}&category=${encodeURIComponent(categoryValue)}`;
+            const searchValue = document.getElementById('productSearchInput').value.trim();
+            const params = new URLSearchParams({ sort: sortValue, category: categoryValue });
+            if (searchValue) params.set('search', searchValue);
+            window.location.href = `?${params.toString()}`;
         }
 
         function deleteProduct(productId, productName) {

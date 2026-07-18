@@ -23,7 +23,10 @@ $user = checkCustomerOrGuest();
         </header>
 
         <section id="about" class="mb-10 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl shadow-sm p-6 sm:p-8">
-            <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Background</h2>
+            <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white flex items-center gap-3">
+                <img class="theme-logo h-10 w-10 rounded-full object-cover border border-gray-200 dark:border-slate-700 bg-white p-1" data-light="assets/logo.svg" data-dark="assets/logo-light.svg" src="assets/logo.svg" alt="ImVidia Logo">
+                About ImVidia
+            </h2>
 
             <div class="space-y-8">
                 <div>
@@ -56,10 +59,10 @@ $user = checkCustomerOrGuest();
                 </div>
 
                 <div>
-                    <h3 class="text-lg font-semibold mb-3 text-imvidia-dark dark:text-imvidia-light">Organisational Chart</h3>
+                    <h3 class="text-lg font-semibold mb-3 text-imvidia-dark dark:text-imvidia-light">Organisational Structure</h3>
                     <div class="bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-xl p-5">
                         <p class="text-gray-600 dark:text-gray-300 leading-relaxed mb-4">
-                            ImVidia operates with a founder-led structure focused on product quality, customer support, and operations.
+                            ImVidia operates with a structure focused on product quality, customer support, and operations.
                         </p>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
                             <div class="rounded-lg border border-gray-200 dark:border-slate-700 px-4 py-3 text-center font-medium bg-white dark:bg-slate-900">

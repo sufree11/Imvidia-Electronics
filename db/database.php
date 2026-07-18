@@ -35,4 +35,11 @@ if (!$connected) {
 
 mysqli_set_charset($conn, "utf8mb4");
 
+// The DB server's own SYSTEM timezone can't be relied on (it's UTC on
+// DigitalOcean's managed MySQL) - anything relying on MySQL's own clock
+// (CURRENT_TIMESTAMP/NOW() defaults, e.g. review/reply created_at) needs
+// this pinned to Malaysia time to match date_default_timezone_set() on the
+// PHP side (see includes/security.php), or timestamps display 8h off.
+mysqli_query($conn, "SET time_zone = '+08:00'");
+
 ?>
