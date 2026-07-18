@@ -323,10 +323,10 @@ function renderReplyThread($replies, $viewer, $review_id) {
                         </div>
                         
                         <button id="add-to-cart-btn" onclick="addToCart(<?php echo (int) $product['product_id']; ?>, '<?php echo htmlspecialchars(addslashes($product['name'])); ?>', <?php echo $product['price']; ?>, <?php echo $product['stock_quantity']; ?>)"
-                                class="flex-1 h-14 bg-imvidia hover:bg-imvidia-dark disabled:bg-gray-300 disabled:dark:bg-slate-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition transform hover:-translate-y-0.5 flex items-center justify-center space-x-2"
-                                <?php echo $product['stock_quantity'] == 0 ? 'disabled' : ''; ?>>
+                                class="flex-1 h-14 bg-imvidia hover:bg-imvidia-dark disabled:bg-gray-300 disabled:dark:bg-slate-700 disabled:cursor-not-allowed disabled:hover:translate-y-0 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition transform hover:-translate-y-0.5 flex items-center justify-center space-x-2"
+                                <?php echo ($product['stock_quantity'] == 0 || $review_viewer['is_admin']) ? 'disabled' : ''; ?>>
                             <i id="add-to-cart-icon" class="fa-solid fa-cart-plus text-lg"></i>
-                            <span id="add-to-cart-label"><?php echo $product['stock_quantity'] > 0 ? 'Add to Cart' : 'Out of Stock'; ?></span>
+                            <span id="add-to-cart-label"><?php echo $review_viewer['is_admin'] ? 'Unavailable for admins' : ($product['stock_quantity'] > 0 ? 'Add to Cart' : 'Out of Stock'); ?></span>
                         </button>
 
                         <button onclick="toggleWishlist(<?php echo $product_id; ?>, this.querySelector('i'))" class="w-14 h-14 flex-shrink-0 flex items-center justify-center rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-md transition transform hover:-translate-y-0.5" title="Toggle wishlist">
